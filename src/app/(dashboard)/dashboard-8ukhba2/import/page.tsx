@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { UploadStep } from "./UploadStep";
 import { VerifyStep } from "./VerifyStep";
@@ -14,7 +15,7 @@ const stepConfig = [
   { id: 4, key: "save", title: "الحفظ" },
 ];
 
-export default function ImportOrchestratorPage() {
+function ImportContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -116,5 +117,13 @@ export default function ImportOrchestratorPage() {
       {/* Render the active child component */}
       <div className="mt-8">{renderCurrentStep()}</div>
     </div>
+  );
+}
+
+export default function ImportOrchestratorPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">جاري التحميل...</div>}>
+      <ImportContent />
+    </Suspense>
   );
 }
