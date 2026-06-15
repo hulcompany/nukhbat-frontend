@@ -68,7 +68,7 @@ export function HowItWorksSection() {
             <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
             {/* REPLACE WITH YOUR 3-PHONES IMAGE */}
             <img
-              src="/landing/phones-group-1.png"
+              src="./landing/phones-group-1.png"
               alt="خطوات التطبيق"
               className="relative z-10 w-full max-w-[500px] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
             />
@@ -82,7 +82,7 @@ export function HowItWorksSection() {
             <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
             {/* REPLACE WITH YOUR 2-PHONES IMAGE */}
             <img
-              src="/landing/phones-mockup.png"
+              src="./landing/phones-mockup.png"
               alt="واجهة التطبيق"
               className="relative z-10 w-full max-w-[450px] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
             />
@@ -118,7 +118,7 @@ export function HowItWorksSection() {
             <div className="absolute top-1/2 right-1/2 translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
             {/* REPLACE WITH YOUR TILTED PHONES IMAGE */}
             <img
-              src="/landing/phones-group-3.png"
+              src="./landing/phones-group-3.png"
               alt="مزايا التطبيق"
               className="relative z-10 w-full max-w-[500px] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
             />

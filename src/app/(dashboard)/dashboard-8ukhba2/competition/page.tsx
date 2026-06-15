@@ -169,14 +169,14 @@ export default function CompetitionPage() {
       </div>
 
       {/* Track Filters */}
-      <Card className="border-slate-200 shadow-xs p-2 flex flex-wrap gap-2">
+      <Card className="border border-slate-200 shadow-sm p-4 flex flex-wrap items-center gap-3 flex-row">
         {trackFilters.map((track, idx) => (
           <button
             key={track}
-            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-5 py-2.5 rounded-lg text-sm font-bold transition-all ${
               idx === 0
-                ? "bg-[#16192b] text-white shadow-sm"
-                : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                ? "bg-slate-900 text-white" // The dark active state
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200" // The light inactive state
             }`}
           >
             {track}

@@ -138,7 +138,7 @@ export default function LandingPage() {
           <motion.img
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            src="/landing/phones-mockup.png"
+            src="./landing/phones-mockup.png"
             alt="واجهة تطبيق النخبة الأوائل"
             className="relative z-10 w-full max-w-md lg:max-w-2xl object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.6)]"
           />

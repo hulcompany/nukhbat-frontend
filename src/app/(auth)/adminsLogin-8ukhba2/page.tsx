@@ -1,3 +1,4 @@
+"use client";
 import {
   Card,
   CardContent,
@@ -10,8 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
+  const router = useRouter();
+
   return (
     <div
       dir="rtl"
@@ -31,7 +35,7 @@ export default function AdminLoginPage() {
       </div>
 
       {/* Card Section - UPDATED SHADOW AND BORDER */}
-      <Card className="w-full max-w-[420px] bg-white border border-slate-100 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.1)] p-7">
+      <Card className="w-full max-w-105 bg-white border border-slate-100 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.1)] p-7">
         <CardHeader className="text-center pb-2">
           <CardTitle className="text-xl font-bold text-slate-900">
             تسجيل الدخول
@@ -41,7 +45,7 @@ export default function AdminLoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-6">
+          <div className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-700 font-medium">
                 البريد الإلكتروني
@@ -87,10 +91,13 @@ export default function AdminLoginPage() {
               </Link>
             </div>
 
-            <Button className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg transition-colors">
+            <Button
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg transition-colors"
+              onClick={() => router.push("/dashboard-8ukhba2")}
+            >
               تسجيل الدخول
             </Button>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>

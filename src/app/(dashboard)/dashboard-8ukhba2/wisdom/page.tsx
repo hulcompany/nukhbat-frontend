@@ -1,6 +1,8 @@
+"use client";
 import { Plus, Upload, Lightbulb, Eye, EyeOff, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ActionButton } from "@/components/ui/action-button";
 
 // Mock Data based on the screenshot
 const wisdomData = [
@@ -53,14 +55,16 @@ export default function WisdomPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg px-6 h-11 transition-all shadow-sm shadow-emerald-200">
-            رفع Excel (365 حكمة)
-            <Upload className="mr-2 h-4 w-4" />
-          </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 h-11 transition-all shadow-sm shadow-blue-200">
-            إضافة حكمة
-            <Plus className="mr-2 h-4 w-4" />
-          </Button>
+          <ActionButton
+            label="رفع Excel (365 حكمة)"
+            icon={Upload}
+            bgClassName="bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200"
+          />
+          <ActionButton
+            label="إضافة حكمة"
+            icon={Plus}
+            bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+          />
         </div>
       </div>
 
@@ -74,7 +78,7 @@ export default function WisdomPage() {
       </div>
 
       {/* Main Table Card */}
-      <Card className="border-slate-200 shadow-xs overflow-hidden p-0">
+      <Card className="border-slate-200 overflow-hidden p-0">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-right">
             <thead className="bg-slate-50/80 text-slate-500 font-medium border-b border-slate-200">
@@ -126,10 +130,10 @@ export default function WisdomPage() {
                   {/* Status Badge */}
                   <td className="px-6 py-4 text-center whitespace-nowrap">
                     <span
-                      className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold ${
+                      className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold border ${
                         row.status === "فعال"
-                          ? "bg-emerald-100 text-emerald-600"
-                          : "bg-slate-100 text-slate-500"
+                          ? "bg-emerald-100 text-emerald-600 border-emerald-200"
+                          : "bg-slate-100 text-slate-500 border-slate-200"
                       }`}
                     >
                       {row.status}

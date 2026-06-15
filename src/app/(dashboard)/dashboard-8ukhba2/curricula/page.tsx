@@ -182,7 +182,7 @@ function CurriculaContent() {
             <Card
               key={track.id}
               onClick={() => navigateTo("subjects", { track: track.title })}
-              className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer group"
+              className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer group p-0"
             >
               <CardContent className="p-6">
                 <div className="flex justify-between items-start mb-6">
@@ -219,7 +219,7 @@ function CurriculaContent() {
                   subject: subject.title,
                 })
               }
-              className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer group"
+              className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer group p-0"
             >
               <CardContent className="p-6 flex flex-col items-end text-right">
                 <div className="flex justify-between items-start w-full mb-6 flex-row-reverse">
@@ -305,7 +305,7 @@ function CurriculaContent() {
           {lessons.map((lesson) => (
             <Card
               key={lesson.id}
-              className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer p-4 md:p-6 flex flex-row justify-between items-center"
+              className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer p-4 md:p-6 flex flex-row justify-between items-center p-0"
             >
               {/* Right Side (Text & Grip) */}
               <div className="flex items-center gap-4">

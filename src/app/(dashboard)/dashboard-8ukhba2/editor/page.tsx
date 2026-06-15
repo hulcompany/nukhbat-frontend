@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 // --- Mock Data for Question Types ---
 const questionTypes = [
@@ -150,7 +151,7 @@ function InteractiveEditorContent() {
                   نص السؤال
                 </label>
                 <textarea
-                  className="w-full min-h-[120px] p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="mt-1 w-full min-h-[120px] p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   placeholder="أدخل نص السؤال..."
                 ></textarea>
               </div>
@@ -160,9 +161,9 @@ function InteractiveEditorContent() {
                 <label className="text-sm font-medium text-slate-700">
                   التلميح
                 </label>
-                <input
+                <Input
                   type="text"
-                  className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -171,7 +172,7 @@ function InteractiveEditorContent() {
                 <label className="text-sm font-medium text-slate-700">
                   الشرح
                 </label>
-                <textarea className="w-full min-h-[120px] p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                <textarea className="mt-1 w-full min-h-[120px] p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
               </div>
             </CardContent>
 

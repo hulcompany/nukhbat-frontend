@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft,
@@ -32,9 +32,27 @@ import {
 } from "lucide-react";
 
 export function DashboardSidebar() {
+  const router = useRouter();
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Initialize collapse state from localStorage
+  useEffect(() => {
+    const savedState = localStorage.getItem("sidebarCollapsed");
+    if (savedState !== null) {
+      setIsCollapsed(savedState === "true");
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Persist collapse state to localStorage
+  const toggleCollapse = () => {
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem("sidebarCollapsed", String(newState));
+  };
 
   // Close mobile sidebar when route changes
   useEffect(() => {
@@ -167,7 +185,7 @@ export function DashboardSidebar() {
 
           {/* Desktop Collapse Toggle */}
           <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={toggleCollapse}
             className="hidden md:flex text-slate-500 hover:text-white transition-colors"
           >
             {isCollapsed ? (
@@ -357,8 +375,9 @@ export function DashboardSidebar() {
               isCollapsed && "justify-center",
             )}
             title={isCollapsed ? "تسجيل الخروج" : undefined}
+            onClick={() => router.push("/adminsLogin-8ukhba2")}
           >
-            <LogOut size={20} className="flex-shrink-0 rotate-180" />
+            <LogOut size={20} className="shrink-0 rotate-180" />
             {!isCollapsed && (
               <span className="text-sm font-medium whitespace-nowrap">
                 تسجيل الخروج

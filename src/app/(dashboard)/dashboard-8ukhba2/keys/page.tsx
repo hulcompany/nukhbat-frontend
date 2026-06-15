@@ -140,19 +140,19 @@ export default function Keys() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-slate-200 shadow-xs p-4 flex flex-col items-center justify-center py-6">
+        <Card className="border-slate-200 shadow-xs p-0 flex flex-col items-center justify-center py-6">
           <span className="text-3xl font-bold text-emerald-500 mb-1">2</span>
           <span className="text-sm text-slate-500">غير مستخدمة</span>
         </Card>
-        <Card className="border-slate-200 shadow-xs p-4 flex flex-col items-center justify-center py-6">
+        <Card className="border-slate-200 shadow-xs p-0 flex flex-col items-center justify-center py-6">
           <span className="text-3xl font-bold text-blue-600 mb-1">3</span>
           <span className="text-sm text-slate-500">مستخدمة</span>
         </Card>
-        <Card className="border-slate-200 shadow-xs p-4 flex flex-col items-center justify-center py-6">
+        <Card className="border-slate-200 shadow-xs p-0 flex flex-col items-center justify-center py-6">
           <span className="text-3xl font-bold text-rose-500 mb-1">1</span>
           <span className="text-sm text-slate-500">منتهية</span>
         </Card>
-        <Card className="border-slate-200 shadow-xs p-4 flex flex-col items-center justify-center py-6">
+        <Card className="border-slate-200 shadow-xs p-0 flex flex-col items-center justify-center py-6">
           <span className="text-3xl font-bold text-slate-600 mb-1">1</span>
           <span className="text-sm text-slate-500">ملغاة</span>
         </Card>
