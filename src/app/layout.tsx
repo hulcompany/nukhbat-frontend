@@ -7,11 +7,11 @@ export const metadata: Metadata = {
   description: "لوحة تحكم النخبة الأوائل",
   icons: {
     icon: [
-      { url: "/favicon.ico" },
-      { url: "/images/logo.png", type: "image/png" },
+      { url: "./favicon.ico" },
+      { url: "./images/logo.png", type: "image/png" },
     ],
-    shortcut: "/favicon.ico",
-    apple: "/images/logo.png",
+    shortcut: "./favicon.ico",
+    apple: "./images/logo.png",
   },
 };
 

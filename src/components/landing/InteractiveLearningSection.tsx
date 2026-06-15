@@ -91,7 +91,7 @@ export function InteractiveLearningSection() {
         */}
         <div className="relative z-10 w-[280px] md:w-[340px]">
           <img
-            src="/landing/student-red.png"
+            src="./landing/student-red.png"
             alt="طالب يدرس"
             className="w-full h-auto rounded-[2.5rem] object-cover shadow-2xl"
           />
@@ -102,7 +102,7 @@ export function InteractiveLearningSection() {
         */}
         <div className="absolute -bottom-10 left-4 md:right-12 z-20 w-[200px] md:w-[240px]">
           <img
-            src="/landing/student-blue.png"
+            src="./landing/student-blue.png"
             alt="طالب سعيد"
             className="w-full h-auto rounded-[2rem] object-cover shadow-[0_20px_50px_rgba(0,0,0,0.5)] "
           />
