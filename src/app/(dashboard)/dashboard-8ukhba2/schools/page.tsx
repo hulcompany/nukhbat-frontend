@@ -53,13 +53,20 @@ const schools = [
 ];
 
 export default function SchoolsManagementPage() {
+  const colorMap: Record<string, string> = {
+    purple: "text-purple-600",
+    blue: "text-blue-600",
+    red: "text-red-600",
+    green: "text-green-600",
+  };
+
   return (
-    <div className="p-8 space-y-6" dir="rtl">
+    <div className="p-4 md:p-8 space-y-6" dir="rtl">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold">إدارة المدارس</h1>
-          <p className="text-slate-500">
+          <h1 className="text-xl md:text-2xl font-bold">إدارة المدارس</h1>
+          <p className="text-sm text-slate-500 mt-1">
             إدارة اشتراكات المدارس والعقود المؤسسية
           </p>
         </div>
@@ -67,88 +74,88 @@ export default function SchoolsManagementPage() {
         <ActionButton
           label="إضافة مدرسة"
           icon={Plus}
-          bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+          bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200 w-full sm:w-auto"
         />
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, idx) => (
           <Card key={idx} className="p-0">
-            <CardContent className="p-6 text-center">
-              <div className={`text-3xl font-bold text-${stat.color}-600 mb-1`}>
+            <CardContent className="p-4 md:p-6 text-center">
+              <div className={`text-2xl md:text-3xl font-bold ${colorMap[stat.color]} mb-1`}>
                 {stat.value}
               </div>
-              <div className="text-sm text-slate-500">{stat.label}</div>
+              <div className="text-xs md:text-sm text-slate-500 whitespace-nowrap">{stat.label}</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Schools Grid */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {schools.map((school, idx) => (
-          <Card key={idx}>
-            <CardContent className="p-6">
+          <Card key={idx} className="overflow-hidden">
+            <CardContent className="p-4 md:p-6">
               <div className="flex justify-between items-start mb-6">
-                <div className="flex gap-4 items-center">
-                  <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                    <Building2 size={28} />
+                <div className="flex gap-3 md:gap-4 items-center">
+                  <div className="p-2 md:p-3 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+                    <Building2 className="w-6 h-6 md:w-7 md:h-7" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">{school.name}</h3>
-                    <p className="text-sm text-slate-500">
+                    <h3 className="font-bold text-base md:text-lg leading-tight">{school.name}</h3>
+                    <p className="text-xs md:text-sm text-slate-500 mt-0.5">
                       {school.students} طالب
                     </p>
                   </div>
                 </div>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs border ${school.statusColor}`}
+                  className={`px-3 py-1 rounded-full text-[10px] md:text-xs border whitespace-nowrap ${school.statusColor}`}
                 >
                   {school.status}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6">
                 {[
                   { label: "بداية العقد", val: school.contractStart },
                   { label: "نهاية العقد", val: school.contractEnd },
                   { label: "الطلاب", val: `${school.students} طالب` },
                   { label: "المفاتيح", val: `${school.keys} مفتاح` },
                 ].map((item, i) => (
-                  <div key={i} className="bg-slate-50 p-3 rounded-lg">
-                    <div className="text-xs text-slate-400 mb-1">
+                  <div key={i} className="bg-slate-50 p-2 md:p-3 rounded-lg">
+                    <div className="text-[10px] md:text-xs text-slate-400 mb-0.5 md:mb-1">
                       {item.label}
                     </div>
-                    <div className="text-sm font-medium">{item.val}</div>
+                    <div className="text-xs md:text-sm font-semibold">{item.val}</div>
                   </div>
                 ))}
               </div>
 
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 sm:flex gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1 gap-2 bg-blue-100 text-blue-700 border-none"
+                  className="flex-1 gap-2 bg-blue-100 text-blue-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-blue-200"
                 >
-                  <Edit2 size={16} /> تعديل
+                  <Edit2 size={16} className="shrink-0" /> <span className="hidden sm:inline">تعديل</span><span className="sm:hidden">تعديل</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 gap-2 bg-green-100 text-green-700 border-none"
+                  className="flex-1 gap-2 bg-green-100 text-green-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-green-200"
                 >
-                  <Key size={16} /> إنشاء مفاتيح
+                  <Key size={16} className="shrink-0" /> <span className="hidden sm:inline">مفاتيح</span><span className="sm:hidden">مفاتيح</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 gap-2 bg-purple-100 text-purple-700 border-none"
+                  className="flex-1 gap-2 bg-purple-100 text-purple-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-purple-200"
                 >
-                  <Send size={16} /> إشعار
+                  <Send size={16} className="shrink-0" /> <span className="hidden sm:inline">إشعار</span><span className="sm:hidden">إشعار</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 gap-2 bg-amber-100 text-amber-700 border-none"
+                  className="flex-1 gap-2 bg-amber-100 text-amber-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-amber-200"
                 >
-                  <FileText size={16} /> تقرير
+                  <FileText size={16} className="shrink-0" /> <span className="hidden sm:inline">تقرير</span><span className="sm:hidden">تقرير</span>
                 </Button>
               </div>
             </CardContent>

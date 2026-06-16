@@ -97,7 +97,7 @@ export default function LandingPage() {
         >
           <motion.h1
             variants={fadeInUp}
-            className="text-5xl md:text-6xl lg:text-[5.5rem] font-black mb-6 leading-tight"
+            className="text-4xl md:text-6xl lg:text-[5.5rem] font-black mb-6 leading-tight"
           >
             <span className="text-[#3b82f6] block mb-2 hover:scale-105 transition-transform duration-300 origin-right">
               النخبة الأوائل
@@ -120,7 +120,7 @@ export default function LandingPage() {
               boxShadow: "0 20px 25px -5px rgba(37, 99, 235, 0.4)",
             }}
             whileTap={{ scale: 0.95 }}
-            className="bg-[#2563eb] text-white px-8 py-4 rounded-xl text-lg font-bold transition-all shadow-xl shadow-blue-900/30 flex items-center gap-3"
+            className="bg-[#2563eb] text-white px-8 py-4 rounded-xl text-md font-bold transition-all shadow-xl shadow-blue-900/30 flex items-center gap-3"
           >
             تحميل التطبيق مباشرة
             <Download className="h-6 w-6 animate-bounce" />

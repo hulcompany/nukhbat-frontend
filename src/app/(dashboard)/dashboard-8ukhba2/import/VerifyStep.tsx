@@ -118,51 +118,65 @@ export function VerifyStep({ onNext, onPrev }: VerifyStepProps) {
   return (
     <div className="space-y-6">
       {/* Summary Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card className="border-slate-200 shadow-sm p-4 flex flex-col items-center justify-center py-6">
-          <span className="text-3xl font-bold text-blue-600 mb-1">7</span>
-          <span className="text-sm text-slate-500 font-medium">الكلي</span>
+          <span className="text-2xl md:text-3xl font-bold text-blue-600 mb-1">
+            7
+          </span>
+          <span className="text-xs md:text-sm text-slate-500 font-medium">
+            الكلي
+          </span>
         </Card>
         <Card className="border-slate-200 shadow-sm p-4 flex flex-col items-center justify-center py-6">
-          <span className="text-3xl font-bold text-emerald-500 mb-1">3</span>
-          <span className="text-sm text-slate-500 font-medium">صالح للحفظ</span>
+          <span className="text-2xl md:text-3xl font-bold text-emerald-500 mb-1">
+            3
+          </span>
+          <span className="text-xs md:text-sm text-slate-500 font-medium whitespace-nowrap">
+            صالح للحفظ
+          </span>
         </Card>
         <Card className="border-slate-200 shadow-sm p-4 flex flex-col items-center justify-center py-6">
-          <span className="text-3xl font-bold text-amber-500 mb-1">1</span>
-          <span className="text-sm text-slate-500 font-medium">
+          <span className="text-2xl md:text-3xl font-bold text-amber-500 mb-1">
+            1
+          </span>
+          <span className="text-xs md:text-sm text-slate-500 font-medium whitespace-nowrap">
             يحتاج مراجعة
           </span>
         </Card>
         <Card className="border-slate-200 shadow-sm p-4 flex flex-col items-center justify-center py-6">
-          <span className="text-3xl font-bold text-amber-500 mb-1">1</span>
-          <span className="text-sm text-slate-500 font-medium">
+          <span className="text-2xl md:text-3xl font-bold text-amber-500 mb-1">
+            1
+          </span>
+          <span className="text-xs md:text-sm text-slate-500 font-medium whitespace-nowrap">
             ناقص بيانات
           </span>
         </Card>
-        <Card className="border-slate-200 shadow-sm p-4 flex flex-col items-center justify-center py-6">
-          <span className="text-3xl font-bold text-rose-500 mb-1">2</span>
-          <span className="text-sm text-slate-500 font-medium">
+        <Card className="border-slate-200 shadow-sm p-4 flex flex-col items-center justify-center py-6 md:col-span-1 col-span-2">
+          <span className="text-2xl md:text-3xl font-bold text-rose-500 mb-1">
+            2
+          </span>
+          <span className="text-xs md:text-sm text-slate-500 font-medium whitespace-nowrap">
             غير مدعوم/مكرر
           </span>
         </Card>
       </div>
 
       {/* Actions */}
-      <div className="flex justify-between items-center gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
         {/* Back Button */}
-        <Button
+        {/* <Button
           variant="ghost"
           onClick={onPrev}
-          className="text-slate-500 hover:text-slate-700"
+          className="text-slate-500 hover:text-slate-700 justify-center sm:justify-start"
         >
           <ArrowRight className="ml-2 h-4 w-4" />
           العودة للملف
-        </Button>
+        </Button> */}
 
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button
             variant="outline"
-            className="rounded-xl border-slate-200 text-slate-700"
+            className="rounded-lg border-slate-200 text-slate-700 w-full xs:w-auto"
           >
             <Download className="ml-2 h-4 w-4" />
             تصدير تقرير الأخطاء
@@ -170,7 +184,7 @@ export function VerifyStep({ onNext, onPrev }: VerifyStepProps) {
           {/* Proceed Button */}
           <Button
             onClick={onNext}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm shadow-emerald-200"
+            className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-sm shadow-emerald-200 w-full xs:w-auto"
           >
             <Save className="ml-2 h-4 w-4" />
             حفظ الأسئلة الصالحة (3)

@@ -221,8 +221,8 @@ function CurriculaContent() {
               }
               className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer group p-0"
             >
-              <CardContent className="p-6 flex flex-col items-end text-right">
-                <div className="flex justify-between items-start w-full mb-6 flex-row-reverse">
+              <CardContent className="p-6 flex flex-col items-start text-right">
+                <div className="flex justify-between items-start w-full mb-6 flex-row">
                   <span className="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-xs font-semibold">
                     {subject.status}
                   </span>
@@ -261,11 +261,11 @@ function CurriculaContent() {
               className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer p-4 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
             >
               {/* Right Side (Text & Grip) */}
-              <div className="flex items-center gap-4">
-                <GripVertical className="h-5 w-5 text-slate-300 cursor-grab" />
+              <div className="flex items-start gap-4 w-full md:w-auto">
+                <GripVertical className="h-5 w-5 text-slate-300 cursor-grab mt-1 shrink-0" />
                 <div className="flex flex-col text-right">
                   <h3 className="font-bold text-slate-900">{unit.title}</h3>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                     {unit.lessonsCount} درس · {unit.questionsCount} سؤال · شرط
                     الفتح: {unit.condition}
                   </p>
@@ -273,25 +273,27 @@ function CurriculaContent() {
               </div>
 
               {/* Left Side (Progress, Badge, Icons) */}
-              <div className="flex items-center gap-4 md:gap-6 flex-row-reverse md:flex-row w-full md:w-auto justify-between md:justify-start">
+              <div className="flex flex-row-reverse md:flex-row items-center justify-between md:justify-end gap-4 md:gap-6 w-full md:w-auto border-t border-slate-50 md:border-0 pt-4 md:pt-0">
                 <div className="flex items-center gap-3">
                   <span className="text-slate-500 font-medium text-xs w-8 text-right">
                     {unit.progress}%
                   </span>
-                  <div className="w-24 bg-slate-100 rounded-full h-2 flex flex-row-reverse overflow-hidden">
+                  <div className="w-20 sm:w-24 bg-slate-100 rounded-full h-2 flex flex-row-reverse overflow-hidden">
                     <div
                       className="h-full bg-emerald-500 rounded-full"
                       style={{ width: `${unit.progress}%` }}
                     ></div>
                   </div>
                 </div>
-                <span className="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-xs font-semibold">
-                  {unit.status}
-                </span>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <Edit className="h-4 w-4 hover:text-slate-600" />
-                  <Unlock className="h-4 w-4 hover:text-slate-600" />
-                  <EyeOff className="h-4 w-4 hover:text-slate-600" />
+                <div className="flex items-center gap-4">
+                  <span className="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
+                    {unit.status}
+                  </span>
+                  <div className="flex items-center gap-3 text-slate-400">
+                    <Edit className="h-4 w-4 hover:text-slate-600 transition-colors" />
+                    <Unlock className="h-4 w-4 hover:text-slate-600 transition-colors" />
+                    <EyeOff className="h-4 w-4 hover:text-slate-600 transition-colors" />
+                  </div>
                 </div>
               </div>
             </Card>
@@ -305,11 +307,11 @@ function CurriculaContent() {
           {lessons.map((lesson) => (
             <Card
               key={lesson.id}
-              className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer p-4 md:p-6 flex flex-row justify-between items-center p-0"
+              className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer p-4 md:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
             >
               {/* Right Side (Text & Grip) */}
-              <div className="flex items-center gap-4">
-                <GripVertical className="h-5 w-5 text-slate-300 cursor-grab" />
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                <GripVertical className="h-5 w-5 text-slate-300 cursor-grab shrink-0" />
                 <div className="flex flex-col text-right">
                   <h3 className="font-bold text-slate-900">{lesson.title}</h3>
                   <p className="text-xs text-slate-500 mt-1">
@@ -319,9 +321,9 @@ function CurriculaContent() {
               </div>
 
               {/* Left Side (Badge & Icons) */}
-              <div className="flex items-center gap-6">
+              <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto border-t border-slate-50 sm:border-0 pt-3 sm:pt-0">
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
                     lesson.status === "فعال"
                       ? "bg-emerald-100 text-emerald-600"
                       : "bg-slate-100 text-slate-500"
@@ -329,12 +331,12 @@ function CurriculaContent() {
                 >
                   {lesson.status}
                 </span>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <Edit className="h-4 w-4 hover:text-slate-600" />
+                <div className="flex items-center gap-4 text-slate-400">
+                  <Edit className="h-4 w-4 hover:text-slate-600 transition-colors" />
                   {lesson.status === "فعال" ? (
-                    <Eye className="h-4 w-4 text-blue-500 hover:text-blue-600" />
+                    <Eye className="h-4 w-4 text-blue-500 hover:text-blue-600 transition-colors" />
                   ) : (
-                    <Eye className="h-4 w-4 hover:text-slate-600" />
+                    <Eye className="h-4 w-4 hover:text-slate-600 transition-colors" />
                   )}
                 </div>
               </div>

@@ -54,11 +54,11 @@ export default function WisdomPage() {
             إدارة الحكم اليومية المعروضة للطلاب
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <ActionButton
             label="رفع Excel (365 حكمة)"
             icon={Upload}
-            bgClassName="bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200"
+            bgClassName="bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200 "
           />
           <ActionButton
             label="إضافة حكمة"

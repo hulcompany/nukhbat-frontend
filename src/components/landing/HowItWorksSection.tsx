@@ -56,7 +56,7 @@ export function HowItWorksSection() {
             </div>
 
             {/* Action Button */}
-            <button className="bg-[#2563eb] hover:bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-bold transition-all shadow-xl shadow-blue-900/30 flex items-center gap-3">
+            <button className="bg-[#2563eb] hover:bg-blue-600 text-white px-8 py-4 rounded-xl text-md font-bold transition-all shadow-xl shadow-blue-900/30 flex items-center gap-3">
               تحميل التطبيق مباشرة
               <Download className="h-6 w-6" />
             </button>

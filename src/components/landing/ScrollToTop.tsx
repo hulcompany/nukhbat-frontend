@@ -20,7 +20,7 @@ export function ScrollToTop() {
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: "smooth"
+      behavior: "smooth",
     });
   };
 
@@ -37,8 +37,17 @@ export function ScrollToTop() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.5, y: 20 }}
           transition={{ duration: 0.3 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           onClick={scrollToTop}
-          className="fixed bottom-8 left-8 z-[100] p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-xl shadow-blue-600/30 focus:outline-none focus:ring-4 focus:ring-blue-500/50 transition-colors"
+          className="fixed bottom-8 left-8 z-100 p-3 
+             bg-gradient-to-tr from-blue-600 to-indigo-500 
+             hover:from-blue-500 hover:to-indigo-400
+             text-white rounded-2xl border border-blue-400/50 
+             shadow-[0_0_20px_rgba(79,70,229,0.5)] 
+             hover:shadow-[0_0_30px_rgba(79,70,229,0.8)] 
+             focus:outline-none focus:ring-4 focus:ring-indigo-500/50 
+             transition-all duration-300"
           aria-label="العودة للأعلى"
         >
           <ArrowUp className="h-6 w-6" strokeWidth={2.5} />

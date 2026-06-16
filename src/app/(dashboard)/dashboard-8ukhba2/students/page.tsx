@@ -159,7 +159,7 @@ export default function Students() {
             {/* Filter Button */}
             <Button
               variant="outline"
-              className="h-12 border-slate-200 text-slate-600 hover:bg-slate-50 flex-1"
+              className="h-12 border-slate-200 text-slate-600 hover:bg-slate-50 min-w-36"
             >
               <Filter className="ml-2 h-4 w-4" />
               تصفية

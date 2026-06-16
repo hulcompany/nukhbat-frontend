@@ -42,123 +42,168 @@ const users = [
 ];
 
 export default function AdminPermissionsPage() {
+  const roleStyles: Record<string, { bg: string; text: string; border: string; iconBg: string }> = {
+    purple: {
+      bg: "bg-purple-50",
+      text: "text-purple-600",
+      border: "border-purple-200",
+      iconBg: "bg-purple-100",
+    },
+    blue: {
+      bg: "bg-blue-50",
+      text: "text-blue-600",
+      border: "border-blue-200",
+      iconBg: "bg-blue-100",
+    },
+  };
+
   return (
-    <div className="p-8 space-y-6" dir="rtl">
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8" dir="rtl">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="text-right">
-          <h1 className="text-2xl font-bold">صلاحيات الأدمن</h1>
-          <p className="text-slate-500">إدارة مستخدمي لوحة التحكم وصلاحياتهم</p>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900">صلاحيات الأدمن</h1>
+          <p className="text-sm text-slate-500 mt-1">إدارة مستخدمي لوحة التحكم وصلاحياتهم</p>
         </div>
 
         <ActionButton
           label="إضافة أدمن"
           icon={Plus}
-          bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+          bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200 w-full sm:w-auto"
         />
       </div>
 
       {/* Roles Summary */}
-      <div className="flex gap-4">
-        {roles.map((role) => (
-          <Card key={role.name} className="w-48 text-center p-0">
-            <CardContent className="p-4 flex flex-col items-center gap-2">
-              <ShieldCheck
-                className={`text-${role.color}-700 bg-${role.color}-100 rounded-full w-10 h-10 p-2 text-500`}
-              />
-              <div className={`font-bold text-${role.color}-700`}>
-                {role.name}
-              </div>
-              <div className="text-sm text-slate-500">{role.count} مستخدم</div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {roles.map((role) => {
+          const style = roleStyles[role.color];
+          return (
+            <Card key={role.name} className="p-0 overflow-hidden border-slate-200 shadow-sm">
+              <CardContent className="p-4 md:p-6 flex flex-col items-center gap-3 text-center">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${style.iconBg} ${style.text}`}>
+                  <ShieldCheck size={24} />
+                </div>
+                <div>
+                  <div className={`font-bold text-base md:text-lg ${style.text}`}>
+                    {role.name}
+                  </div>
+                  <div className="text-xs md:text-sm text-slate-500 font-medium">
+                    {role.count} مستخدم
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         {/* Roles Permissions View */}
-        <Card className="col-span-1 p-0">
-          <CardContent className="p-6">
-            <h2 className="font-bold mb-4">صلاحيات الأدوار</h2>
-            {Object.entries(permissions).map(([role, perms]) => (
-              <div key={role} className="mb-6">
-                <span
-                  className={`bg-${role === "Content Manager" ? "blue" : "purple"}-100 text-${role === "Content Manager" ? "blue" : "purple"}-600 px-2 py-1 rounded-full text-xs`}
-                >
-                  {role}
-                </span>
-                <ul className="mt-2 space-y-2">
-                  {perms.map((p) => (
-                    <li
-                      key={p}
-                      className="flex items-center gap-2 text-sm text-slate-600"
+        <Card className="lg:col-span-1 p-0 overflow-hidden border-slate-200">
+          <CardContent className="p-4 md:p-6">
+            <h2 className="font-bold text-base md:text-lg mb-6 flex items-center gap-2">
+              <ShieldCheck className="text-slate-400" size={20} />
+              صلاحيات الأدوار
+            </h2>
+            <div className="space-y-8">
+              {Object.entries(permissions).map(([role, perms]) => {
+                const isSuper = role === "Super Admin";
+                return (
+                  <div key={role} className="relative pr-4 border-r-2 border-slate-100">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${
+                        isSuper ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
+                      }`}
                     >
-                      <Check
-                        size={16}
-                        className="text-green-500 bg-green-50 rounded-full"
-                      />{" "}
-                      {p}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+                      {role}
+                    </span>
+                    <ul className="space-y-2.5">
+                      {perms.map((p) => (
+                        <li
+                          key={p}
+                          className="flex items-center gap-2 text-xs md:text-sm text-slate-600 font-medium leading-relaxed"
+                        >
+                          <Check
+                            size={14}
+                            className="text-emerald-500 bg-emerald-50 rounded-full shrink-0"
+                          />
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
 
         {/* Users Table */}
-        <Card className="col-span-2">
-          <CardContent className="">
-            <h2 className="font-bold mb-4 px-4">مستخدمو لوحة التحكم</h2>
-            <table className="w-full text-right">
-              <thead>
-                <tr className="text-slate-400 text-sm border-b">
-                  <th className="p-4">المستخدم</th>
-                  <th className="p-4">الدور</th>
-                  <th className="p-4">آخر دخول</th>
-                  <th className="p-4">الحالة</th>
-                  <th className="p-4">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u, i) => (
-                  <tr key={i} className="border-b">
-                    <td className="p-4 flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-full bg-${u.color}-600 text-white flex items-center justify-center font-bold`}
-                      >
-                        {u.name[0]}
-                      </div>
-                      <div>
-                        <div className="font-bold">{u.name}</div>
-                        <div className="text-xs text-slate-400">{u.email}</div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`border bg-${u.color}-50 text-${u.color}-600 border-${u.color}-200 px-2 py-1 rounded-full text-xs whitespace-nowrap`}
-                      >
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="p-4 text-sm text-slate-500">
-                      {u.lastLogin}
-                    </td>
-                    <td className="p-4">
-                      <span className="border bg-green-100 text-green-700 border-green-200 px-3 py-1 rounded-full text-xs">
-                        {u.status}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <Edit2
-                        size={16}
-                        className="text-blue-500 cursor-pointer"
-                      />
-                    </td>
+        <Card className="lg:col-span-2 p-0 overflow-hidden border-slate-200">
+          <CardContent className="p-0">
+            <div className="p-4 md:p-6 border-b border-slate-100">
+              <h2 className="font-bold text-base md:text-lg flex items-center gap-2 text-slate-800">
+                <User className="text-slate-400" size={20} />
+                مستخدمو لوحة التحكم
+              </h2>
+            </div>
+            <div className="overflow-x-auto scrollbar-hide">
+              <table className="w-full text-right border-collapse min-w-[650px]">
+                <thead>
+                  <tr className="bg-slate-50/50 text-slate-400 text-xs md:text-sm border-b">
+                    <th className="p-4 font-medium">المستخدم</th>
+                    <th className="p-4 font-medium text-center">الدور</th>
+                    <th className="p-4 font-medium text-center">آخر دخول</th>
+                    <th className="p-4 font-medium text-center">الحالة</th>
+                    <th className="p-4 font-medium text-center">إجراءات</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {users.map((u, i) => {
+                    const style = roleStyles[u.color];
+                    return (
+                      <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm ${
+                                u.color === "purple" ? "bg-purple-600" : "bg-blue-600"
+                              }`}
+                            >
+                              {u.name[0]}
+                            </div>
+                            <div className="overflow-hidden">
+                              <div className="font-bold text-slate-800 text-sm md:text-base">{u.name}</div>
+                              <div className="text-[10px] md:text-xs text-slate-400 truncate">{u.email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 text-center">
+                          <span
+                            className={`border ${style.bg} ${style.text} ${style.border} px-2.5 py-1 rounded-full text-[10px] md:text-xs font-bold whitespace-nowrap`}
+                          >
+                            {u.role}
+                          </span>
+                        </td>
+                        <td className="p-4 text-center text-xs md:text-sm text-slate-500 whitespace-nowrap font-medium">
+                          {u.lastLogin}
+                        </td>
+                        <td className="p-4 text-center">
+                          <span className="bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-[10px] md:text-xs font-bold">
+                            {u.status}
+                          </span>
+                        </td>
+                        <td className="p-4 text-center">
+                          <button className="p-2 hover:bg-blue-50 rounded-lg transition-colors group">
+                            <Edit2 size={16} className="text-blue-500" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       </div>

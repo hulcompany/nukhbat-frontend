@@ -72,17 +72,17 @@ function ImportContent() {
       </div>
 
       {/* Dynamic Stepper */}
-      <div className="flex items-center justify-start w-full gap-4">
+      <div className="flex items-center justify-between w-full overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
         {stepConfig.map((step, index) => {
           // Logic to determine if a step is done, active, or upcoming
           const isCompleted = index < currentStepIndex;
           const isActive = index === currentStepIndex;
 
           return (
-            <div key={step.id} className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
+            <div key={step.id} className={`flex items-center ${index < stepConfig.length - 1 ? "flex-1" : ""}`}>
+              <div className="flex items-center gap-2 md:gap-3 shrink-0">
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold shrink-0 transition-colors ${
+                  className={`flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full text-xs md:text-sm font-bold shrink-0 transition-colors ${
                     isCompleted || isActive
                       ? "bg-emerald-500 text-white shadow-md shadow-emerald-200"
                       : "bg-slate-200 text-slate-500"
@@ -91,7 +91,7 @@ function ImportContent() {
                   {step.id}
                 </div>
                 <span
-                  className={`text-sm font-bold transition-colors ${
+                  className={`text-xs md:text-sm font-bold whitespace-nowrap transition-colors ${
                     isCompleted || isActive
                       ? "text-emerald-500"
                       : "text-slate-500"
@@ -104,7 +104,7 @@ function ImportContent() {
               {/* Connecting Line */}
               {index < stepConfig.length - 1 && (
                 <div
-                  className={`w-12 md:w-24 h-px transition-colors ${
+                  className={`flex-1 mx-3 md:mx-6 h-px transition-colors ${
                     isCompleted ? "bg-emerald-500" : "bg-slate-200"
                   }`}
                 ></div>
