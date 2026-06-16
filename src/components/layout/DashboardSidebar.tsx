@@ -139,7 +139,7 @@ export function DashboardSidebar() {
       {/* Mobile Toggle Button (Visible only on small screens) */}
       <button
         onClick={() => setIsMobileOpen(true)}
-        className="md:hidden fixed top-4 right-4 z-40 p-2 bg-white rounded-md shadow-md text-slate-700"
+        className="md:hidden fixed top-[18px] right-4 z-40 p-2 bg-white rounded-lg shadow-md text-slate-700 border border-slate-100"
       >
         <Menu size={24} />
       </button>

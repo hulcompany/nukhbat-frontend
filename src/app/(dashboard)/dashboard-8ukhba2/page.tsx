@@ -174,7 +174,7 @@ const getStatusBadge = (status: string) => {
 
 export default function MainDashboardPage() {
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto pb-8">
+    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8">
       {/* Page Header */}
       <div className="flex flex-col items-start text-right mb-6">
         <h1 className="text-2xl font-bold text-slate-900 mb-1">

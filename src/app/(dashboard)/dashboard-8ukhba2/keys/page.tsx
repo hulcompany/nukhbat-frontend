@@ -117,7 +117,7 @@ const filterTabs = ["الكل", "غير مستخدم", "مستخدم", "منته
 
 export default function Keys() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>

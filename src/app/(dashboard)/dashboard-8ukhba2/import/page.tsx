@@ -60,7 +60,7 @@ function ImportContent() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8">
       {/* Universal Page Header */}
       <div className="flex flex-col items-start text-right">
         <h1 className="text-2xl font-bold text-slate-900 mb-2">
@@ -79,7 +79,10 @@ function ImportContent() {
           const isActive = index === currentStepIndex;
 
           return (
-            <div key={step.id} className={`flex items-center ${index < stepConfig.length - 1 ? "flex-1" : ""}`}>
+            <div
+              key={step.id}
+              className={`flex items-center ${index < stepConfig.length - 1 ? "flex-1" : ""}`}
+            >
               <div className="flex items-center gap-2 md:gap-3 shrink-0">
                 <div
                   className={`flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full text-xs md:text-sm font-bold shrink-0 transition-colors ${

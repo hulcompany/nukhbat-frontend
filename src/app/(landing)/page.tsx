@@ -97,7 +97,7 @@ export default function LandingPage() {
         >
           <motion.h1
             variants={fadeInUp}
-            className="text-4xl md:text-6xl lg:text-[5.5rem] font-black mb-6 leading-tight"
+            className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-6 leading-tight"
           >
             <span className="text-[#3b82f6] block mb-2 hover:scale-105 transition-transform duration-300 origin-right">
               النخبة الأوائل

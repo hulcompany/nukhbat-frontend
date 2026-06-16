@@ -32,12 +32,14 @@ export default function LandingManagementPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 md:space-y-8" dir="rtl">
+    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8" dir="rtl">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="text-right">
           <h1 className="text-xl md:text-2xl font-bold">إدارة صفحة الهبوط</h1>
-          <p className="text-sm text-slate-500 mt-1">تعديل محتوى الموقع الرسمي</p>
+          <p className="text-sm text-slate-500 mt-1">
+            تعديل محتوى الموقع الرسمي
+          </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <ActionButton
@@ -62,8 +64,8 @@ export default function LandingManagementPage() {
                 key={item}
                 onClick={() => setActiveTab(item)}
                 className={`p-3 md:p-4 rounded-xl cursor-pointer text-right transition-all whitespace-nowrap lg:whitespace-normal flex-shrink-0 lg:flex-shrink ${
-                  activeTab === item 
-                    ? "bg-blue-600 text-white font-bold shadow-md shadow-blue-100 lg:bg-blue-50 lg:text-blue-600 lg:shadow-none" 
+                  activeTab === item
+                    ? "bg-blue-600 text-white font-bold shadow-md shadow-blue-100 lg:bg-blue-50 lg:text-blue-600 lg:shadow-none"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200 lg:bg-slate-50"
                 }`}
               >
@@ -79,7 +81,9 @@ export default function LandingManagementPage() {
             <Card className="p-0 overflow-hidden">
               <CardContent className="p-4 md:p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="font-bold text-base md:text-lg">الأسئلة الشائعة</h2>
+                  <h2 className="font-bold text-base md:text-lg">
+                    الأسئلة الشائعة
+                  </h2>
                   <ActionButton
                     onClick={addFaq}
                     label="إضافة"
@@ -123,7 +127,9 @@ export default function LandingManagementPage() {
 
           {activeTab === "القسم الرئيسي (Hero)" && (
             <div className="bg-slate-50 rounded-2xl p-12 text-center border-2 border-dashed border-slate-200">
-              <p className="text-slate-400 font-medium italic">قريباً: إعدادات القسم الرئيسي</p>
+              <p className="text-slate-400 font-medium italic">
+                قريباً: إعدادات القسم الرئيسي
+              </p>
             </div>
           )}
         </div>

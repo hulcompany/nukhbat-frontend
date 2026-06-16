@@ -74,7 +74,11 @@ const monthlyKeys = [
 ];
 
 export default function AnalyticsDashboard() {
-  const [selectedQuestion, setSelectedQuestion] = useState<{ id: number; text: string; count: number } | null>(null);
+  const [selectedQuestion, setSelectedQuestion] = useState<{
+    id: number;
+    text: string;
+    count: number;
+  } | null>(null);
 
   const reviewQuestions = [
     {
@@ -82,17 +86,31 @@ export default function AnalyticsDashboard() {
       text: "ما مقدار الشحنة المختزنة في مكثف سعة 5 ميكروفاراد إذا كان فرق الجهد بين طرفيه 10 فولت؟",
       count: 45,
     },
-    { id: 2, text: "اكتشف الخطأ في تعريف التسارع: هو التغير في المسافة المقطوعة خلال وحدة الزمن في اتجاه معين.", count: 38 },
-    { id: 3, text: "هل دور النواس البسيط يعتمد على كتلته عند الزوايا الصغيرة؟ علل إجابتك.", count: 35 },
-    { id: 4, text: "حول الوحدات التالية: 3600 ثانية تساوي ساعة واحدة بالضبط، و 1000 جرام تساوي 1 كيلوجرام.", count: 28 },
+    {
+      id: 2,
+      text: "اكتشف الخطأ في تعريف التسارع: هو التغير في المسافة المقطوعة خلال وحدة الزمن في اتجاه معين.",
+      count: 38,
+    },
+    {
+      id: 3,
+      text: "هل دور النواس البسيط يعتمد على كتلته عند الزوايا الصغيرة؟ علل إجابتك.",
+      count: 35,
+    },
+    {
+      id: 4,
+      text: "حول الوحدات التالية: 3600 ثانية تساوي ساعة واحدة بالضبط، و 1000 جرام تساوي 1 كيلوجرام.",
+      count: 28,
+    },
   ];
 
   return (
-    <div className="p-4 md:p-8 space-y-6" dir="rtl">
+    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8" dir="rtl">
       {/* 1. Header (Tab Switcher) */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-8">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold">الإحصائيات والتحليلات</h1>
+          <h1 className="text-xl md:text-2xl font-bold">
+            الإحصائيات والتحليلات
+          </h1>
           <p className="text-sm text-slate-500">تحليلات شاملة لأداء المنصة</p>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto scrollbar-hide">
@@ -132,8 +150,8 @@ export default function AnalyticsDashboard() {
                     data={subjectData}
                     dataKey="v"
                     nameKey="n"
-                    outerRadius="70%" 
-                    stroke="#ffffff" 
+                    outerRadius="70%"
+                    stroke="#ffffff"
                     strokeWidth={2}
                     labelLine={false}
                     label={({
@@ -168,8 +186,12 @@ export default function AnalyticsDashboard() {
                       <Cell key={`cell-${index}`} fill={entry.c} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -195,7 +217,11 @@ export default function AnalyticsDashboard() {
                   data={dailyActive}
                   margin={{ top: 0, right: 0, left: -25, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f1f5f9"
+                  />
                   <XAxis
                     dataKey="name"
                     axisLine={false}
@@ -210,9 +236,13 @@ export default function AnalyticsDashboard() {
                     domain={[0, 220]}
                     ticks={[0, 55, 110, 165, 220]}
                   />
-                  <Tooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  <Tooltip
+                    cursor={{ fill: "#f8fafc" }}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
                   />
                   <Bar
                     dataKey="v"
@@ -244,7 +274,11 @@ export default function AnalyticsDashboard() {
                   data={retentionData}
                   margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f1f5f9"
+                  />
                   <XAxis
                     dataKey="n"
                     axisLine={false}
@@ -259,15 +293,24 @@ export default function AnalyticsDashboard() {
                     domain={[50, 100]}
                     ticks={[50, 65, 80, 100]}
                   />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
                   />
                   <Line
                     type="linear"
                     dataKey="v"
                     stroke="#22c55e"
                     strokeWidth={3}
-                    dot={{ r: 4, fill: "#22c55e", strokeWidth: 2, stroke: "#fff" }}
+                    dot={{
+                      r: 4,
+                      fill: "#22c55e",
+                      strokeWidth: 2,
+                      stroke: "#fff",
+                    }}
                     activeDot={{ r: 6, strokeWidth: 0 }}
                   />
                 </LineChart>
@@ -295,7 +338,11 @@ export default function AnalyticsDashboard() {
                   data={difficultyData}
                   margin={{ top: 0, right: 20, left: -20, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    horizontal={false}
+                    stroke="#f1f5f9"
+                  />
                   <XAxis
                     type="number"
                     axisLine={false}
@@ -313,9 +360,13 @@ export default function AnalyticsDashboard() {
                     tick={{ fill: "#64748b", fontSize: 11, fontWeight: 500 }}
                     width={60}
                   />
-                  <Tooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  <Tooltip
+                    cursor={{ fill: "#f8fafc" }}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
                   />
                   <Bar
                     dataKey="v"
@@ -366,9 +417,13 @@ export default function AnalyticsDashboard() {
                     domain={[0, 100]}
                     ticks={[0, 25, 50, 75, 100]}
                   />
-                  <Tooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  <Tooltip
+                    cursor={{ fill: "#f8fafc" }}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
                   />
                   <Bar
                     dataKey="v"
@@ -397,7 +452,11 @@ export default function AnalyticsDashboard() {
                   data={monthlyKeys}
                   margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="#f1f5f9"
+                  />
                   <XAxis
                     dataKey="n"
                     axisLine={false}
@@ -412,8 +471,12 @@ export default function AnalyticsDashboard() {
                     domain={[0, 80]}
                     ticks={[0, 20, 40, 60, 80]}
                   />
-                  <Tooltip 
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
                   />
                   <Line
                     type="monotone"
@@ -468,7 +531,9 @@ export default function AnalyticsDashboard() {
         {/* Card 8: Progress Bars */}
         <Card className="p-0 overflow-hidden">
           <CardContent className="p-4 md:p-6">
-            <h3 className="font-bold text-base md:text-lg mb-6 text-slate-800">متوسط أداء كل مسار</h3>
+            <h3 className="font-bold text-base md:text-lg mb-6 text-slate-800">
+              متوسط أداء كل مسار
+            </h3>
             <div className="space-y-5">
               {[
                 { n: "بكالوريا علمي", v: 76 },
@@ -493,12 +558,17 @@ export default function AnalyticsDashboard() {
         </Card>
       </div>
 
-      <Dialog open={!!selectedQuestion} onOpenChange={(open) => !open && setSelectedQuestion(null)}>
+      <Dialog
+        open={!!selectedQuestion}
+        onOpenChange={(open) => !open && setSelectedQuestion(null)}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-blue-600 flex items-center gap-2">
               <span>تفاصيل السؤال</span>
-              <span className="text-xs bg-blue-100 px-2 py-0.5 rounded-full font-medium text-blue-700">رقم {selectedQuestion?.id}</span>
+              <span className="text-xs bg-blue-100 px-2 py-0.5 rounded-full font-medium text-blue-700">
+                رقم {selectedQuestion?.id}
+              </span>
             </DialogTitle>
             <DialogDescription>
               النص الكامل للسؤال المضاف للمراجعة
@@ -511,7 +581,9 @@ export default function AnalyticsDashboard() {
           </div>
           <div className="mt-4 flex justify-between items-center text-sm text-slate-500 font-medium">
             <span>عدد الإضافات للمراجعة:</span>
-            <span className="text-blue-600 font-bold text-base">{selectedQuestion?.count} مرة</span>
+            <span className="text-blue-600 font-bold text-base">
+              {selectedQuestion?.count} مرة
+            </span>
           </div>
         </DialogContent>
       </Dialog>

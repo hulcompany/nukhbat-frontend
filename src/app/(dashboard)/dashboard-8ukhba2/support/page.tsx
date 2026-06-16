@@ -60,7 +60,7 @@ export default function SupportPage() {
   const [filter, setFilter] = useState("الكل");
 
   return (
-    <div className="p-4 md:p-8 space-y-6" dir="rtl">
+    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8" dir="rtl">
       {/* Header */}
       <div className="text-right">
         <h1 className="text-xl md:text-2xl font-bold">الدعم والمشاكل</h1>
@@ -72,10 +72,14 @@ export default function SupportPage() {
         {stats.map((stat, idx) => (
           <Card key={idx} className="p-0 overflow-hidden">
             <CardContent className="p-4 md:p-6 text-center">
-              <div className={`text-2xl md:text-3xl font-bold mb-1 ${stat.color}`}>
+              <div
+                className={`text-2xl md:text-3xl font-bold mb-1 ${stat.color}`}
+              >
                 {stat.value}
               </div>
-              <div className="text-xs md:text-sm text-slate-500">{stat.label}</div>
+              <div className="text-xs md:text-sm text-slate-500">
+                {stat.label}
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -130,10 +134,19 @@ export default function SupportPage() {
             </thead>
             <tbody>
               {issues.map((issue) => (
-                <tr key={issue.id} className="border-b last:border-0 hover:bg-slate-50 transition-colors">
-                  <td className="p-4 font-bold text-blue-600 whitespace-nowrap text-sm">{issue.id}</td>
-                  <td className="p-4 text-sm whitespace-nowrap">{issue.student}</td>
-                  <td className="p-4 text-sm whitespace-nowrap">{issue.type}</td>
+                <tr
+                  key={issue.id}
+                  className="border-b last:border-0 hover:bg-slate-50 transition-colors"
+                >
+                  <td className="p-4 font-bold text-blue-600 whitespace-nowrap text-sm">
+                    {issue.id}
+                  </td>
+                  <td className="p-4 text-sm whitespace-nowrap">
+                    {issue.student}
+                  </td>
+                  <td className="p-4 text-sm whitespace-nowrap">
+                    {issue.type}
+                  </td>
                   <td className="p-4 text-sm min-w-[200px]">{issue.title}</td>
                   <td className="p-4">
                     <span
@@ -142,9 +155,15 @@ export default function SupportPage() {
                       {issue.status}
                     </span>
                   </td>
-                  <td className="p-4 text-slate-500 text-xs md:text-sm whitespace-nowrap">{issue.date}</td>
-                  <td className="p-4 text-slate-500 text-xs md:text-sm whitespace-nowrap">{issue.lastUpdate}</td>
-                  <td className="p-4 text-slate-500 text-xs md:text-sm whitespace-nowrap">{issue.admin}</td>
+                  <td className="p-4 text-slate-500 text-xs md:text-sm whitespace-nowrap">
+                    {issue.date}
+                  </td>
+                  <td className="p-4 text-slate-500 text-xs md:text-sm whitespace-nowrap">
+                    {issue.lastUpdate}
+                  </td>
+                  <td className="p-4 text-slate-500 text-xs md:text-sm whitespace-nowrap">
+                    {issue.admin}
+                  </td>
                   <td className="p-4">
                     <Button
                       variant="outline"

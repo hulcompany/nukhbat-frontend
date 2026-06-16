@@ -29,11 +29,13 @@ const activityLogs = [
 
 export default function ActivityLogPage() {
   return (
-    <div className="p-4 md:p-8 space-y-6" dir="rtl">
+    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8" dir="rtl">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="text-right">
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">سجل العمليات</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900">
+            سجل العمليات
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
             تتبع جميع العمليات التي يقوم بها المدراء
           </p>
@@ -79,12 +81,13 @@ export default function ActivityLogPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {activityLogs.map((log, idx) => (
-                <tr
-                  key={idx}
-                  className="hover:bg-slate-50 transition-colors"
-                >
-                  <td className="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">{log.admin}</td>
-                  <td className="p-4 text-xs md:text-sm text-slate-500 whitespace-nowrap">{log.role}</td>
+                <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-4 font-bold text-slate-800 text-sm whitespace-nowrap">
+                    {log.admin}
+                  </td>
+                  <td className="p-4 text-xs md:text-sm text-slate-500 whitespace-nowrap">
+                    {log.role}
+                  </td>
                   <td className="p-4">
                     <span
                       className={`px-3 py-1 rounded-full text-[10px] md:text-xs font-bold whitespace-nowrap ${
@@ -96,9 +99,16 @@ export default function ActivityLogPage() {
                       {log.operation}
                     </span>
                   </td>
-                  <td className="p-4 text-xs md:text-sm text-slate-600 whitespace-nowrap">{log.section}</td>
-                  <td className="p-4 text-xs md:text-sm text-slate-600 whitespace-nowrap">{log.target}</td>
-                  <td className="p-4 text-xs md:text-sm text-slate-500 font-medium" dir="ltr">
+                  <td className="p-4 text-xs md:text-sm text-slate-600 whitespace-nowrap">
+                    {log.section}
+                  </td>
+                  <td className="p-4 text-xs md:text-sm text-slate-600 whitespace-nowrap">
+                    {log.target}
+                  </td>
+                  <td
+                    className="p-4 text-xs md:text-sm text-slate-500 font-medium"
+                    dir="ltr"
+                  >
                     {log.timestamp}
                   </td>
                   <td className="p-4 text-xs md:text-sm text-slate-600 min-w-[200px] leading-relaxed">

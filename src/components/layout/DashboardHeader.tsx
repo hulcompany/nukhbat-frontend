@@ -6,7 +6,7 @@ export function DashboardHeader() {
   return (
     <header className="flex items-center justify-between px-4 md:px-8 py-4 bg-white z-10 shrink-0 border-b">
       {/* Right Side: Global Search */}
-      <div className="flex-1 max-w-lg">
+      <div className="flex-1 max-w-lg pr-14 md:pr-0">
         <div className="relative">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
           <Input

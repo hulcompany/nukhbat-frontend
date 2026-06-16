@@ -40,15 +40,15 @@ export function HowItWorksSection() {
               {steps.map((step, idx) => (
                 <div key={idx} className="flex flex-col items-start">
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="text-slate-400 font-mono text-lg">
+                    <div className="w-3.5 h-3.5 rounded-full bg-[#2563eb] shadow-[0_0_12px_rgba(37,99,235,0.8)]"></div>
+                    <span className="text-slate-400 font-mono text-xl">
                       {step.num}
                     </span>
-                    <div className="w-3.5 h-3.5 rounded-full bg-[#2563eb] shadow-[0_0_12px_rgba(37,99,235,0.8)]"></div>
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-2">
+                  <h3 className="text-3xl font-bold text-white mb-2">
                     {step.title}
                   </h3>
-                  <p className="text-slate-400 leading-relaxed font-medium">
+                  <p className="text-slate-400 leading-relaxed font-medium text-md">
                     {step.description}
                   </p>
                 </div>
@@ -70,7 +70,7 @@ export function HowItWorksSection() {
             <img
               src="./landing/phones-group-1.png"
               alt="خطوات التطبيق"
-              className="relative z-10 w-full max-w-[500px] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
+              className="relative z-10 w-full max-w-125 object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
             />
           </div>
         </div>
@@ -90,10 +90,10 @@ export function HowItWorksSection() {
 
           {/* Left Side: Text Content */}
           <div className="flex-1 flex flex-col items-start text-right w-full lg:max-w-md">
-            <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h3 className="text-4xl md:text-5xl font-bold text-white mb-4">
               أنشئ حسابك وفعله
             </h3>
-            <p className="text-lg text-slate-400 leading-relaxed font-medium">
+            <p className="text-xl text-slate-400 leading-relaxed font-medium">
               سجل دخولك واستخدم مفتاح التفعيل الخاص بك للبدء.
             </p>
           </div>
@@ -105,10 +105,10 @@ export function HowItWorksSection() {
           <div className="flex-1 flex flex-col items-start text-right w-full lg:max-w-md lg:ml-auto">
             <div className="absolute top-1/2 right-2/3 translate-x-1/2 -translate-y-1/2 w-72 h-64 bg-blue-600/40 rounded-full blur-[100px] pointer-events-none"></div>
 
-            <h3 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h3 className="text-4xl md:text-5xl font-bold text-white mb-4">
               أنشئ حسابك وفعله
             </h3>
-            <p className="text-lg text-slate-400 leading-relaxed font-medium">
+            <p className="text-xl text-slate-400 leading-relaxed font-medium">
               سجل دخولك واستخدم مفتاح التفعيل الخاص بك للبدء.
             </p>
           </div>

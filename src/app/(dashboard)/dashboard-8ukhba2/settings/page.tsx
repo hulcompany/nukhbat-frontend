@@ -19,8 +19,8 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("الإعدادات العامة");
 
   return (
-    <div className="p-8 space-y-8" dir="rtl">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 max-w-7xl mx-auto p-1" dir="rtl">
+      <div className="flex justify-between items-start flex-col sm:flex-row gap-3">
         <div className="text-right">
           <h1 className="text-2xl font-bold">الإعدادات</h1>
           <p className="text-slate-500">إعدادات النظام ولوحة التحكم</p>
@@ -28,7 +28,7 @@ export default function SettingsPage() {
         <ActionButton
           label="حفظ الإعدادات"
           icon={Save}
-          bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+          bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200 w-full sm:w-auto"
         />
       </div>
 

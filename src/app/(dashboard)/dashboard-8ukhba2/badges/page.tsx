@@ -95,7 +95,7 @@ const badges = [
 
 export default function BadgesPage() {
   return (
-    <div className="p-8 space-y-8" dir="rtl">
+    <div className="space-y-6 max-w-7xl mx-auto p-1" dir="rtl">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

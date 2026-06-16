@@ -42,7 +42,10 @@ const users = [
 ];
 
 export default function AdminPermissionsPage() {
-  const roleStyles: Record<string, { bg: string; text: string; border: string; iconBg: string }> = {
+  const roleStyles: Record<
+    string,
+    { bg: string; text: string; border: string; iconBg: string }
+  > = {
     purple: {
       bg: "bg-purple-50",
       text: "text-purple-600",
@@ -58,12 +61,16 @@ export default function AdminPermissionsPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 md:space-y-8" dir="rtl">
+    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8" dir="rtl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="text-right">
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">صلاحيات الأدمن</h1>
-          <p className="text-sm text-slate-500 mt-1">إدارة مستخدمي لوحة التحكم وصلاحياتهم</p>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900">
+            صلاحيات الأدمن
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            إدارة مستخدمي لوحة التحكم وصلاحياتهم
+          </p>
         </div>
 
         <ActionButton
@@ -78,13 +85,20 @@ export default function AdminPermissionsPage() {
         {roles.map((role) => {
           const style = roleStyles[role.color];
           return (
-            <Card key={role.name} className="p-0 overflow-hidden border-slate-200 shadow-sm">
+            <Card
+              key={role.name}
+              className="p-0 overflow-hidden border-slate-200 shadow-sm"
+            >
               <CardContent className="p-4 md:p-6 flex flex-col items-center gap-3 text-center">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${style.iconBg} ${style.text}`}>
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center ${style.iconBg} ${style.text}`}
+                >
                   <ShieldCheck size={24} />
                 </div>
                 <div>
-                  <div className={`font-bold text-base md:text-lg ${style.text}`}>
+                  <div
+                    className={`font-bold text-base md:text-lg ${style.text}`}
+                  >
                     {role.name}
                   </div>
                   <div className="text-xs md:text-sm text-slate-500 font-medium">
@@ -109,10 +123,15 @@ export default function AdminPermissionsPage() {
               {Object.entries(permissions).map(([role, perms]) => {
                 const isSuper = role === "Super Admin";
                 return (
-                  <div key={role} className="relative pr-4 border-r-2 border-slate-100">
+                  <div
+                    key={role}
+                    className="relative pr-4 border-r-2 border-slate-100"
+                  >
                     <span
                       className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-3 ${
-                        isSuper ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"
+                        isSuper
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-blue-100 text-blue-700"
                       }`}
                     >
                       {role}
@@ -162,19 +181,28 @@ export default function AdminPermissionsPage() {
                   {users.map((u, i) => {
                     const style = roleStyles[u.color];
                     return (
-                      <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                      <tr
+                        key={i}
+                        className="hover:bg-slate-50/50 transition-colors"
+                      >
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div
                               className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-white shadow-sm ${
-                                u.color === "purple" ? "bg-purple-600" : "bg-blue-600"
+                                u.color === "purple"
+                                  ? "bg-purple-600"
+                                  : "bg-blue-600"
                               }`}
                             >
                               {u.name[0]}
                             </div>
                             <div className="overflow-hidden">
-                              <div className="font-bold text-slate-800 text-sm md:text-base">{u.name}</div>
-                              <div className="text-[10px] md:text-xs text-slate-400 truncate">{u.email}</div>
+                              <div className="font-bold text-slate-800 text-sm md:text-base">
+                                {u.name}
+                              </div>
+                              <div className="text-[10px] md:text-xs text-slate-400 truncate">
+                                {u.email}
+                              </div>
                             </div>
                           </div>
                         </td>

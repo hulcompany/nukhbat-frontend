@@ -86,7 +86,7 @@ function InteractiveEditorContent() {
   };
 
   return (
-    <div className="space-y-8 max-w-[1600px] mx-auto pb-8">
+    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8">
       {/* Universal Page Header */}
       <div className="flex flex-col items-start text-right">
         <h1 className="text-2xl font-bold text-slate-900 mb-1">
