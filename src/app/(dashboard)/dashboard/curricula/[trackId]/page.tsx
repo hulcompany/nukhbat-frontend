@@ -67,7 +67,10 @@ export default function TrackCoursesPage() {
           {courses.map((course) => (
             <Card
               key={course.id}
-              className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all p-0 group"
+              onClick={() =>
+                router.push(`/dashboard/curricula/${trackId}/${course.id}`)
+              }
+              className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer p-0 group"
             >
               <CardContent className="p-6">
                 <div className="flex justify-between items-start mb-6">
