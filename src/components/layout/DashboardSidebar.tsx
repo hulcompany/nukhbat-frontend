@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 import {
   ChevronLeft,
   ChevronRight,
@@ -34,6 +35,7 @@ import {
 export function DashboardSidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -375,7 +377,7 @@ export function DashboardSidebar() {
               isCollapsed && "justify-center",
             )}
             title={isCollapsed ? "تسجيل الخروج" : undefined}
-            onClick={() => router.push("/adminsLogin-8ukhba2")}
+            onClick={() => { logout(); router.push("/adminsLogin-8ukhba2"); }}
           >
             <LogOut size={20} className="shrink-0 rotate-180" />
             {!isCollapsed && (

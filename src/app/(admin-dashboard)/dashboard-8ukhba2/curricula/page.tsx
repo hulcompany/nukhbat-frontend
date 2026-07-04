@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import {
   Plus,
@@ -14,13 +14,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
-// --- Mock Data ---
-const tracks = [
-  { id: 1, title: "بكالوريا علمي", subjectsCount: 2, status: "فعال" },
-  { id: 2, title: "بكالوريا أدبي", subjectsCount: 1, status: "فعال" },
-  { id: 3, title: "الصف التاسع", subjectsCount: 0, status: "فعال" },
-];
+import { getTracks } from "@/api/tracks";
+import { Track } from "@/types/track";
 
 const subjects = [
   { id: 1, title: "فيزياء", unitsCount: 8, status: "فعال" },
@@ -60,9 +55,21 @@ function CurriculaContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [tracksLoading, setTracksLoading] = useState(true);
+  const [tracksError, setTracksError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getTracks()
+      .then((res) => setTracks(res.data))
+      .catch((e) => setTracksError((e as Error).message))
+      .finally(() => setTracksLoading(false));
+  }, []);
+
   // Read current state from URL
   const level = searchParams.get("level") || "tracks";
   const currentTrack = searchParams.get("track");
+  const currentTrackName = searchParams.get("trackName");
   const currentSubject = searchParams.get("subject");
   const currentUnit = searchParams.get("unit");
 
@@ -79,6 +86,7 @@ function CurriculaContent() {
     // Remove deeper levels if navigating backwards
     if (newLevel === "tracks") {
       newParams.delete("track");
+      newParams.delete("trackName");
       newParams.delete("subject");
       newParams.delete("unit");
     }
@@ -137,12 +145,12 @@ function CurriculaContent() {
             <>
               <ChevronLeft className="h-4 w-4 text-slate-400" />
               <button
-                onClick={() => navigateTo("subjects", { track: currentTrack })}
+                onClick={() => navigateTo("subjects", { track: currentTrack, trackName: currentTrackName ?? currentTrack })}
                 className={
                   level === "subjects" ? "text-slate-900" : "hover:underline"
                 }
               >
-                {currentTrack}
+                {currentTrackName ?? currentTrack}
               </button>
             </>
           )}
@@ -177,34 +185,46 @@ function CurriculaContent() {
 
       {/* Level 1: Tracks */}
       {level === "tracks" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {tracks.map((track) => (
-            <Card
-              key={track.id}
-              onClick={() => navigateTo("subjects", { track: track.title })}
-              className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer group p-0"
-            >
-              <CardContent className="p-6">
-                <div className="flex justify-between items-start mb-6">
-                  <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100/80 transition-colors">
-                    <BookOpen className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <span className="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-xs font-semibold">
-                    {track.status}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-1">
-                    {track.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 font-medium">
-                    {track.subjectsCount} مادة
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <>
+          {tracksLoading && (
+            <p className="text-center text-slate-500 py-12">جاري التحميل...</p>
+          )}
+          {tracksError && (
+            <p className="text-center text-red-500 py-12">{tracksError}</p>
+          )}
+          {!tracksLoading && !tracksError && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {tracks.length === 0 && (
+                <p className="text-center text-slate-400 col-span-3 py-12">
+                  لا توجد مسارات
+                </p>
+              )}
+              {tracks.map((track) => (
+                <Card
+                  key={track.id}
+                  onClick={() => navigateTo("subjects", { track: track.id, trackName: track.name })}
+                  className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer group p-0"
+                >
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100/80 transition-colors">
+                        <BookOpen className="h-5 w-5 text-blue-600" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 mb-1">
+                        {track.name}
+                      </h3>
+                      <p className="text-xs text-slate-400 font-medium">
+                        {new Date(track.createdAt).toLocaleDateString("ar-SA")}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* Level 2: Subjects */}

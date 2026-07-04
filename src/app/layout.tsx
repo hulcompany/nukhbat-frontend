@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Cairo } from "next/font/google";
+import { AuthProvider } from "@/context/AuthContext";
+import NextTopLoader from "nextjs-toploader";
 
 export const metadata: Metadata = {
   title: "النخبة الأوائل",
@@ -29,7 +31,8 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body className={`${cairo.className} font-sans bg-[#0a0f1c]`}>
-        {children}
+        <NextTopLoader color="#2563eb" showSpinner={false} />
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

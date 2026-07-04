@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -9,12 +10,39 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
-export default function AdminLoginPage() {
+export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const role = await login(email, password);
+      if (role === "admin") {
+        router.push("/dashboard-8ukhba2");
+      } else if (role === "contentWriter") {
+        router.push("/dashboard");
+      } else {
+        setError("هذا الحساب غير مصرح له بالوصول إلى لوحة التحكم");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "حدث خطأ، حاول مرة أخرى");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -34,7 +62,7 @@ export default function AdminLoginPage() {
         </p>
       </div>
 
-      {/* Card Section - UPDATED SHADOW AND BORDER */}
+      {/* Card Section */}
       <Card className="w-full max-w-105 bg-white border border-slate-100 shadow-[0_30px_70px_-15px_rgba(0,0,0,0.1)] p-7">
         <CardHeader className="text-center pb-2">
           <CardTitle className="text-xl font-bold text-slate-900">
@@ -46,6 +74,12 @@ export default function AdminLoginPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 text-center">
+                {error}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email" className="text-slate-700 font-medium">
                 البريد الإلكتروني
@@ -55,30 +89,37 @@ export default function AdminLoginPage() {
                 type="email"
                 placeholder="admin@elite.com"
                 dir="ltr"
-                className="text-right -xl"
+                className="text-right"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
               />
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label
-                  htmlFor="password"
-                  className="text-slate-700 font-medium"
-                >
-                  كلمة المرور
-                </Label>
-              </div>
+              <Label htmlFor="password" className="text-slate-700 font-medium">
+                كلمة المرور
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="........"
                   dir="ltr"
-                  className="text-right  pl-11"
+                  className="text-right pl-11"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
                 />
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 cursor-pointer">
-                  <Eye size={20} />
-                </div>
+                <button
+                  type="button"
+                  className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 hover:text-slate-600"
+                  onClick={() => setShowPassword((v) => !v)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
             </div>
 
@@ -92,10 +133,11 @@ export default function AdminLoginPage() {
             </div>
 
             <Button
-              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg transition-colors"
-              onClick={() => router.push("/dashboard-8ukhba2")}
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg transition-colors disabled:opacity-60"
+              onClick={handleSubmit}
+              disabled={loading || !email || !password}
             >
-              تسجيل الدخول
+              {loading ? "جارٍ تسجيل الدخول..." : "تسجيل الدخول"}
             </Button>
           </div>
         </CardContent>
