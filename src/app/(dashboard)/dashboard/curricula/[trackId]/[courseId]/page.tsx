@@ -10,7 +10,6 @@ import {
   Check,
   X,
   Trash2,
-  Loader2,
   Layers,
   Plus,
 } from "lucide-react";
@@ -25,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ListCardSkeleton } from "@/components/ui/skeleton";
 import {
   getCourseUnits,
   createUnit,
@@ -32,6 +32,7 @@ import {
   deleteUnit,
   reorderUnits,
 } from "@/api/unit";
+import { getUnitLessons } from "@/api/lesson";
 import { Unit } from "@/types/unit";
 
 export default function CourseUnitsPage() {
@@ -42,6 +43,9 @@ export default function CourseUnitsPage() {
   const router = useRouter();
 
   const [units, setUnits] = useState<Unit[]>([]);
+  const [questionCounts, setQuestionCounts] = useState<
+    Record<string, number | null>
+  >({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reorderError, setReorderError] = useState<string | null>(null);
@@ -66,7 +70,24 @@ export default function CourseUnitsPage() {
     setError(null);
     try {
       const res = await getCourseUnits(courseId);
-      setUnits([...res.data].sort((a, b) => a.index - b.index));
+      const sorted = [...res.data].sort((a, b) => a.index - b.index);
+      setUnits(sorted);
+
+      const counts = await Promise.all(
+        sorted.map(async (unit) => {
+          try {
+            const lessonsRes = await getUnitLessons(unit.id);
+            const total = lessonsRes.data.reduce(
+              (sum, lesson) => sum + (lesson.questionCount ?? 0),
+              0,
+            );
+            return [unit.id, total] as const;
+          } catch {
+            return [unit.id, null] as const;
+          }
+        }),
+      );
+      setQuestionCounts(Object.fromEntries(counts));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -200,12 +221,7 @@ export default function CourseUnitsPage() {
         <p className="text-sm text-red-500 text-center">{reorderError}</p>
       )}
 
-      {loading && (
-        <div className="flex items-center justify-center py-16 text-slate-400">
-          <Loader2 size={24} className="animate-spin ml-2" />
-          جارٍ التحميل...
-        </div>
-      )}
+      {loading && <ListCardSkeleton />}
 
       {!loading && error && (
         <p className="text-center text-red-500 py-16">{error}</p>
@@ -252,9 +268,14 @@ export default function CourseUnitsPage() {
                       )}
                     </div>
                   ) : (
-                    <h3 className="font-bold text-slate-900 truncate">
-                      {unit.title}
-                    </h3>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-slate-900 truncate">
+                        {unit.title}
+                      </h3>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        عدد الأسئلة: {questionCounts[unit.id] ?? "—"}
+                      </p>
+                    </div>
                   )}
                 </div>
 

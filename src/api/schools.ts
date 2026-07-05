@@ -32,12 +32,14 @@ export async function getMySchool(): Promise<SchoolResponse> {
 }
 
 export async function updateMySchool(data: {
-  name: string;
-  image: File;
+  name?: string;
+  image?: File;
+  password?: string;
 }): Promise<SchoolResponse> {
   const formData = new FormData();
-  formData.append("name", data.name);
-  formData.append("image", data.image);
+  if (data.name !== undefined) formData.append("name", data.name);
+  if (data.image) formData.append("image", data.image);
+  if (data.password !== undefined) formData.append("password", data.password);
 
   const res = await apiClient.patch<SchoolResponse>("/school/me", formData, {
     headers: { "Content-Type": "multipart/form-data" },

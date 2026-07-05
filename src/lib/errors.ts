@@ -39,16 +39,20 @@ export function getArabicError(code?: string): string {
 }
 
 export interface ApiErrorResponse {
-  message: string;
+  message: string | string[];
   code: string;
 }
 
 export class ApiError extends Error {
   code?: string;
+  serverMessage?: string;
 
-  constructor(code?: string) {
+  constructor(code?: string, serverMessage?: string | string[]) {
     super(getArabicError(code));
     this.name = "ApiError";
     this.code = code;
+    this.serverMessage = Array.isArray(serverMessage)
+      ? serverMessage.join("، ")
+      : serverMessage;
   }
 }

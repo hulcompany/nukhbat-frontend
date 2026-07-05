@@ -206,7 +206,9 @@ export default function SchoolsManagementPage() {
             <Card
               key={school.id}
               className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => router.push(`/dashboard-8ukhba2/school/${school.id}`)}
+              onClick={() =>
+                router.push(`/dashboard-8ukhba2/school/${school.id}`)
+              }
             >
               <CardContent className="p-4 md:p-6">
                 <div className="flex justify-between items-start mb-6">
@@ -256,7 +258,11 @@ export default function SchoolsManagementPage() {
                   <Button
                     variant="outline"
                     className="flex-1 gap-2 bg-blue-100 text-blue-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-blue-200"
-                    onClick={() => router.push(`/dashboard-8ukhba2/school/${school.id}?edit=true`)}
+                    onClick={() =>
+                      router.push(
+                        `/dashboard-8ukhba2/school/${school.id}?edit=true`,
+                      )
+                    }
                   >
                     <Edit2 size={16} className="shrink-0" /> تعديل
                   </Button>
@@ -314,7 +320,7 @@ export default function SchoolsManagementPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent dir="rtl" className="max-w-md">
           <DialogHeader>
-            <DialogTitle>إضافة مدرسة جديدة</DialogTitle>
+            <DialogTitle className="pt-6">إضافة مدرسة جديدة</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreate} className="space-y-4 mt-2">
             <div className="space-y-1">
@@ -349,10 +355,11 @@ export default function SchoolsManagementPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setDialogOpen(false)}
+                className="p-4 h-11"
               >
                 إلغاء
               </Button>
-              <Button type="submit" disabled={submitting}>
+              <Button type="submit" disabled={submitting} className="p-4 h-11">
                 {submitting ? "جاري الإضافة..." : "إضافة"}
               </Button>
             </div>

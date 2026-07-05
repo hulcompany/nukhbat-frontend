@@ -8,6 +8,7 @@ export interface Lesson {
   schoolId: string;
   index: number;
   status: LessonStatus;
+  questionCount: number | null;
 }
 
 export interface LessonsResponse {

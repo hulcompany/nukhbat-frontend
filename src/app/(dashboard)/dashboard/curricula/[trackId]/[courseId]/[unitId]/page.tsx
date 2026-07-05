@@ -33,6 +33,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { ListCardSkeleton } from "@/components/ui/skeleton";
 import {
   getUnitLessons,
   createLesson,
@@ -58,7 +59,7 @@ const STATUS_META: Record<LessonStatus, { label: string; className: string }> =
     },
   };
 
-const STATUS_OPTIONS: LessonStatus[] = ["active", "draft", "unActive"];
+const STATUS_OPTIONS: LessonStatus[] = ["active", "unActive"];
 
 export default function UnitLessonsPage() {
   const { trackId, courseId, unitId } = useParams<{
@@ -172,6 +173,7 @@ export default function UnitLessonsPage() {
 
   async function changeStatus(lesson: Lesson, status: LessonStatus) {
     if (status === lesson.status) return;
+    if (!lesson.questionCount) return;
 
     setStatusUpdatingId(lesson.id);
     setStatusError(null);
@@ -267,12 +269,7 @@ export default function UnitLessonsPage() {
         <p className="text-sm text-red-500 text-center">{statusError}</p>
       )}
 
-      {loading && (
-        <div className="flex items-center justify-center py-16 text-slate-400">
-          <Loader2 size={24} className="animate-spin ml-2" />
-          جارٍ التحميل...
-        </div>
-      )}
+      {loading && <ListCardSkeleton />}
 
       {!loading && error && (
         <p className="text-center text-red-500 py-16">{error}</p>
@@ -289,9 +286,15 @@ export default function UnitLessonsPage() {
           {lessons.map((lesson, index) => {
             const isEditing = editingId === lesson.id;
             const status = STATUS_META[lesson.status];
+            const canChangeStatus = (lesson.questionCount ?? 0) > 0;
             return (
               <Card
                 key={lesson.id}
+                title={
+                  canChangeStatus
+                    ? undefined
+                    : "لا توجد أسئلة لهذا الدرس بعد — أضف أسئلة لتتمكن من تفعيله"
+                }
                 onClick={() => {
                   if (isEditing) return;
                   router.push(
@@ -335,6 +338,9 @@ export default function UnitLessonsPage() {
                           {lesson.description}
                         </p>
                       )}
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        عدد الأسئلة: {lesson.questionCount ?? 0}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -345,13 +351,20 @@ export default function UnitLessonsPage() {
                 >
                   <DropdownMenu dir="rtl">
                     <DropdownMenuTrigger
-                      disabled={statusUpdatingId === lesson.id}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ml-2 ${status.className}`}
+                      disabled={statusUpdatingId === lesson.id || !canChangeStatus}
+                      title={
+                        canChangeStatus
+                          ? undefined
+                          : "أضف أسئلة للدرس أولاً لتتمكن من تغيير حالته"
+                      }
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border ml-2 ${status.className} ${
+                        canChangeStatus ? "" : "opacity-60 cursor-not-allowed"
+                      }`}
                     >
                       {statusUpdatingId === lesson.id ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
                       ) : (
-                        <ChevronDown className="h-3 w-3" />
+                        canChangeStatus && <ChevronDown className="h-3 w-3" />
                       )}
                       {status.label}
                     </DropdownMenuTrigger>
@@ -444,11 +457,7 @@ export default function UnitLessonsPage() {
             </div>
             <div className="space-y-3">
               <Label htmlFor="lesson-description">وصف الدرس (اختياري)</Label>
-              <Textarea
-                id="lesson-description"
-                ref={descriptionRef}
-                rows={3}
-              />
+              <Textarea id="lesson-description" ref={descriptionRef} rows={3} />
             </div>
             {createError && (
               <p className="text-sm text-red-500">{createError}</p>

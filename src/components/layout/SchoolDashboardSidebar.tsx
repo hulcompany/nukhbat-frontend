@@ -44,7 +44,7 @@ const reportItems = [
 
 const otherItems = [
   { title: "ملف المدرسة", icon: Building2, href: `${BASE}/profile` },
-  { title: "الإشعارات", icon: Bell, href: `${BASE}/notifications` },
+  // { title: "الإشعارات", icon: Bell, href: `${BASE}/notifications` },
   { title: "الدعم", icon: HeadphonesIcon, href: `${BASE}/support` },
   { title: "الإعدادات", icon: Settings, href: `${BASE}/settings` },
 ];
@@ -172,7 +172,11 @@ export function SchoolDashboardSidebar() {
             onClick={toggleCollapse}
             className="hidden md:flex text-slate-500 hover:text-white transition-colors"
           >
-            {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+            {isCollapsed ? (
+              <ChevronRight size={20} />
+            ) : (
+              <ChevronLeft size={20} />
+            )}
           </button>
           <button
             onClick={() => setIsMobileOpen(false)}
@@ -188,7 +192,12 @@ export function SchoolDashboardSidebar() {
             {sections.map((section, si) => (
               <div key={si}>
                 {si > 0 && (
-                  <div className={cn("mt-6 mb-2", isCollapsed ? "text-center" : "px-3")}>
+                  <div
+                    className={cn(
+                      "mt-6 mb-2",
+                      isCollapsed ? "text-center" : "px-3",
+                    )}
+                  >
                     {!isCollapsed ? (
                       <p className="text-xs font-semibold text-slate-500 mb-2">
                         {section.label}
@@ -219,7 +228,10 @@ export function SchoolDashboardSidebar() {
               isCollapsed && "justify-center",
             )}
             title={isCollapsed ? "تسجيل الخروج" : undefined}
-            onClick={() => { logout(); router.push("/login"); }}
+            onClick={() => {
+              logout();
+              router.push("/login");
+            }}
           >
             <LogOut size={20} className="shrink-0 rotate-180" />
             {!isCollapsed && (

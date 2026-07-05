@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Building2, Edit2, Loader2 } from "lucide-react";
+import { Building2, Edit2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getMySchool, updateMySchool } from "@/api/schools";
 import { downloadFile } from "@/api/files";
 import { School } from "@/types/school";
@@ -82,24 +83,20 @@ export default function SchoolProfilePage() {
     setSubmitting(true);
     setFormError(null);
     try {
-      let imageFile = imageRef.current?.files?.[0];
+      const newName = nameRef.current!.value.trim();
+      const imageFile = imageRef.current?.files?.[0];
 
-      // If no new image selected, re-fetch and re-send the current logo
-      if (!imageFile && school.logo) {
-        const blob = await downloadFile(school.logo);
-        imageFile = new File([blob], "logo", { type: blob.type });
-      }
+      const payload: { name?: string; image?: File } = {};
+      if (newName && newName !== school.name) payload.name = newName;
+      if (imageFile) payload.image = imageFile;
 
-      if (!imageFile) {
-        setFormError("يرجى اختيار صورة");
+      if (Object.keys(payload).length === 0) {
+        setEditOpen(false);
         setSubmitting(false);
         return;
       }
 
-      await updateMySchool({
-        name: nameRef.current!.value,
-        image: imageFile,
-      });
+      await updateMySchool(payload);
 
       setEditOpen(false);
       fetchSchool();
@@ -112,9 +109,42 @@ export default function SchoolProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-slate-400">
-        <Loader2 size={24} className="animate-spin ml-2" />
-        جارٍ التحميل...
+      <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+          <Skeleton className="h-11 w-24 rounded-lg" />
+        </div>
+
+        {/* School Info */}
+        <Card className="p-0">
+          <CardContent className="p-6 flex gap-6 items-center">
+            <Skeleton className="w-20 h-20 rounded-2xl shrink-0" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Owner Details */}
+        <Card className="p-0">
+          <CardContent className="p-6 space-y-4">
+            <Skeleton className="h-5 w-32" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="bg-slate-50 p-3 rounded-lg space-y-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -131,7 +161,7 @@ export default function SchoolProfilePage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-1 pb-8" dir="rtl">
+    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -200,7 +230,7 @@ export default function SchoolProfilePage() {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent dir="rtl" className="max-w-md">
           <DialogHeader>
-            <DialogTitle>تعديل ملف المدرسة</DialogTitle>
+            <DialogTitle className="pt-6">تعديل ملف المدرسة</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleEdit} className="space-y-4 mt-2">
             <div className="space-y-1">

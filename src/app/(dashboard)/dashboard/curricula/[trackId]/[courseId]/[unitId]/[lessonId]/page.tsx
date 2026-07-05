@@ -1,50 +1,52 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import {
-  Search,
-  Plus,
+  ArrowRight,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  Edit2,
   X,
+  Trash2,
+  Plus,
   ChevronDown,
   HelpCircle,
-  ImageIcon,
   CheckCircle2,
   Circle,
-  ArrowLeft,
-  Loader2,
-  Edit2,
+  Lock,
+  ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { ActionButton } from "@/components/ui/action-button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { getTracks } from "@/api/tracks";
-import { getSchoolCourses } from "@/api/courses";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ListCardSkeleton } from "@/components/ui/skeleton";
 import {
+  getLessonQuestions,
   createQuestion,
   updateQuestion,
-  getLessonQuestions,
+  deleteQuestion,
+  reorderQuestions,
 } from "@/api/question";
+import { getUnitLessons } from "@/api/lesson";
 import { downloadFile } from "@/api/files";
-import { Track } from "@/types/track";
-import { Subject } from "@/types/courses";
-import { Question, QuestionType } from "@/types/question";
+import {
+  Question,
+  QuestionType,
+  QuestionOptionInput,
+  QuestionMatchItemInput,
+} from "@/types/question";
+import { Lesson } from "@/types/lesson";
 import { ApiError } from "@/lib/errors";
-
-const PAGE_SIZE = 10;
-
-function formatError(e: unknown): string {
-  if (e instanceof ApiError && e.code === "BAD_INPUT" && e.serverMessage) {
-    return e.serverMessage;
-  }
-  return (e as Error).message;
-}
 
 const TYPE_META: Record<QuestionType, { label: string; className: string }> = {
   options: {
@@ -57,33 +59,12 @@ const TYPE_META: Record<QuestionType, { label: string; className: string }> = {
   },
 };
 
-const PURPOSE_META: Record<string, { label: string; className: string }> = {
-  lesson: {
-    label: "درس",
-    className: "bg-slate-100 text-slate-600 border-slate-200",
-  },
-  dailyChallenge: {
-    label: "تحدي يومي",
-    className: "bg-amber-100 text-amber-600 border-amber-200",
-  },
-};
-
-interface OptionRow {
-  text: string;
-  isCorrect: boolean;
+function formatError(e: unknown): string {
+  if (e instanceof ApiError && e.code === "BAD_INPUT" && e.serverMessage) {
+    return e.serverMessage;
+  }
+  return (e as Error).message;
 }
-
-interface BaseRow {
-  text: string;
-  matchIndex: number | null;
-}
-
-interface MatchRow {
-  text: string;
-}
-
-const selectClassName =
-  "h-10 w-full rounded-lg border border-slate-200 bg-slate-100/50 px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-blue-200";
 
 function FileImage({
   fileId,
@@ -114,21 +95,31 @@ function FileImage({
   return <img src={src} alt={alt} className={className} />;
 }
 
+interface OptionRow {
+  text: string;
+  isCorrect: boolean;
+}
+
+interface BaseRow {
+  text: string;
+  matchIndex: number | null;
+}
+
+interface MatchRow {
+  text: string;
+}
+
 function QuestionFormDialog({
+  lessonId,
   editing,
   onClose,
   onSaved,
 }: {
+  lessonId: string;
   editing: Question | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [courses, setCourses] = useState<Subject[]>([]);
-  const [trackId, setTrackId] = useState("");
-  const [courseId, setCourseId] = useState("");
-  const [coursesLoading, setCoursesLoading] = useState(false);
-
   const [title, setTitle] = useState(editing?.title ?? "");
   const [type, setType] = useState<QuestionType>(editing?.type ?? "options");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -149,6 +140,7 @@ function QuestionFormDialog({
       { text: "", isCorrect: false },
     ];
   });
+
   const [bases, setBases] = useState<BaseRow[]>(() => {
     if (editing && editing.type === "match") {
       const matchItems = editing.matchingItems.filter(
@@ -169,6 +161,7 @@ function QuestionFormDialog({
       { text: "", matchIndex: null },
     ];
   });
+
   const [matches, setMatches] = useState<MatchRow[]>(() => {
     if (editing && editing.type === "match") {
       const matchItems = editing.matchingItems.filter(
@@ -180,22 +173,6 @@ function QuestionFormDialog({
     }
     return [{ text: "" }, { text: "" }];
   });
-
-  useEffect(() => {
-    if (editing) return;
-    getTracks()
-      .then((res) => setTracks(res.data))
-      .catch(() => setTracks([]));
-  }, [editing]);
-
-  useEffect(() => {
-    if (editing || !trackId) return;
-    setCoursesLoading(true);
-    getSchoolCourses(trackId)
-      .then((res) => setCourses(res.data))
-      .catch(() => setCourses([]))
-      .finally(() => setCoursesLoading(false));
-  }, [editing, trackId]);
 
   useEffect(() => {
     return () => {
@@ -217,9 +194,6 @@ function QuestionFormDialog({
   }
 
   function validate(): string | null {
-    if (!editing && !courseId) return "يجب اختيار المسار والمادة";
-    if (!title.trim()) return "يجب إدخال نص السؤال";
-
     if (type === "options") {
       if (options.length < 2) return "يجب إضافة خيارين على الأقل";
       if (options.some((o) => !o.text.trim())) return "أدخل نص جميع الخيارات";
@@ -246,11 +220,13 @@ function QuestionFormDialog({
     return null;
   }
 
-  function buildOptionInputs() {
+  function buildOptionInputs(): QuestionOptionInput[] {
     return options.map((o) => ({ text: o.text.trim(), isCorrect: o.isCorrect }));
   }
 
-  function buildMatchInputs() {
+  function buildMatchInputs(): QuestionMatchItemInput[] {
+    // The full array is sent bases-first, so a base's correctIndex is
+    // the paired match's offset after all base rows.
     return [
       ...bases.map((b) => ({
         text: b.text.trim(),
@@ -286,7 +262,7 @@ function QuestionFormDialog({
         await createQuestion({
           title: title.trim(),
           type,
-          courseId,
+          lessonId,
           ...(imageFile ? { image: imageFile } : {}),
           ...(type === "options"
             ? { options: buildOptionInputs() }
@@ -301,6 +277,9 @@ function QuestionFormDialog({
     }
   }
 
+  const selectClassName =
+    "h-10 w-full rounded-lg border border-slate-200 bg-slate-100/50 px-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-blue-200";
+
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent dir="rtl" className="max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -310,48 +289,6 @@ function QuestionFormDialog({
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-          {!editing && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <Label>المسار</Label>
-                <select
-                  className={selectClassName}
-                  value={trackId}
-                  onChange={(e) => {
-                    setTrackId(e.target.value);
-                    setCourseId("");
-                    setCourses([]);
-                  }}
-                >
-                  <option value="">اختر المسار</option>
-                  {tracks.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-3">
-                <Label>المادة</Label>
-                <select
-                  className={selectClassName}
-                  value={courseId}
-                  onChange={(e) => setCourseId(e.target.value)}
-                  disabled={!trackId || coursesLoading}
-                >
-                  <option value="">
-                    {coursesLoading ? "جارٍ التحميل..." : "اختر المادة"}
-                  </option>
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
-
           <div className="space-y-3">
             <Label htmlFor="question-title">نص السؤال</Label>
             <Input
@@ -477,10 +414,7 @@ function QuestionFormDialog({
               <div className="space-y-3">
                 <Label>العناصر الأساسية</Label>
                 {bases.map((base, i) => (
-                  <div
-                    key={i}
-                    className="space-y-2 rounded-lg border border-slate-200 p-3"
-                  >
+                  <div key={i} className="space-y-2 rounded-lg border border-slate-200 p-3">
                     <div className="flex items-center gap-2">
                       <Input
                         value={base.text}
@@ -628,183 +562,164 @@ function QuestionFormDialog({
   );
 }
 
-export default function Questions() {
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [courses, setCourses] = useState<Subject[]>([]);
-  const [trackId, setTrackId] = useState("");
-  const [courseId, setCourseId] = useState("");
-  const [coursesLoading, setCoursesLoading] = useState(false);
+export default function LessonQuestionsPage() {
+  const { unitId, lessonId } = useParams<{
+    trackId: string;
+    courseId: string;
+    unitId: string;
+    lessonId: string;
+  }>();
+  const router = useRouter();
 
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [totalRecords, setTotalRecords] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
+  const [reorderError, setReorderError] = useState<string | null>(null);
+  const [savingOrder, setSavingOrder] = useState(false);
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const [formOpen, setFormOpen] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<Question | null>(
-    null,
-  );
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
-  useEffect(() => {
-    getTracks()
-      .then((res) => setTracks(res.data))
-      .catch(() => setTracks([]));
-  }, []);
+  const [deleteTarget, setDeleteTarget] = useState<Question | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!trackId) return;
-    setCoursesLoading(true);
-    getSchoolCourses(trackId)
-      .then((res) => setCourses(res.data))
-      .catch(() => setCourses([]))
-      .finally(() => setCoursesLoading(false));
-  }, [trackId]);
+  const locked = lesson?.status === "active";
 
-  function fetchQuestions() {
-    if (!courseId) {
-      setQuestions([]);
-      setTotalRecords(0);
-      return;
-    }
+  async function fetchData() {
     setLoading(true);
     setError(null);
-    getLessonQuestions({ courseId, skip: page * PAGE_SIZE, limit: PAGE_SIZE })
-      .then((res) => {
-        setQuestions(res.data.list);
-        setTotalRecords(res.data.totalRecords);
-      })
-      .catch((e) => setError((e as Error).message))
-      .finally(() => setLoading(false));
+    try {
+      const [questionsRes, lessonsRes] = await Promise.all([
+        getLessonQuestions({ lessonId }),
+        getUnitLessons(unitId),
+      ]);
+      setQuestions(
+        [...questionsRes.data.list].sort((a, b) => a.index - b.index),
+      );
+      setLesson(lessonsRes.data.find((l) => l.id === lessonId) ?? null);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
-    fetchQuestions();
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId, page]);
+  }, [lessonId, unitId]);
 
-  const filteredQuestions = questions.filter((q) =>
-    q.title.toLowerCase().includes(search.trim().toLowerCase()),
-  );
+  async function handleDelete() {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteQuestion(deleteTarget.id);
+      setQuestions((prev) => prev.filter((q) => q.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (e) {
+      setDeleteError(formatError(e));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function moveQuestion(index: number, direction: -1 | 1) {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= questions.length) return;
+
+    const reordered = [...questions];
+    [reordered[index], reordered[targetIndex]] = [
+      reordered[targetIndex],
+      reordered[index],
+    ];
+    setQuestions(reordered);
+    setReorderError(null);
+    setSavingOrder(true);
+    try {
+      await reorderQuestions(
+        lessonId,
+        reordered.map((q) => q.id),
+      );
+    } catch (e) {
+      setReorderError(formatError(e));
+      fetchData();
+    } finally {
+      setSavingOrder(false);
+    }
+  }
+
+  function closeForm() {
+    setFormOpen(false);
+    setEditingQuestion(null);
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8" dir="rtl">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">إدارة الأسئلة</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            اختر المسار والمادة لعرض أسئلتها
-          </p>
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.back()}
+            className="shrink-0"
+          >
+            <ArrowRight className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold">أسئلة الدرس</h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {lesson ? `إدارة أسئلة درس "${lesson.title}"` : "إدارة أسئلة هذا الدرس"}
+            </p>
+          </div>
         </div>
-        <Button
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-6 h-10"
-          onClick={() => {
-            setEditingQuestion(null);
-            setFormOpen(true);
-          }}
-        >
-          إضافة سؤال
-          <Plus className="mr-2 h-4 w-4" />
-        </Button>
+        {!locked && (
+          <ActionButton
+            label="إضافة سؤال"
+            icon={Plus}
+            bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+            onClick={() => {
+              setEditingQuestion(null);
+              setFormOpen(true);
+            }}
+          />
+        )}
       </div>
 
-      {/* Filters Card */}
-      <Card className="border-slate-200 shadow-xs">
-        <CardContent className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>المسار</Label>
-            <select
-              className={selectClassName}
-              value={trackId}
-              onChange={(e) => {
-                setTrackId(e.target.value);
-                setCourseId("");
-                setCourses([]);
-                setPage(0);
-              }}
-            >
-              <option value="">اختر المسار</option>
-              {tracks.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <Label>المادة</Label>
-            <select
-              className={selectClassName}
-              value={courseId}
-              onChange={(e) => {
-                setCourseId(e.target.value);
-                setPage(0);
-              }}
-              disabled={!trackId || coursesLoading}
-            >
-              <option value="">
-                {coursesLoading ? "جارٍ التحميل..." : "اختر المادة"}
-              </option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Search Input Card */}
-      <Card className="border-slate-200 shadow-xs">
-        <CardContent className="p-4">
-          <div className="relative w-full">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
-            <Input
-              placeholder="بحث في نص السؤال..."
-              className="w-full pr-10 h-12"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              disabled={!courseId}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {!courseId && (
-        <p className="text-center text-slate-400 py-16">
-          اختر المسار والمادة لعرض الأسئلة
-        </p>
-      )}
-
-      {courseId && loading && (
-        <div className="flex items-center justify-center py-16 text-slate-400">
-          <Loader2 size={24} className="animate-spin ml-2" />
-          جارٍ التحميل...
+      {locked && (
+        <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <Lock className="h-4 w-4 shrink-0" />
+          الدرس نشط حالياً — قم بإلغاء تفعيل الدرس لتتمكن من تعديل أسئلته.
         </div>
       )}
 
-      {courseId && !loading && error && (
+      {reorderError && (
+        <p className="text-sm text-red-500 text-center">{reorderError}</p>
+      )}
+
+      {loading && <ListCardSkeleton />}
+
+      {!loading && error && (
         <p className="text-center text-red-500 py-16">{error}</p>
       )}
 
-      {courseId && !loading && !error && filteredQuestions.length === 0 && (
+      {!loading && !error && questions.length === 0 && (
         <p className="text-center text-slate-400 py-16">
-          لا توجد أسئلة لهذه المادة
+          لا توجد أسئلة لهذا الدرس بعد
         </p>
       )}
 
-      {courseId && !loading && !error && filteredQuestions.length > 0 && (
+      {!loading && !error && questions.length > 0 && (
         <div className="flex flex-col gap-4">
-          {filteredQuestions.map((question) => {
+          {questions.map((question, index) => {
             const isExpanded = expandedId === question.id;
             const typeMeta = TYPE_META[question.type];
-            const purposeMeta = PURPOSE_META[question.purpose] ?? {
-              label: question.purpose,
-              className: "bg-slate-100 text-slate-600 border-slate-200",
-            };
             const matchItems = question.matchingItems.filter(
               (m) => m.type === "match",
             );
@@ -817,7 +732,9 @@ export default function Questions() {
             return (
               <Card
                 key={question.id}
-                onClick={() => setExpandedId(isExpanded ? null : question.id)}
+                onClick={() =>
+                  setExpandedId(isExpanded ? null : question.id)
+                }
                 className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer p-4 md:p-6 flex flex-col gap-4"
               >
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -833,18 +750,11 @@ export default function Questions() {
                       <h3 className="font-bold text-slate-900 truncate">
                         {question.title}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${typeMeta.className}`}
-                        >
-                          {typeMeta.label}
-                        </span>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${purposeMeta.className}`}
-                        >
-                          {purposeMeta.label}
-                        </span>
-                      </div>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 mt-1 rounded-full text-xs font-semibold border ${typeMeta.className}`}
+                      >
+                        {typeMeta.label}
+                      </span>
                     </div>
                   </div>
 
@@ -852,16 +762,48 @@ export default function Questions() {
                     className="flex items-center gap-1 shrink-0 w-full md:w-auto justify-end border-t border-slate-50 md:border-0 pt-3 md:pt-0"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setEditingQuestion(question);
-                        setFormOpen(true);
-                      }}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
+                    {!locked && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={index === 0 || savingOrder}
+                          onClick={() => moveQuestion(index, -1)}
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={
+                            index === questions.length - 1 || savingOrder
+                          }
+                          onClick={() => moveQuestion(index, 1)}
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setEditingQuestion(question);
+                            setFormOpen(true);
+                          }}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setDeleteError(null);
+                            setDeleteTarget(question);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -950,45 +892,55 @@ export default function Questions() {
         </div>
       )}
 
-      {/* Pagination */}
-      {courseId && !loading && !error && (
-        <div className="flex items-center justify-center gap-3">
-          <Button
-            variant="outline"
-            disabled={page === 0}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-          >
-            السابق
-          </Button>
-          <span className="text-sm text-slate-500">
-            صفحة {page + 1} من {Math.max(1, Math.ceil(totalRecords / PAGE_SIZE))}
-          </span>
-          <Button
-            variant="outline"
-            disabled={(page + 1) * PAGE_SIZE >= totalRecords}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            التالي
-          </Button>
-        </div>
-      )}
-
-      {/* Add/Edit Question Dialog */}
+      {/* Create / Edit Question Dialog */}
       {formOpen && (
         <QuestionFormDialog
           key={editingQuestion?.id ?? "new"}
+          lessonId={lessonId}
           editing={editingQuestion}
-          onClose={() => {
-            setFormOpen(false);
-            setEditingQuestion(null);
-          }}
+          onClose={closeForm}
           onSaved={() => {
-            setFormOpen(false);
-            setEditingQuestion(null);
-            fetchQuestions();
+            closeForm();
+            fetchData();
           }}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>حذف السؤال</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-slate-500">
+            هل أنت متأكد من حذف سؤال &quot;{deleteTarget?.title}&quot;؟ لا يمكن
+            التراجع عن هذا الإجراء.
+          </p>
+          {deleteError && <p className="text-sm text-red-500">{deleteError}</p>}
+          <div className="flex gap-3 justify-end pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              className="p-4 h-11"
+            >
+              إلغاء
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleting}
+              onClick={handleDelete}
+              className="p-4 h-11"
+            >
+              {deleting ? "جاري الحذف..." : "حذف"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

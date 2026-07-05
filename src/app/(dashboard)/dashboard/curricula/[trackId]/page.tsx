@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowRight, BookOpen, Loader2 } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { GridCardSkeleton } from "@/components/ui/skeleton";
 import { getSchoolCourses } from "@/api/courses";
 import { Subject } from "@/types/courses";
 
@@ -45,12 +46,7 @@ export default function TrackCoursesPage() {
         </div>
       </div>
 
-      {loading && (
-        <div className="flex items-center justify-center py-16 text-slate-400">
-          <Loader2 size={24} className="animate-spin ml-2" />
-          جارٍ التحميل...
-        </div>
-      )}
+      {loading && <GridCardSkeleton />}
 
       {!loading && error && (
         <p className="text-center text-red-500 py-16">{error}</p>

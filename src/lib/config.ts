@@ -4,5 +4,5 @@ export const config = {
 
   // You can easily add other global settings here later!
   appName: "النخبة الأوائل",
-  apiTimeout: 10000, // 10 seconds
+  apiTimeout: 60000, // 10 seconds
 };
