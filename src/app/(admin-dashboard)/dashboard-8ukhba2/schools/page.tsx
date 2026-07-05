@@ -160,7 +160,7 @@ export default function SchoolsManagementPage() {
             className="pr-9"
           />
         </div>
-        <Button type="submit" variant="outline" className="h-11 p-4">
+        <Button type="submit" variant="outline" className="h-12 p-4">
           بحث
         </Button>
         {/* {search && (

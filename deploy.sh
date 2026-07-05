@@ -1,9 +1,11 @@
-#!/bin/bash
+cd /opt/nukhbat-frontend
 
-cd /opt/nukhbat-frontend || exit
-
+git reset --hard
 git pull origin main
 
+rm -rf node_modules .next package-lock.json
+
+npm install
 npm run build
 
-npm run start
+pm2 restart frontend
