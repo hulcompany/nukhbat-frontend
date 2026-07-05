@@ -1,5 +1,7 @@
 cd /opt/nukhbat-frontend
 
+node -v
+
 git reset --hard
 git pull origin main
 
