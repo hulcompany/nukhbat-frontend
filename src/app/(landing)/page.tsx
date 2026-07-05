@@ -102,7 +102,7 @@ export default function LandingPage() {
             <span className="text-[#3b82f6] block mb-2 hover:scale-105 transition-transform duration-300 origin-right">
               النخبة
             </span>
-            <span className="text-white">، تعلّم، تدرب، ونافس</span>
+            <span className="text-white">، تعلّم، تدرب، ونافس ،</span>
           </motion.h1>
 
           <motion.p
