@@ -8,14 +8,14 @@ export async function getTracks(): Promise<TracksResponse> {
 
 export async function grantTrackAccess(
   schoolId: string,
-  trackId: string
+  trackId: string,
 ): Promise<void> {
-  await apiClient.post(`/learning/schoolAccess/${schoolId}/${trackId}`);
+  await apiClient.post(`/learning/admin/schoolAccess/${schoolId}/${trackId}`);
 }
 
 export async function revokeTrackAccess(
   schoolId: string,
-  trackId: string
+  trackId: string,
 ): Promise<void> {
-  await apiClient.delete(`/learning/schoolAccess/${schoolId}/${trackId}`);
+  await apiClient.delete(`/learning/admin/schoolAccess/${schoolId}/${trackId}`);
 }

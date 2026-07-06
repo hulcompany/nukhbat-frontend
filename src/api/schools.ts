@@ -13,7 +13,7 @@ export interface GetSchoolsParams {
 }
 
 export async function getSchools(
-  params: GetSchoolsParams = {}
+  params: GetSchoolsParams = {},
 ): Promise<SchoolListResponse> {
   const res = await apiClient.get<SchoolListResponse>("/school/manage", {
     params,
@@ -23,6 +23,7 @@ export async function getSchools(
 
 export async function getSchoolById(id: string): Promise<SchoolResponse> {
   const res = await apiClient.get<SchoolResponse>(`/school/manage/${id}`);
+  console.log(res.data);
   return res.data;
 }
 
@@ -51,9 +52,13 @@ export async function deleteMySchoolImage(): Promise<void> {
   await apiClient.delete("/user/mine/image");
 }
 
+export async function deleteSchoolImage(id: string): Promise<void> {
+  await apiClient.delete(`/school/${id}/deleteImage`);
+}
+
 export async function updateSchool(
   id: string,
-  data: { name: string; image: File }
+  data: { name: string; image: File },
 ): Promise<SchoolManagementResponse> {
   const formData = new FormData();
   formData.append("name", data.name);
@@ -62,13 +67,13 @@ export async function updateSchool(
   const res = await apiClient.patch<SchoolManagementResponse>(
     `/school/manage/${id}`,
     formData,
-    { headers: { "Content-Type": "multipart/form-data" } }
+    { headers: { "Content-Type": "multipart/form-data" } },
   );
   return res.data;
 }
 
 export async function createSchool(
-  data: CreateSchoolRequest
+  data: CreateSchoolRequest,
 ): Promise<SchoolManagementResponse> {
   const formData = new FormData();
   formData.append("schoolName", data.schoolName);
@@ -80,7 +85,7 @@ export async function createSchool(
   const res = await apiClient.post<SchoolManagementResponse>(
     "/school/manage",
     formData,
-    { headers: { "Content-Type": "multipart/form-data" } }
+    { headers: { "Content-Type": "multipart/form-data" } },
   );
   return res.data;
 }

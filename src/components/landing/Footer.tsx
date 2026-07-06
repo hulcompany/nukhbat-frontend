@@ -6,7 +6,7 @@ import { Phone, Mail, MapPin } from "lucide-react";
 import { getInfo } from "@/api/landing";
 import { AppInfo } from "@/types/landing";
 
-const FIXED_EMAIL = "support@elite-first.com";
+const FIXED_EMAIL = "support.alnokhba@gmail.com";
 
 export function Footer() {
   const [info, setInfo] = useState<AppInfo | null>(null);

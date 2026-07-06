@@ -12,6 +12,7 @@ import {
   Search,
   ChevronRight,
   ChevronLeft,
+  ImageIcon,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,6 +82,20 @@ export default function SchoolsManagementPage() {
   const passwordRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
 
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  function selectLogo(file: File | null) {
+    if (file && !file.type.startsWith("image/")) return;
+    setLogoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return file ? URL.createObjectURL(file) : null;
+    });
+    setLogoFile(file);
+    if (!file && imageRef.current) imageRef.current.value = "";
+  }
+
   async function fetchSchools(params: GetSchoolsParams) {
     setLoading(true);
     setError(null);
@@ -99,16 +114,15 @@ export default function SchoolsManagementPage() {
     fetchSchools({ skip, limit: LIMIT, ...(search ? { name: search } : {}) });
   }, [skip, search]);
 
-  function handleSearch(e: React.FormEvent) {
+  function handleSearch(e: React.SubmitEvent) {
     e.preventDefault();
     setSkip(0);
     setSearch(searchInput);
   }
 
-  async function handleCreate(e: React.FormEvent) {
+  async function handleCreate(e: React.SubmitEvent) {
     e.preventDefault();
-    const imageFile = imageRef.current?.files?.[0];
-    if (!imageFile) {
+    if (!logoFile) {
       setFormError("يرجى اختيار صورة");
       return;
     }
@@ -121,9 +135,10 @@ export default function SchoolsManagementPage() {
         name: nameRef.current!.value,
         email: emailRef.current!.value,
         password: passwordRef.current!.value,
-        image: imageFile,
+        image: logoFile,
       });
       setDialogOpen(false);
+      selectLogo(null);
       fetchSchools({ skip, limit: LIMIT, ...(search ? { name: search } : {}) });
     } catch (e) {
       setFormError((e as Error).message);
@@ -161,7 +176,7 @@ export default function SchoolsManagementPage() {
             className="pr-9"
           />
         </div>
-        <Button type="submit" variant="outline" className="h-12 p-4">
+        <Button type="submit" variant="outline" className="h-12 p-4 px-8">
           بحث
         </Button>
         {/* {search && (
@@ -212,7 +227,10 @@ export default function SchoolsManagementPage() {
 
                 <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6">
                   {Array.from({ length: 2 }).map((_, j) => (
-                    <div key={j} className="bg-slate-50 p-2 md:p-3 rounded-lg space-y-1.5">
+                    <div
+                      key={j}
+                      className="bg-slate-50 p-2 md:p-3 rounded-lg space-y-1.5"
+                    >
                       <Skeleton className="h-2.5 w-16" />
                       <Skeleton className="h-3.5 w-20" />
                     </div>
@@ -221,7 +239,10 @@ export default function SchoolsManagementPage() {
 
                 <div className="grid grid-cols-2 sm:flex gap-2">
                   {Array.from({ length: 4 }).map((_, k) => (
-                    <Skeleton key={k} className="flex-1 h-9 md:h-10 rounded-md" />
+                    <Skeleton
+                      key={k}
+                      className="flex-1 h-9 md:h-10 rounded-md"
+                    />
                   ))}
                 </div>
               </CardContent>
@@ -377,13 +398,70 @@ export default function SchoolsManagementPage() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="image">شعار المدرسة</Label>
-              <Input
+              <input
                 id="image"
                 type="file"
                 accept="image/*"
                 ref={imageRef}
-                required
+                className="hidden"
+                onChange={(e) => selectLogo(e.target.files?.[0] ?? null)}
               />
+              <div
+                onClick={() => imageRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  selectLogo(e.dataTransfer.files?.[0] ?? null);
+                }}
+                className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
+                  isDragging
+                    ? "bg-blue-50 border-blue-400"
+                    : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-blue-300"
+                }`}
+              >
+                {logoPreview ? (
+                  <img
+                    src={logoPreview}
+                    alt="شعار المدرسة"
+                    className="w-16 h-16 rounded-xl object-cover mb-3"
+                  />
+                ) : (
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+                    <ImageIcon className="h-6 w-6 text-blue-600" />
+                  </div>
+                )}
+                {logoFile ? (
+                  <>
+                    <p className="text-sm font-bold text-slate-900">
+                      {logoFile.name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        selectLogo(null);
+                      }}
+                      className="text-xs text-red-500 hover:text-red-600 mt-1"
+                    >
+                      إزالة الصورة
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-bold text-slate-900">
+                      اسحب الصورة هنا
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      أو انقر لاختيار صورة
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
             {formError && <p className="text-sm text-red-500">{formError}</p>}
             <div className="flex gap-3 justify-end pt-2">

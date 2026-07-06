@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { FileImage } from "@/components/ui/file-image";
 import {
   ChevronLeft,
   ChevronRight,
@@ -56,10 +57,16 @@ const sections = [
   { label: "أخرى", items: otherItems },
 ];
 
+function roleLabel(role?: string) {
+  if (role === "admin") return "مسؤول";
+  if (role === "contentWriter") return "كاتب محتوى";
+  return role ?? "";
+}
+
 export function SchoolDashboardSidebar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -161,7 +168,7 @@ export function SchoolDashboardSidebar() {
                 </div>
                 <div className="flex flex-col whitespace-nowrap">
                   <span className="text-white font-bold text-base">
-                    النخبة الأوائل
+                    النُخبة
                   </span>
                   <span className="text-slate-500 text-xs">لوحة المدرسة</span>
                 </div>
@@ -220,8 +227,39 @@ export function SchoolDashboardSidebar() {
           </nav>
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-white/5">
+        {/* Footer User Info + Logout */}
+        <div className="p-4 border-t border-white/5 space-y-2">
+          {user && (
+            <div
+              className={cn(
+                "flex items-center gap-3 px-3 py-2",
+                isCollapsed && "justify-center px-0",
+              )}
+              title={isCollapsed ? user.name : undefined}
+            >
+              {user.profileImage ? (
+                <FileImage
+                  fileId={user.profileImage}
+                  alt={user.name}
+                  className="w-10 h-10 rounded-full object-cover shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">
+                  {user.name.charAt(0)}
+                </div>
+              )}
+              {!isCollapsed && (
+                <div className="flex flex-col overflow-hidden">
+                  <span className="text-white text-sm font-semibold truncate">
+                    {user.name}
+                  </span>
+                  <span className="text-slate-500 text-xs truncate">
+                    {roleLabel(user.role)}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
           <button
             className={cn(
               "flex items-center gap-3 w-full px-3 py-3 rounded-xl transition-all group hover:bg-red-500/10 text-red-500",

@@ -18,6 +18,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => void;
   refresh: () => Promise<boolean>;
+  updateUser: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -64,6 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const updateUser = (updates: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...updates };
+      localStorage.setItem("user", JSON.stringify(next));
+      return next;
+    });
+  };
+
   const refresh = async (): Promise<boolean> => {
     const token = localStorage.getItem("refreshToken");
     if (!token) return false;
@@ -83,7 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, isLoading, login, logout, refresh }}>
+    <AuthContext.Provider
+      value={{ user, accessToken, isLoading, login, logout, refresh, updateUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
