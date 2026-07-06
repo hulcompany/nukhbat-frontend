@@ -52,8 +52,7 @@ export interface School {
   name: string;
   logo: string | null;
   owner: SchoolOwner;
-  // If tracks are populated later, you can replace any[] with your Track[] interface
-  tracks: Track[] | [];
+  tracks?: Track[];
   allowedTracks?: Track[];
 }
 

@@ -5,6 +5,9 @@ import {
   QuestionType,
   QuestionOptionInput,
   QuestionMatchItemInput,
+  BulkCreateQuestionsRequest,
+  BulkCreateQuestionsResponse,
+  BulkDeleteQuestionsResponse,
 } from "@/types/question";
 
 function appendAnswers(
@@ -45,17 +48,15 @@ export interface GetQuestionsParams {
 export async function getLessonQuestions(
   params: GetQuestionsParams,
 ): Promise<QuestionsResponse> {
-  console.log("/learning/school/questions", { params });
-  const res = await apiClient.get<QuestionsResponse>(
-    "/learning/school/questions",
-    { params },
-  );
+  const res = await apiClient.get<QuestionsResponse>("/school/me/questions", {
+    params,
+  });
   return res.data;
 }
 
 export async function getQuestionById(id: string): Promise<QuestionResponse> {
   const res = await apiClient.get<QuestionResponse>(
-    `/learning/school/questions/${id}`,
+    `/school/me/questions/${id}`,
   );
   return res.data;
 }
@@ -76,7 +77,7 @@ export async function createQuestion(data: {
   if (data.image) formData.append("image", data.image);
   appendAnswers(formData, data.type, data.options, data.matchingItems);
   const res = await apiClient.post<QuestionResponse>(
-    "/learning/school/questions",
+    "/school/me/questions",
     formData,
     { headers: { "Content-Type": "multipart/form-data" } },
   );
@@ -101,20 +102,44 @@ export async function updateQuestion(
   }
 
   const res = await apiClient.patch<QuestionResponse>(
-    `/learning/school/questions/${id}`,
+    `/school/me/questions/${id}`,
     formData,
     { headers: { "Content-Type": "multipart/form-data" } },
   );
   return res.data;
 }
 
+export async function deleteQuestionImage(id: string): Promise<void> {
+  await apiClient.delete(`/school/me/questions/${id}/deleteImage`);
+}
+
+export async function bulkCreateQuestions(
+  data: BulkCreateQuestionsRequest,
+): Promise<BulkCreateQuestionsResponse> {
+  const res = await apiClient.post<BulkCreateQuestionsResponse>(
+    "/school/me/questions/bulk",
+    data,
+  );
+  return res.data;
+}
+
 export async function deleteQuestion(id: string): Promise<void> {
-  await apiClient.delete(`/learning/school/questions/${id}`);
+  await apiClient.delete(`/school/me/questions/${id}`);
+}
+
+export async function bulkDeleteQuestions(
+  ids: string[],
+): Promise<BulkDeleteQuestionsResponse> {
+  const res = await apiClient.post<BulkDeleteQuestionsResponse>(
+    "/school/me/questions/bulk-delete",
+    { ids },
+  );
+  return res.data;
 }
 
 export async function reorderQuestions(
   lessonId: string,
   ids: string[],
 ): Promise<void> {
-  await apiClient.post(`/learning/school/questions/order/${lessonId}`, { ids });
+  await apiClient.post(`/school/me/questions/order/${lessonId}`, { ids });
 }

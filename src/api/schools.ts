@@ -47,6 +47,10 @@ export async function updateMySchool(data: {
   return res.data;
 }
 
+export async function deleteMySchoolImage(): Promise<void> {
+  await apiClient.delete("/user/mine/image");
+}
+
 export async function updateSchool(
   id: string,
   data: { name: string; image: File }

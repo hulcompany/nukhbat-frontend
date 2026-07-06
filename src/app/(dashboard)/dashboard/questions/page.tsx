@@ -160,7 +160,10 @@ function QuestionFormDialog({
           const matchIndex = matchItems.findIndex(
             (m) => m.id === b.correctMatchId,
           );
-          return { text: b.text, matchIndex: matchIndex < 0 ? null : matchIndex };
+          return {
+            text: b.text,
+            matchIndex: matchIndex < 0 ? null : matchIndex,
+          };
         });
       }
     }
@@ -247,7 +250,10 @@ function QuestionFormDialog({
   }
 
   function buildOptionInputs() {
-    return options.map((o) => ({ text: o.text.trim(), isCorrect: o.isCorrect }));
+    return options.map((o) => ({
+      text: o.text.trim(),
+      isCorrect: o.isCorrect,
+    }));
   }
 
   function buildMatchInputs() {
@@ -303,7 +309,10 @@ function QuestionFormDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent dir="rtl" className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent
+        dir="rtl"
+        className="max-w-2xl max-h-[85vh] overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle className="pt-5">
             {editing ? "تعديل السؤال" : "إضافة سؤال جديد"}
@@ -536,7 +545,10 @@ function QuestionFormDialog({
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setBases((prev) => [...prev, { text: "", matchIndex: null }]);
+                    setBases((prev) => [
+                      ...prev,
+                      { text: "", matchIndex: null },
+                    ]);
                     setAnswersDirty(true);
                   }}
                 >
@@ -610,11 +622,11 @@ function QuestionFormDialog({
               type="button"
               variant="outline"
               onClick={onClose}
-              className="p-4 h-11"
+              className="p-4 h-12"
             >
               إلغاء
             </Button>
-            <Button type="submit" disabled={submitting} className="p-4 h-11">
+            <Button type="submit" disabled={submitting} className="px-10 h-12">
               {submitting
                 ? "جاري الحفظ..."
                 : editing
@@ -643,9 +655,7 @@ export default function Questions() {
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<Question | null>(
-    null,
-  );
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   useEffect(() => {
     getTracks()
@@ -936,8 +946,7 @@ export default function Questions() {
                         })}
                         {decoys.length > 0 && (
                           <p className="text-xs text-slate-400">
-                            إجابات تمويه:{" "}
-                            {decoys.map((d) => d.text).join("، ")}
+                            إجابات تمويه: {decoys.map((d) => d.text).join("، ")}
                           </p>
                         )}
                       </div>
@@ -961,7 +970,8 @@ export default function Questions() {
             السابق
           </Button>
           <span className="text-sm text-slate-500">
-            صفحة {page + 1} من {Math.max(1, Math.ceil(totalRecords / PAGE_SIZE))}
+            صفحة {page + 1} من{" "}
+            {Math.max(1, Math.ceil(totalRecords / PAGE_SIZE))}
           </span>
           <Button
             variant="outline"

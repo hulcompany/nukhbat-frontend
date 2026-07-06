@@ -26,7 +26,7 @@ export interface Question {
   index: number;
   purpose: QuestionPurpose;
   lessonId: string | null;
-  courseId: string;
+  courseId: string | null;
   imageId: string | null;
   schoolId: string;
   options: QuestionOption[];
@@ -57,4 +57,39 @@ export interface QuestionMatchItemInput {
   text: string;
   type: QuestionMatchType;
   correctIndex?: number;
+}
+
+export interface BulkOptionsQuestionInput {
+  title: string;
+  type: "options";
+  lessonId: string;
+  options: QuestionOptionInput[];
+}
+
+export interface BulkMatchQuestionInput {
+  title: string;
+  type: "match";
+  lessonId: string;
+  matchingItems: QuestionMatchItemInput[];
+}
+
+export type BulkQuestionInput =
+  | BulkOptionsQuestionInput
+  | BulkMatchQuestionInput;
+
+export interface BulkCreateQuestionsRequest {
+  questions: BulkQuestionInput[];
+}
+
+export interface BulkCreateQuestionsResponse {
+  message: string;
+  data: Question[];
+}
+
+export interface BulkDeleteQuestionsRequest {
+  ids: string[];
+}
+
+export interface BulkDeleteQuestionsResponse {
+  message: string;
 }

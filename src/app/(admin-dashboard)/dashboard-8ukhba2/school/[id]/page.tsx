@@ -48,13 +48,15 @@ function FileImage({
   return <img src={src} alt={alt} className={className} />;
 }
 
+type SchoolWithTracks = School & { tracks: Track[] };
+
 export default function SchoolDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [editOpen, setEditOpen] = useState(searchParams.get("edit") === "true");
 
-  const [school, setSchool] = useState<School | null>(null);
+  const [school, setSchool] = useState<SchoolWithTracks | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,7 +77,7 @@ export default function SchoolDetailPage() {
     setError(null);
     try {
       const res = await getSchoolById(id);
-      setSchool(res.data);
+      setSchool({ ...res.data, tracks: res.data.tracks ?? [] });
     } catch (e) {
       setError((e as Error).message);
     } finally {

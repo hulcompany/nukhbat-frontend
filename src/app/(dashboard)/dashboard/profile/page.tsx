@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getMySchool, updateMySchool } from "@/api/schools";
+import { getMySchool, updateMySchool, deleteMySchoolImage } from "@/api/schools";
 import { downloadFile } from "@/api/files";
 import { School } from "@/types/school";
 
@@ -54,6 +54,11 @@ export default function SchoolProfilePage() {
   const [editOpen, setEditOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const [deletingImage, setDeletingImage] = useState(false);
+  const [deleteImageError, setDeleteImageError] = useState<string | null>(
+    null,
+  );
 
   const nameRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
@@ -104,6 +109,20 @@ export default function SchoolProfilePage() {
       setFormError((e as Error).message);
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDeleteImage() {
+    setDeletingImage(true);
+    setDeleteImageError(null);
+    try {
+      await deleteMySchoolImage();
+      if (imageRef.current) imageRef.current.value = "";
+      fetchSchool();
+    } catch (e) {
+      setDeleteImageError((e as Error).message);
+    } finally {
+      setDeletingImage(false);
     }
   }
 
@@ -250,11 +269,26 @@ export default function SchoolProfilePage() {
                 </span>
               </Label>
               {school.logo && (
-                <FileImage
-                  fileId={school.logo}
-                  alt={school.name}
-                  className="w-16 h-16 rounded-xl object-cover mb-2"
-                />
+                <div className="flex items-center gap-3 mb-2">
+                  <FileImage
+                    fileId={school.logo}
+                    alt={school.name}
+                    className="w-16 h-16 rounded-xl object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={deletingImage}
+                    onClick={handleDeleteImage}
+                    className="text-red-500 hover:text-red-600"
+                  >
+                    {deletingImage ? "جاري الحذف..." : "حذف الصورة"}
+                  </Button>
+                </div>
+              )}
+              {deleteImageError && (
+                <p className="text-xs text-red-500">{deleteImageError}</p>
               )}
               <Input
                 id="edit-image"

@@ -351,7 +351,9 @@ export default function UnitLessonsPage() {
                 >
                   <DropdownMenu dir="rtl">
                     <DropdownMenuTrigger
-                      disabled={statusUpdatingId === lesson.id || !canChangeStatus}
+                      disabled={
+                        statusUpdatingId === lesson.id || !canChangeStatus
+                      }
                       title={
                         canChangeStatus
                           ? undefined
@@ -467,11 +469,11 @@ export default function UnitLessonsPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setCreateOpen(false)}
-                className="p-4 h-11"
+                className="p-4 h-12"
               >
                 إلغاء
               </Button>
-              <Button type="submit" disabled={creating} className="p-4 h-11">
+              <Button type="submit" disabled={creating} className="p-4 h-12">
                 {creating ? "جاري الإضافة..." : "إضافة"}
               </Button>
             </div>
@@ -498,7 +500,7 @@ export default function UnitLessonsPage() {
               type="button"
               variant="outline"
               onClick={() => setDeleteTarget(null)}
-              className="p-4 h-11"
+              className="p-4 h-12"
             >
               إلغاء
             </Button>
@@ -507,7 +509,7 @@ export default function UnitLessonsPage() {
               variant="destructive"
               disabled={deleting}
               onClick={handleDelete}
-              className="p-4 h-11"
+              className="p-4 h-12"
             >
               {deleting ? "جاري الحذف..." : "حذف"}
             </Button>

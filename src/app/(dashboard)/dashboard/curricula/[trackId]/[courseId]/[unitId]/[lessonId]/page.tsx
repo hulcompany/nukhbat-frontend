@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -11,12 +11,14 @@ import {
   X,
   Trash2,
   Plus,
+  Upload,
   ChevronDown,
   HelpCircle,
   CheckCircle2,
   Circle,
   Lock,
   ImageIcon,
+  FileJson,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -34,8 +36,11 @@ import {
   getLessonQuestions,
   createQuestion,
   updateQuestion,
+  deleteQuestionImage,
   deleteQuestion,
   reorderQuestions,
+  bulkCreateQuestions,
+  bulkDeleteQuestions,
 } from "@/api/question";
 import { getUnitLessons } from "@/api/lesson";
 import { downloadFile } from "@/api/files";
@@ -44,6 +49,7 @@ import {
   QuestionType,
   QuestionOptionInput,
   QuestionMatchItemInput,
+  BulkQuestionInput,
 } from "@/types/question";
 import { Lesson } from "@/types/lesson";
 import { ApiError } from "@/lib/errors";
@@ -64,6 +70,190 @@ function formatError(e: unknown): string {
     return e.serverMessage;
   }
   return (e as Error).message;
+}
+
+function parseBulkQuestions(
+  text: string,
+  lessonId: string,
+): BulkQuestionInput[] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("ملف غير صالح: يجب أن يكون بصيغة JSON");
+  }
+
+  const questions = (parsed as { questions?: unknown[] } | null)?.questions;
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new Error("يجب أن يحتوي الملف على مصفوفة questions غير فارغة");
+  }
+
+  return questions.map((q, i) => {
+    const item = q as Record<string, unknown>;
+    const label = `السؤال رقم ${i + 1}`;
+
+    if (!item.title || typeof item.title !== "string") {
+      throw new Error(`${label}: يجب إدخال نص السؤال`);
+    }
+
+    if (item.type === "options") {
+      if (!Array.isArray(item.options) || item.options.length < 2) {
+        throw new Error(`${label}: يجب إضافة خيارين على الأقل`);
+      }
+      return {
+        title: item.title,
+        type: "options",
+        lessonId,
+        options: item.options as QuestionOptionInput[],
+      };
+    }
+
+    if (item.type === "match") {
+      if (!Array.isArray(item.matchingItems) || item.matchingItems.length < 3) {
+        throw new Error(`${label}: يجب إضافة عناصر توصيل كافية`);
+      }
+      return {
+        title: item.title,
+        type: "match",
+        lessonId,
+        matchingItems: item.matchingItems as QuestionMatchItemInput[],
+      };
+    }
+
+    throw new Error(`${label}: نوع السؤال يجب أن يكون options أو match`);
+  });
+}
+
+function BulkImportDialog({
+  lessonId,
+  onClose,
+  onSaved,
+}: {
+  lessonId: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragging(false);
+    const dropped = e.dataTransfer.files?.[0];
+    if (dropped) setFile(dropped);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!file) {
+      setFormError("يرجى اختيار ملف JSON");
+      return;
+    }
+
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      const text = await file.text();
+      const questions = parseBulkQuestions(text, lessonId);
+      await bulkCreateQuestions({ questions });
+      onSaved();
+    } catch (err) {
+      setFormError(formatError(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent dir="rtl" className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="pt-5">استيراد أسئلة من ملف JSON</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          <div className="space-y-3">
+            <Label htmlFor="bulk-file">ملف الأسئلة</Label>
+            <input
+              id="bulk-file"
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
+                isDragging
+                  ? "bg-blue-50 border-blue-400"
+                  : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-blue-300"
+              }`}
+            >
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+                <FileJson className="h-6 w-6 text-blue-600" />
+              </div>
+              {file ? (
+                <>
+                  <p className="text-sm font-bold text-slate-900">
+                    {file.name}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="text-xs text-red-500 hover:text-red-600 mt-1"
+                  >
+                    إزالة الملف
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-bold text-slate-900">
+                    اسحب ملف JSON هنا
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    أو انقر لاختيار ملف · يُقبل فقط ملفات json.
+                  </p>
+                </>
+              )}
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              يجب أن يحتوي الملف على مصفوفة questions، وكل سؤال من نوع options
+              أو match. سيتم ربط جميع الأسئلة المستوردة بهذا الدرس تلقائياً.
+            </p>
+          </div>
+
+          {formError && <p className="text-sm text-red-500">{formError}</p>}
+
+          <div className="flex gap-3 justify-end pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="p-4 h-12"
+            >
+              إلغاء
+            </Button>
+            <Button type="submit" disabled={submitting} className="p-4 h-12">
+              {submitting ? "جاري الاستيراد..." : "استيراد"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function FileImage({
@@ -124,6 +314,7 @@ function QuestionFormDialog({
   const [type, setType] = useState<QuestionType>(editing?.type ?? "options");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageRemoved, setImageRemoved] = useState(false);
   const [answersDirty, setAnswersDirty] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -152,7 +343,10 @@ function QuestionFormDialog({
           const matchIndex = matchItems.findIndex(
             (m) => m.id === b.correctMatchId,
           );
-          return { text: b.text, matchIndex: matchIndex < 0 ? null : matchIndex };
+          return {
+            text: b.text,
+            matchIndex: matchIndex < 0 ? null : matchIndex,
+          };
         });
       }
     }
@@ -184,6 +378,13 @@ function QuestionFormDialog({
     const file = e.target.files?.[0] ?? null;
     setImageFile(file);
     setImagePreview(file ? URL.createObjectURL(file) : null);
+    if (file) setImageRemoved(false);
+  }
+
+  function handleRemoveImage() {
+    setImageFile(null);
+    setImagePreview(null);
+    setImageRemoved(true);
   }
 
   function switchType(next: QuestionType) {
@@ -221,7 +422,10 @@ function QuestionFormDialog({
   }
 
   function buildOptionInputs(): QuestionOptionInput[] {
-    return options.map((o) => ({ text: o.text.trim(), isCorrect: o.isCorrect }));
+    return options.map((o) => ({
+      text: o.text.trim(),
+      isCorrect: o.isCorrect,
+    }));
   }
 
   function buildMatchInputs(): QuestionMatchItemInput[] {
@@ -249,6 +453,9 @@ function QuestionFormDialog({
     setFormError(null);
     try {
       if (editing) {
+        if (imageRemoved && !imageFile && editing.imageId) {
+          await deleteQuestionImage(editing.id);
+        }
         await updateQuestion(editing.id, {
           title: title.trim(),
           ...(imageFile ? { image: imageFile } : {}),
@@ -282,7 +489,10 @@ function QuestionFormDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent dir="rtl" className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent
+        dir="rtl"
+        className="max-w-2xl max-h-[85vh] overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle className="pt-5">
             {editing ? "تعديل السؤال" : "إضافة سؤال جديد"}
@@ -308,18 +518,41 @@ function QuestionFormDialog({
               onChange={handleImageChange}
             />
             {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="معاينة صورة السؤال"
-                className="max-h-40 rounded-lg border border-slate-200"
-              />
-            ) : (
-              editing?.imageId && (
-                <FileImage
-                  fileId={editing.imageId}
-                  alt="صورة السؤال الحالية"
+              <div className="flex items-center gap-3">
+                <img
+                  src={imagePreview}
+                  alt="معاينة صورة السؤال"
                   className="max-h-40 rounded-lg border border-slate-200"
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveImage}
+                  className="text-red-500 hover:text-red-600"
+                >
+                  إزالة الصورة
+                </Button>
+              </div>
+            ) : (
+              editing?.imageId &&
+              !imageRemoved && (
+                <div className="flex items-center gap-3">
+                  <FileImage
+                    fileId={editing.imageId}
+                    alt="صورة السؤال الحالية"
+                    className="max-h-40 rounded-lg border border-slate-200"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRemoveImage}
+                    className="text-red-500 hover:text-red-600"
+                  >
+                    إزالة الصورة
+                  </Button>
+                </div>
               )
             )}
           </div>
@@ -414,7 +647,10 @@ function QuestionFormDialog({
               <div className="space-y-3">
                 <Label>العناصر الأساسية</Label>
                 {bases.map((base, i) => (
-                  <div key={i} className="space-y-2 rounded-lg border border-slate-200 p-3">
+                  <div
+                    key={i}
+                    className="space-y-2 rounded-lg border border-slate-200 p-3"
+                  >
                     <div className="flex items-center gap-2">
                       <Input
                         value={base.text}
@@ -470,7 +706,10 @@ function QuestionFormDialog({
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setBases((prev) => [...prev, { text: "", matchIndex: null }]);
+                    setBases((prev) => [
+                      ...prev,
+                      { text: "", matchIndex: null },
+                    ]);
                     setAnswersDirty(true);
                   }}
                 >
@@ -544,11 +783,11 @@ function QuestionFormDialog({
               type="button"
               variant="outline"
               onClick={onClose}
-              className="p-4 h-11"
+              className="p-4 h-12"
             >
               إلغاء
             </Button>
-            <Button type="submit" disabled={submitting} className="p-4 h-11">
+            <Button type="submit" disabled={submitting} className="p-4 h-12">
               {submitting
                 ? "جاري الحفظ..."
                 : editing
@@ -582,10 +821,16 @@ export default function LessonQuestionsPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<Question | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
 
   const locked = lesson?.status === "active";
 
@@ -621,11 +866,46 @@ export default function LessonQuestionsPage() {
     try {
       await deleteQuestion(deleteTarget.id);
       setQuestions((prev) => prev.filter((q) => q.id !== deleteTarget.id));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(deleteTarget.id);
+        return next;
+      });
       setDeleteTarget(null);
     } catch (e) {
       setDeleteError(formatError(e));
     } finally {
       setDeleting(false);
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return;
+
+    setBulkDeleting(true);
+    setBulkDeleteError(null);
+    try {
+      const ids = Array.from(selectedIds);
+      await bulkDeleteQuestions(ids);
+      setQuestions((prev) => prev.filter((q) => !selectedIds.has(q.id)));
+      setSelectedIds(new Set());
+      setBulkDeleteOpen(false);
+    } catch (e) {
+      setBulkDeleteError(formatError(e));
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -675,22 +955,61 @@ export default function LessonQuestionsPage() {
           <div>
             <h1 className="text-xl md:text-2xl font-bold">أسئلة الدرس</h1>
             <p className="text-sm text-slate-500 mt-0.5">
-              {lesson ? `إدارة أسئلة درس "${lesson.title}"` : "إدارة أسئلة هذا الدرس"}
+              {lesson
+                ? `إدارة أسئلة درس "${lesson.title}"`
+                : "إدارة أسئلة هذا الدرس"}
             </p>
           </div>
         </div>
         {!locked && (
-          <ActionButton
-            label="إضافة سؤال"
-            icon={Plus}
-            bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200"
-            onClick={() => {
-              setEditingQuestion(null);
-              setFormOpen(true);
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <ActionButton
+              label="استيراد أسئلة"
+              icon={Upload}
+              bgClassName="bg-slate-600 hover:bg-slate-700 shadow-slate-200"
+              onClick={() => setBulkOpen(true)}
+            />
+            <ActionButton
+              label="إضافة سؤال"
+              icon={Plus}
+              bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+              onClick={() => {
+                setEditingQuestion(null);
+                setFormOpen(true);
+              }}
+            />
+          </div>
         )}
       </div>
+
+      {!locked && selectedIds.size > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <span className="text-sm text-red-700 font-medium">
+            تم تحديد {selectedIds.size} سؤال
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedIds(new Set())}
+            >
+              إلغاء التحديد
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                setBulkDeleteError(null);
+                setBulkDeleteOpen(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4 ml-1" /> حذف المحدد
+            </Button>
+          </div>
+        </div>
+      )}
 
       {locked && (
         <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
@@ -732,13 +1051,20 @@ export default function LessonQuestionsPage() {
             return (
               <Card
                 key={question.id}
-                onClick={() =>
-                  setExpandedId(isExpanded ? null : question.id)
-                }
+                onClick={() => setExpandedId(isExpanded ? null : question.id)}
                 className="border-slate-200 shadow-xs hover:shadow-md hover:border-blue-100 transition-all cursor-pointer p-4 md:p-6 flex flex-col gap-4"
               >
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div className="flex items-center gap-4 flex-1 w-full md:w-auto min-w-0">
+                    {!locked && (
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 shrink-0 accent-blue-600"
+                        checked={selectedIds.has(question.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={() => toggleSelect(question.id)}
+                      />
+                    )}
                     <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
                       {question.imageId ? (
                         <ImageIcon className="h-5 w-5 text-blue-600" />
@@ -878,8 +1204,7 @@ export default function LessonQuestionsPage() {
                         })}
                         {decoys.length > 0 && (
                           <p className="text-xs text-slate-400">
-                            إجابات تمويه:{" "}
-                            {decoys.map((d) => d.text).join("، ")}
+                            إجابات تمويه: {decoys.map((d) => d.text).join("، ")}
                           </p>
                         )}
                       </div>
@@ -906,6 +1231,18 @@ export default function LessonQuestionsPage() {
         />
       )}
 
+      {/* Bulk Import Questions Dialog */}
+      {bulkOpen && (
+        <BulkImportDialog
+          lessonId={lessonId}
+          onClose={() => setBulkOpen(false)}
+          onSaved={() => {
+            setBulkOpen(false);
+            fetchData();
+          }}
+        />
+      )}
+
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={!!deleteTarget}
@@ -913,7 +1250,7 @@ export default function LessonQuestionsPage() {
       >
         <DialogContent dir="rtl" className="max-w-md">
           <DialogHeader>
-            <DialogTitle>حذف السؤال</DialogTitle>
+            <DialogTitle className="pt-5">حذف السؤال</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-slate-500">
             هل أنت متأكد من حذف سؤال &quot;{deleteTarget?.title}&quot;؟ لا يمكن
@@ -925,7 +1262,7 @@ export default function LessonQuestionsPage() {
               type="button"
               variant="outline"
               onClick={() => setDeleteTarget(null)}
-              className="p-4 h-11"
+              className="p-4 h-12"
             >
               إلغاء
             </Button>
@@ -934,9 +1271,47 @@ export default function LessonQuestionsPage() {
               variant="destructive"
               disabled={deleting}
               onClick={handleDelete}
-              className="p-4 h-11"
+              className="p-4 h-12"
             >
               {deleting ? "جاري الحذف..." : "حذف"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog
+        open={bulkDeleteOpen}
+        onOpenChange={(open) => !open && setBulkDeleteOpen(false)}
+      >
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="pt-5">حذف الأسئلة المحددة</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-slate-500">
+            هل أنت متأكد من حذف {selectedIds.size} سؤال؟ لا يمكن التراجع عن هذا
+            الإجراء.
+          </p>
+          {bulkDeleteError && (
+            <p className="text-sm text-red-500">{bulkDeleteError}</p>
+          )}
+          <div className="flex gap-3 justify-end pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setBulkDeleteOpen(false)}
+              className="p-4 h-12"
+            >
+              إلغاء
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={bulkDeleting}
+              onClick={handleBulkDelete}
+              className="p-4 h-12"
+            >
+              {bulkDeleting ? "جاري الحذف..." : "حذف"}
             </Button>
           </div>
         </DialogContent>

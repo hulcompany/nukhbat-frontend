@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getSchools, createSchool, GetSchoolsParams } from "@/api/schools";
 import { downloadFile } from "@/api/files";
 import { School } from "@/types/school";
@@ -178,9 +179,13 @@ export default function SchoolsManagementPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-0">
           <CardContent className="p-4 md:p-6 text-center">
-            <div className="text-2xl md:text-3xl font-bold text-green-600 mb-1">
-              {totalRecords}
-            </div>
+            {loading ? (
+              <Skeleton className="h-8 w-12 mx-auto mb-1" />
+            ) : (
+              <div className="text-2xl md:text-3xl font-bold text-green-600 mb-1">
+                {totalRecords}
+              </div>
+            )}
             <div className="text-xs md:text-sm text-slate-500">
               إجمالي المدارس
             </div>
@@ -189,10 +194,41 @@ export default function SchoolsManagementPage() {
       </div>
 
       {/* States */}
-      {loading && (
-        <p className="text-center text-slate-500 py-12">جاري التحميل...</p>
-      )}
       {error && <p className="text-center text-red-500 py-12">{error}</p>}
+
+      {/* Schools Grid Skeleton */}
+      {loading && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardContent className="p-4 md:p-6">
+                <div className="flex gap-3 md:gap-4 items-center mb-6">
+                  <Skeleton className="w-10 h-10 md:w-12 md:h-12 rounded-xl shrink-0" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6">
+                  {Array.from({ length: 2 }).map((_, j) => (
+                    <div key={j} className="bg-slate-50 p-2 md:p-3 rounded-lg space-y-1.5">
+                      <Skeleton className="h-2.5 w-16" />
+                      <Skeleton className="h-3.5 w-20" />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-2 sm:flex gap-2">
+                  {Array.from({ length: 4 }).map((_, k) => (
+                    <Skeleton key={k} className="flex-1 h-9 md:h-10 rounded-md" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Schools Grid */}
       {!loading && !error && (
