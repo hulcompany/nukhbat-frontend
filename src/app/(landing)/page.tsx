@@ -84,7 +84,7 @@ export default function LandingPage() {
       {/* --- 1. Main Hero Section --- */}
       <section
         id="home"
-        className="relative z-10 max-w-350 mx-auto px-6 lg:px-16 pt-32 lg:pt-24 pb-20 flex flex-col lg:flex-row items-center justify-between gap-12 min-h-[calc(100vh-120px)]"
+        className="relative z-10 max-w-350 mx-auto px-6 lg:px-16 pt-32 lg:pt-24 flex flex-col lg:flex-row items-center justify-between gap-12 min-h-[calc(100vh-120px)]"
       >
         {/* Text Content */}
         <motion.div
@@ -152,7 +152,7 @@ export default function LandingPage() {
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
         variants={fadeInUp}
-        className="relative z-20 pt-20"
+        className="relative z-20"
       >
         <FeaturesSection />
       </motion.div>
@@ -164,7 +164,7 @@ export default function LandingPage() {
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
         variants={slideInRight}
-        className="relative z-20 pt-20"
+        className="relative z-20"
       >
         <InteractiveLearningSection />
       </motion.div>
@@ -186,7 +186,7 @@ export default function LandingPage() {
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
         variants={scaleUp}
-        className="relative z-20 pt-20"
+        className="relative z-20"
       >
         <HowItWorksSection />
       </motion.div>
@@ -198,7 +198,7 @@ export default function LandingPage() {
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
         variants={fadeInUp}
-        className="relative z-20 pt-20"
+        className="relative z-20"
       >
         <LearningTracksSection />
       </motion.div>
@@ -209,7 +209,7 @@ export default function LandingPage() {
         whileInView="visible"
         viewport={{ once: true, margin: "-50px" }}
         variants={scaleUp}
-        className="relative z-20 pt-20"
+        className="relative z-20"
       >
         <CTASection />
       </motion.div>
@@ -221,7 +221,7 @@ export default function LandingPage() {
         whileInView="visible"
         viewport={{ once: true, margin: "-50px" }}
         variants={fadeInUp}
-        className="relative z-20 pt-20"
+        className="relative z-20"
       >
         <FAQSection />
       </motion.div>

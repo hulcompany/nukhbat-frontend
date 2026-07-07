@@ -15,6 +15,8 @@ export interface AppInfo {
   phone: string;
   location?: string;
   position?: Position;
+  facebook?: string;
+  instagram?: string;
 }
 
 export interface InfoResponse {

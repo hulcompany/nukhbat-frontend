@@ -163,9 +163,11 @@ export function SchoolDashboardSidebar() {
           >
             {!isCollapsed && (
               <>
-                <div className="flex-shrink-0 w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-blue-600/20">
-                  ن
-                </div>
+                <img
+                  src="/images/logo.png"
+                  alt="شعار النُخبة"
+                  className="shrink-0 w-10 h-10 object-contain rounded-lg shadow-lg shadow-blue-600/20"
+                />
                 <div className="flex flex-col whitespace-nowrap">
                   <span className="text-white font-bold text-base">
                     النُخبة

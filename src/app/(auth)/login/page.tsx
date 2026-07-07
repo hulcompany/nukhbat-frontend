@@ -127,11 +127,15 @@ export default function LoginPage() {
     >
       {/* Header Section */}
       <div className="flex flex-col items-center mb-8 text-center">
-        <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mb-6 shadow-[0_10px_20px_-5px_rgba(37,99,235,0.4)]">
-          <span className="text-white text-3xl font-bold">ن</span>
+        <div className="w-16 h-16 rounded-lg flex items-center justify-center mb-6 shadow-[0_10px_20px_-5px_rgba(37,99,235,0.4)] overflow-hidden">
+          <img
+            src="/images/logo.png"
+            alt="شعار النُخبة"
+            className="w-full h-full object-contain"
+          />
         </div>
         <h1 className="text-2xl font-bold text-slate-900 mb-2">
-          لوحة تحكم النخبة الأوائل
+          لوحة تحكم النُخبة
         </h1>
         <p className="text-slate-500 text-sm max-w-xs leading-relaxed">
           إدارة الطلاب، المناهج، الأسئلة، الاشتراكات، والإحصائيات من مكان واحد.

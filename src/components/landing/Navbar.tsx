@@ -26,11 +26,19 @@ export function Navbar() {
       className="absolute top-0 mx-auto left-0 right-0 z-50 flex items-center justify-between px-6 lg:px-16 py-8 max-w-[1400px]"
       dir="rtl"
     >
-      {/* Action Button (Now on the far right) - Hidden on mobile, shown in menu */}
-      <div className="shrink-0 hidden lg:block">
-        <button className="bg-[#2563eb] hover:bg-blue-600 text-white px-8 py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg shadow-blue-900/20">
-          تحميل التطبيق
-        </button>
+      {/* Logo (Far Left) */}
+      <div className="flex items-center shrink-0">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-2xl font-black text-white tracking-tight"
+        >
+          <img
+            src="/images/logo.png"
+            alt="شعار النُخبة"
+            className="h-10 w-auto object-contain rounded-lg"
+          />
+          النُخبة
+        </Link>
       </div>
 
       {/* Links (Center) */}
@@ -72,14 +80,11 @@ export function Navbar() {
         </Link>
       </div>
 
-      {/* Logo (Far Left) */}
-      <div className="flex items-center shrink-0">
-        <Link
-          href="/"
-          className="text-2xl font-black text-white tracking-tight"
-        >
-          النخبة الأوائل
-        </Link>
+      {/* Action Button (Now on the far right) - Hidden on mobile, shown in menu */}
+      <div className="shrink-0 hidden lg:block">
+        <button className="bg-[#2563eb] hover:bg-blue-600 text-white px-8 py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg shadow-blue-900/20">
+          تحميل التطبيق
+        </button>
       </div>
 
       {/* Mobile Menu Toggle Button */}

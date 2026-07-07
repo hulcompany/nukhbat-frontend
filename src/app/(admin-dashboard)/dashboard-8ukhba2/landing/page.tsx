@@ -133,6 +133,7 @@ export default function LandingManagementPage() {
           <ActionButton
             label="الموقع"
             icon={Globe}
+            onClick={() => window.open("/", "_blank")}
             bgClassName="bg-transparent text-gray-700 border-slate-200 hover:bg-slate-50 shadow-xs flex-1 sm:flex-none"
           />
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Building2, Edit2 } from "lucide-react";
+import { Building2, Edit2, ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -63,6 +63,20 @@ export default function SchoolProfilePage() {
   const nameRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
 
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  function selectLogo(file: File | null) {
+    if (file && !file.type.startsWith("image/")) return;
+    setLogoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return file ? URL.createObjectURL(file) : null;
+    });
+    setLogoFile(file);
+    if (!file && imageRef.current) imageRef.current.value = "";
+  }
+
   async function fetchSchool() {
     setLoading(true);
     setError(null);
@@ -81,7 +95,7 @@ export default function SchoolProfilePage() {
     fetchSchool();
   }, []);
 
-  async function handleEdit(e: React.FormEvent) {
+  async function handleEdit(e: React.SubmitEvent) {
     e.preventDefault();
     if (!school) return;
 
@@ -89,11 +103,10 @@ export default function SchoolProfilePage() {
     setFormError(null);
     try {
       const newName = nameRef.current!.value.trim();
-      const imageFile = imageRef.current?.files?.[0];
 
       const payload: { name?: string; image?: File } = {};
       if (newName && newName !== school.name) payload.name = newName;
-      if (imageFile) payload.image = imageFile;
+      if (logoFile) payload.image = logoFile;
 
       if (Object.keys(payload).length === 0) {
         setEditOpen(false);
@@ -104,6 +117,7 @@ export default function SchoolProfilePage() {
       await updateMySchool(payload);
 
       setEditOpen(false);
+      selectLogo(null);
       fetchSchool();
     } catch (e) {
       setFormError((e as Error).message);
@@ -117,8 +131,7 @@ export default function SchoolProfilePage() {
     setDeleteImageError(null);
     try {
       await deleteMySchoolImage();
-      if (imageRef.current) imageRef.current.value = "";
-      fetchSchool();
+      setSchool((s) => (s ? { ...s, logo: null } : s));
     } catch (e) {
       setDeleteImageError((e as Error).message);
     } finally {
@@ -268,34 +281,94 @@ export default function SchoolProfilePage() {
                   (اتركه فارغاً للإبقاء على الشعار الحالي)
                 </span>
               </Label>
-              {school.logo && (
-                <div className="flex items-center gap-3 mb-2">
-                  <FileImage
-                    fileId={school.logo}
-                    alt={school.name}
-                    className="w-16 h-16 rounded-xl object-cover"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={deletingImage}
-                    onClick={handleDeleteImage}
-                    className="text-red-500 hover:text-red-600"
-                  >
-                    {deletingImage ? "جاري الحذف..." : "حذف الصورة"}
-                  </Button>
-                </div>
-              )}
-              {deleteImageError && (
-                <p className="text-xs text-red-500">{deleteImageError}</p>
-              )}
-              <Input
+              <input
                 id="edit-image"
                 type="file"
                 accept="image/*"
                 ref={imageRef}
+                className="hidden"
+                onChange={(e) => selectLogo(e.target.files?.[0] ?? null)}
               />
+              <div
+                onClick={() => imageRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  selectLogo(e.dataTransfer.files?.[0] ?? null);
+                }}
+                className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
+                  isDragging
+                    ? "bg-blue-50 border-blue-400"
+                    : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-blue-300"
+                }`}
+              >
+                {logoPreview ? (
+                  <img
+                    src={logoPreview}
+                    alt="الشعار الجديد"
+                    className="w-16 h-16 rounded-xl object-cover mb-3"
+                  />
+                ) : school.logo ? (
+                  <FileImage
+                    fileId={school.logo}
+                    alt={school.name}
+                    className="w-16 h-16 rounded-xl object-cover mb-3"
+                  />
+                ) : (
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+                    <ImageIcon className="h-6 w-6 text-blue-600" />
+                  </div>
+                )}
+                {logoFile ? (
+                  <>
+                    <p className="text-sm font-bold text-slate-900">
+                      {logoFile.name}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        selectLogo(null);
+                      }}
+                      className="text-xs text-red-500 hover:text-red-600 mt-1"
+                    >
+                      إزالة الصورة
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm font-bold text-slate-900">
+                      اسحب الصورة هنا
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      أو انقر لاختيار صورة
+                    </p>
+                    {school.logo && (
+                      <button
+                        type="button"
+                        disabled={deletingImage}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteImage();
+                        }}
+                        className="text-xs text-red-500 hover:text-red-600 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {deletingImage
+                          ? "جاري حذف الشعار..."
+                          : "حذف الشعار الحالي"}
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+              {deleteImageError && (
+                <p className="text-xs text-red-500">{deleteImageError}</p>
+              )}
             </div>
             {formError && <p className="text-sm text-red-500">{formError}</p>}
             <div className="flex gap-3 justify-end pt-2">

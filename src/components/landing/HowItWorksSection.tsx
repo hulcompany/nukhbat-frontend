@@ -70,7 +70,7 @@ export function HowItWorksSection() {
             <img
               src="./landing/phones-group-1.png"
               alt="خطوات التطبيق"
-              className="relative z-10 w-full max-w-125 object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
+              className="relative z-10 w-full max-w-xl object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
             />
           </div>
         </div>
@@ -84,7 +84,7 @@ export function HowItWorksSection() {
             <img
               src="./landing/phones-mockup.png"
               alt="واجهة التطبيق"
-              className="relative z-10 w-full max-w-[450px] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
+              className="relative z-10 w-full max-w-xl object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
             />
           </div>
 
@@ -120,7 +120,7 @@ export function HowItWorksSection() {
             <img
               src="./landing/phones-group-3.png"
               alt="مزايا التطبيق"
-              className="relative z-10 w-full max-w-[500px] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
+              className="relative z-10 w-full max-w-xl object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.4)]"
             />
           </div>
         </div>

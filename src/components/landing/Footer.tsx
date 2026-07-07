@@ -49,11 +49,13 @@ export function Footer() {
           {/* Column 1: Logo & App Description */}
           <div className="lg:col-span-2 flex flex-col items-start">
             <Link href="/" className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-[#2563eb] rounded-full flex items-center justify-center text-white font-bold text-xl">
-                ن
-              </div>
+              <img
+                src="/images/logo.png"
+                alt="شعار النُخبة"
+                className="h-10 w-auto object-contain rounded-lg"
+              />
               <span className="text-2xl font-black text-white tracking-tight">
-                النخبة الأوائل
+                النُخبة
               </span>
             </Link>
 
@@ -86,26 +88,49 @@ export function Footer() {
                 </svg>
               </a>
 
-              {/* App Store Button */}
+              {/* Facebook */}
               <a
-                href={formatUrl(info?.appStore)} // Use the helper here
+                href={formatUrl("https://www.facebook.com/share/1BJ8HuzztG/")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-row-reverse items-center gap-3 bg-transparent border border-slate-700 rounded-xl px-5 py-2.5 hover:bg-slate-800 transition-colors group"
+                aria-label="فيسبوك"
+                className="w-11 h-12 rounded-xl border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
               >
-                <div className="flex flex-col items-start text-left">
-                  <span className="text-[10px] text-slate-400 group-hover:text-slate-300 transition-colors">
-                    حمله من
-                  </span>
-                  <span className="text-sm font-bold text-white leading-none mt-0.5">
-                    App Store
-                  </span>
-                </div>
                 <svg
-                  viewBox="0 0 384 512"
-                  className="w-6 h-6 fill-current text-white"
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                </svg>
+              </a>
+
+              {/* Instagram */}
+              <a
+                href={formatUrl(
+                  "https://www.instagram.com/alnukhba.app?igsh=MWZkbnI4a2N1ZmxrZw==",
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="انستغرام"
+                className="w-11 h-12 rounded-xl border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
                 </svg>
               </a>
             </div>
@@ -176,7 +201,7 @@ export function Footer() {
                 <li className="flex items-center gap-3">
                   <MapPin className="w-5 h-5 text-[#2563eb]" />
                   <span className="text-slate-400">
-                    {info?.location || "سوريا - دمشق - شارع الثورة"}
+                    {info?.location || "سوريا"}
                   </span>
                 </li>
               </ul>
@@ -192,10 +217,10 @@ export function Footer() {
               href="https://hul-co.com/"
               className="text-slate-300 underline underline-offset-4 hover:text-white transition-colors"
             >
-              شركة حل
+              شركة حَل
             </a>
           </p>
-          <p>جميع الحقوق محفوظة © 2026 تطبيق النخبة الأوائل.</p>
+          <p>جميع الحقوق محفوظة © 2026 تطبيق النُخبة .</p>
         </div>
       </div>
     </footer>

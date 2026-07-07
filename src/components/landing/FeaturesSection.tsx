@@ -53,7 +53,7 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className="relative z-10 py-20 lg:py-32 px-6 lg:px-16 max-w-[1400px] mx-auto">
+    <section className="relative z-10 py-20 lg:py-32 px-6 lg:px-16 max-w-350 mx-auto">
       {/* Section Header */}
       <div className="text-center mb-16 lg:mb-20">
         <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
