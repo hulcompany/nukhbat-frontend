@@ -114,11 +114,12 @@ export default function SchoolProfilePage() {
         return;
       }
 
-      await updateMySchool(payload);
+      const res = await updateMySchool(payload);
 
       setEditOpen(false);
       selectLogo(null);
-      fetchSchool();
+      setSchool(res.data);
+      window.dispatchEvent(new Event("school-updated"));
     } catch (e) {
       setFormError((e as Error).message);
     } finally {
@@ -132,6 +133,7 @@ export default function SchoolProfilePage() {
     try {
       await deleteMySchoolImage();
       setSchool((s) => (s ? { ...s, logo: null } : s));
+      window.dispatchEvent(new Event("school-updated"));
     } catch (e) {
       setDeleteImageError((e as Error).message);
     } finally {

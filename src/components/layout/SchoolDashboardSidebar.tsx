@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { FileImage } from "@/components/ui/file-image";
+import { getMySchool } from "@/api/schools";
+import { School } from "@/types/school";
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,6 +16,7 @@ import {
   Users,
   Key,
   BookOpen,
+  Book,
   HelpCircle,
   Zap,
   BarChart2,
@@ -35,6 +38,7 @@ const mainItems = [
 
 const contentItems = [
   { title: "المناهج", icon: BookOpen, href: `${BASE}/curricula` },
+  { title: "الكتب", icon: Book, href: `${BASE}/books` },
   { title: "الأسئلة", icon: HelpCircle, href: `${BASE}/questions` },
   { title: "التحدي اليومي", icon: Zap, href: `${BASE}/daily-challenge` },
 ];
@@ -70,12 +74,28 @@ export function SchoolDashboardSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [school, setSchool] = useState<School | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("schoolSidebarCollapsed");
     if (saved !== null) setIsCollapsed(saved === "true");
     setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (user?.role !== "contentWriter") return;
+
+    const fetchSchool = () => {
+      getMySchool()
+        .then((res) => setSchool(res.data))
+        .catch(() => setSchool(null));
+    };
+
+    fetchSchool();
+    // Re-fetch when the profile page updates the school (e.g. new logo)
+    window.addEventListener("school-updated", fetchSchool);
+    return () => window.removeEventListener("school-updated", fetchSchool);
+  }, [user?.role]);
 
   useEffect(() => {
     setIsMobileOpen(false);
@@ -239,7 +259,13 @@ export function SchoolDashboardSidebar() {
               )}
               title={isCollapsed ? user.name : undefined}
             >
-              {user.profileImage ? (
+              {school?.logo ? (
+                <FileImage
+                  fileId={school.logo}
+                  alt={school.name}
+                  className="w-10 h-10 rounded-full object-cover shrink-0"
+                />
+              ) : user.profileImage ? (
                 <FileImage
                   fileId={user.profileImage}
                   alt={user.name}

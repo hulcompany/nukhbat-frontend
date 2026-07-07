@@ -52,6 +52,7 @@ export interface School {
   name: string;
   logo: string | null;
   owner: SchoolOwner;
+  default?: boolean;
   tracks?: Track[];
   allowedTracks?: Track[];
 }
