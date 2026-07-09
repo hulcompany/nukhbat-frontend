@@ -184,7 +184,7 @@ export function SchoolDashboardSidebar() {
             {!isCollapsed && (
               <>
                 <img
-                  src="/images/logo.png"
+                  src="/images/logo.webp"
                   alt="شعار النُخبة"
                   className="shrink-0 w-10 h-10 object-contain rounded-lg shadow-lg shadow-blue-600/20"
                 />

@@ -33,7 +33,7 @@ export function Navbar() {
           className="flex items-center gap-2 text-2xl font-black text-white tracking-tight"
         >
           <img
-            src="/images/logo.png"
+            src="/images/logo.webp"
             alt="شعار النُخبة"
             className="h-10 w-auto object-contain rounded-lg"
           />

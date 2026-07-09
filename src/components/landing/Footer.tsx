@@ -50,7 +50,7 @@ export function Footer() {
           <div className="lg:col-span-2 flex flex-col items-start">
             <Link href="/" className="flex items-center gap-3 mb-6">
               <img
-                src="/images/logo.png"
+                src="/images/logo.webp"
                 alt="شعار النُخبة"
                 className="h-10 w-auto object-contain rounded-lg"
               />

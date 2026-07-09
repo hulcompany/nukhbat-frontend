@@ -129,7 +129,7 @@ export default function LoginPage() {
       <div className="flex flex-col items-center mb-8 text-center">
         <div className="w-16 h-16 rounded-lg flex items-center justify-center mb-6 shadow-[0_10px_20px_-5px_rgba(37,99,235,0.4)] overflow-hidden">
           <img
-            src="/images/logo.png"
+            src="/images/logo.webp"
             alt="شعار النُخبة"
             className="w-full h-full object-contain"
           />
