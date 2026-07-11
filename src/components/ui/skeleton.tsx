@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -52,4 +53,23 @@ function ListCardSkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
-export { Skeleton, GridCardSkeleton, ListCardSkeleton };
+/** Skeleton for a grid of horizontal icon+text cards (books). */
+function HorizontalCardSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {Array.from({ length: count }).map((_, i) => (
+        <Card key={i} className="p-0">
+          <CardContent className="p-5 flex items-center gap-4">
+            <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-3 w-1/3" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+export { Skeleton, GridCardSkeleton, ListCardSkeleton, HorizontalCardSkeleton };

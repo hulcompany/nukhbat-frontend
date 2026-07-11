@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import {
-  Plus,
   ListChecks,
   ArrowLeft,
   CheckCircle2,
   Circle,
+  RefreshCcw,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ActionButton } from "@/components/ui/action-button";
@@ -17,7 +17,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getDailyChallenges, createDailyChallenge } from "@/api/daily-challenge";
+import {
+  getDailyChallenges,
+  createDailyChallenge,
+} from "@/api/daily-challenge";
 import { getQuestionById } from "@/api/question";
 import { downloadFile } from "@/api/files";
 import { Challenge, UnusedQuestionSummary } from "@/types/daily-challenge";
@@ -65,7 +68,9 @@ function FileImage({
 
 export default function DailyChallengePage() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [unUsedQuestions, setUnUsedQuestions] = useState<UnusedQuestionSummary[]>([]);
+  const [unUsedQuestions, setUnUsedQuestions] = useState<
+    UnusedQuestionSummary[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,9 +80,7 @@ export default function DailyChallengePage() {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
     null,
   );
-  const [questionDetails, setQuestionDetails] = useState<Question | null>(
-    null,
-  );
+  const [questionDetails, setQuestionDetails] = useState<Question | null>(null);
   const [questionLoading, setQuestionLoading] = useState(false);
   const [questionError, setQuestionError] = useState<string | null>(null);
 
@@ -145,15 +148,13 @@ export default function DailyChallengePage() {
         </div>
         <div className="flex flex-col items-end gap-2">
           <ActionButton
-            label={creating ? "جاري الإضافة..." : "إضافة تحدي"}
-            icon={Plus}
+            label={creating ? "جاري إنشاء التحدي" : "توليد التحدي اليومي"}
+            icon={RefreshCcw}
             bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200"
             disabled={creating}
             onClick={handleCreate}
           />
-          {createError && (
-            <p className="text-xs text-red-500">{createError}</p>
-          )}
+          {createError && <p className="text-xs text-red-500">{createError}</p>}
         </div>
       </div>
 
@@ -357,7 +358,9 @@ export default function DailyChallengePage() {
                             <button
                               key={uq.id}
                               type="button"
-                              onClick={() => setSelectedQuestionId(uq.question.id)}
+                              onClick={() =>
+                                setSelectedQuestionId(uq.question.id)
+                              }
                               className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors cursor-pointer"
                             >
                               {uq.question.title}
@@ -434,7 +437,10 @@ export default function DailyChallengePage() {
         open={!!selectedQuestionId}
         onOpenChange={(open) => !open && setSelectedQuestionId(null)}
       >
-        <DialogContent dir="rtl" className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent
+          dir="rtl"
+          className="max-w-2xl max-h-[85vh] overflow-y-auto"
+        >
           <DialogHeader>
             <DialogTitle className="pt-5">تفاصيل السؤال</DialogTitle>
           </DialogHeader>

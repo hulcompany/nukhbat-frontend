@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Search,
   Plus,
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { ErrorState } from "@/components/ui/error-state";
 import {
   Dialog,
   DialogContent,
@@ -133,6 +134,8 @@ function QuestionFormDialog({
   const [type, setType] = useState<QuestionType>(editing?.type ?? "options");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [answersDirty, setAnswersDirty] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -206,10 +209,14 @@ function QuestionFormDialog({
     };
   }, [imagePreview]);
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null;
+  function selectImage(file: File | null) {
+    if (file && !file.type.startsWith("image/")) {
+      setFormError("يُقبل فقط ملفات الصور");
+      return;
+    }
     setImageFile(file);
     setImagePreview(file ? URL.createObjectURL(file) : null);
+    if (!file && imageInputRef.current) imageInputRef.current.value = "";
   }
 
   function switchType(next: QuestionType) {
@@ -373,27 +380,78 @@ function QuestionFormDialog({
 
           <div className="space-y-3">
             <Label htmlFor="question-image">صورة السؤال (اختياري)</Label>
-            <Input
+            <input
+              ref={imageInputRef}
               id="question-image"
               type="file"
               accept="image/*"
-              onChange={handleImageChange}
+              className="hidden"
+              onChange={(e) => selectImage(e.target.files?.[0] ?? null)}
             />
-            {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="معاينة صورة السؤال"
-                className="max-h-40 rounded-lg border border-slate-200"
-              />
-            ) : (
-              editing?.imageId && (
-                <FileImage
-                  fileId={editing.imageId}
-                  alt="صورة السؤال الحالية"
-                  className="max-h-40 rounded-lg border border-slate-200"
-                />
-              )
-            )}
+            <div
+              onClick={() => imageInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingImage(true);
+              }}
+              onDragLeave={() => setIsDraggingImage(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDraggingImage(false);
+                selectImage(e.dataTransfer.files?.[0] ?? null);
+              }}
+              className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
+                isDraggingImage
+                  ? "bg-blue-50 border-blue-400"
+                  : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-blue-300"
+              }`}
+            >
+              {imagePreview ? (
+                <>
+                  <img
+                    src={imagePreview}
+                    alt="معاينة صورة السؤال"
+                    className="max-h-40 rounded-lg border border-slate-200 mb-2"
+                  />
+                  {imageFile && (
+                    <p className="text-xs text-slate-500">{imageFile.name}</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      selectImage(null);
+                    }}
+                    className="text-xs text-red-500 hover:text-red-600 mt-1"
+                  >
+                    إزالة الصورة
+                  </button>
+                </>
+              ) : editing?.imageId ? (
+                <>
+                  <FileImage
+                    fileId={editing.imageId}
+                    alt="صورة السؤال الحالية"
+                    className="max-h-40 rounded-lg border border-slate-200 mb-2"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    اضغط أو اسحب صورة جديدة للاستبدال
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-3">
+                    <ImageIcon className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-900">
+                    اسحب الصورة هنا
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    أو اضغط للاختيار من جهازك
+                  </p>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -797,7 +855,7 @@ export default function Questions() {
       )}
 
       {courseId && !loading && error && (
-        <p className="text-center text-red-500 py-16">{error}</p>
+        <ErrorState message={error} onRetry={fetchQuestions} />
       )}
 
       {courseId && !loading && !error && filteredQuestions.length === 0 && (

@@ -9,6 +9,7 @@ import {
   BulkCreateQuestionsResponse,
   BulkDeleteQuestionsResponse,
 } from "@/types/question";
+import { stringify } from "querystring";
 
 function appendAnswers(
   formData: FormData,
@@ -44,6 +45,7 @@ export interface GetQuestionsParams {
   limit?: number;
   title?: string;
 }
+// --------- For School ---------
 
 export async function getLessonQuestions(
   params: GetQuestionsParams,
@@ -76,11 +78,13 @@ export async function createQuestion(data: {
   if (data.courseId) formData.append("courseId", data.courseId);
   if (data.image) formData.append("image", data.image);
   appendAnswers(formData, data.type, data.options, data.matchingItems);
+
   const res = await apiClient.post<QuestionResponse>(
     "/school/me/questions",
     formData,
     { headers: { "Content-Type": "multipart/form-data" } },
   );
+
   return res.data;
 }
 
