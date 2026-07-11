@@ -9,3 +9,13 @@ export async function getSchoolCourses(
   );
   return res.data;
 }
+
+export async function getAdminCourses(
+  trackId: string,
+): Promise<SubjectsResponse> {
+  const res = await apiClient.get<SubjectsResponse>(
+    "/learning/admin/courses",
+    { params: { trackId } },
+  );
+  return res.data;
+}

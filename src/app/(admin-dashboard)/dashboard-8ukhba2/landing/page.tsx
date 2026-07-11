@@ -17,11 +17,7 @@ interface DraftFaq {
   description: string;
 }
 
-const navItems = [
-  "القسم الرئيسي (Hero)",
-  "الأسئلة الشائعة",
-  "التذييل (Footer)",
-];
+const navItems = ["الأسئلة الشائعة", "التذييل (Footer)"];
 
 export default function LandingManagementPage() {
   const [activeTab, setActiveTab] = useState("الأسئلة الشائعة");
