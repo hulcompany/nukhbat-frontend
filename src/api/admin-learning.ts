@@ -43,9 +43,11 @@ export async function getAdminLessons(params: {
 export async function getAdminQuestions(params: {
   skip?: number;
   limit?: number;
+  courseId?: string;
   lessonId?: string;
   schoolId?: string;
   title?: string;
+  trackId?: string;
 }): Promise<QuestionsResponse> {
   const res = await apiClient.get<QuestionsResponse>(
     "/learning/admin/questions",

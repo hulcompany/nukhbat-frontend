@@ -19,6 +19,13 @@ export interface QuestionMatchItem {
   schoolId: string;
 }
 
+export interface QuestionSchool {
+  id: string;
+  name: string;
+  logo: string | null;
+  default: boolean;
+}
+
 export interface Question {
   id: string;
   title: string;
@@ -29,6 +36,7 @@ export interface Question {
   courseId: string | null;
   imageId: string | null;
   schoolId: string;
+  school?: QuestionSchool;
   options: QuestionOption[];
   matchingItems: QuestionMatchItem[];
 }

@@ -12,7 +12,9 @@ import {
   ImageIcon,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   BookOpen,
+  Search,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -176,6 +178,19 @@ export default function SchoolDetailPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionsTotal, setQuestionsTotal] = useState(0);
   const [questionsSkip, setQuestionsSkip] = useState(0);
+  const [courseTab, setCourseTab] = useState<"units" | "questions">("units");
+  const [questionTitleInput, setQuestionTitleInput] = useState("");
+  const [questionTitle, setQuestionTitle] = useState("");
+  const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(
+    null,
+  );
+
+  function resetQuestionsView() {
+    setQuestionsSkip(0);
+    setQuestionTitleInput("");
+    setQuestionTitle("");
+    setExpandedQuestionId(null);
+  }
 
   const [browserLoading, setBrowserLoading] = useState(false);
   const [browserError, setBrowserError] = useState<string | null>(null);
@@ -201,6 +216,8 @@ export default function SchoolDetailPage() {
     setSelCourse(course);
     setSelUnit(null);
     setSelLesson(null);
+    setCourseTab("units");
+    resetQuestionsView();
     setBrowserLoading(true);
     setBrowserError(null);
     try {
@@ -234,7 +251,15 @@ export default function SchoolDetailPage() {
 
   function openLesson(lesson: AdminLesson) {
     setSelLesson(lesson);
-    setQuestionsSkip(0);
+    resetQuestionsView();
+  }
+
+  function switchCourseTab(tab: "units" | "questions") {
+    if (tab === courseTab) return;
+    setCourseTab(tab);
+    resetQuestionsView();
+    setBrowserError(null);
+    setBrowserLoading(false);
   }
 
   function closeBrowser() {
@@ -245,16 +270,20 @@ export default function SchoolDetailPage() {
     setBrowserError(null);
   }
 
+  const showCourseQuestions =
+    !!selCourse && !selUnit && !selLesson && courseTab === "questions";
+
   useEffect(() => {
-    if (!selLesson) return;
+    if (!selLesson && !showCourseQuestions) return;
     let cancelled = false;
     setBrowserLoading(true);
     setBrowserError(null);
     getAdminQuestions({
       skip: questionsSkip,
       limit: QUESTIONS_LIMIT,
-      lessonId: selLesson.id,
       schoolId: id,
+      ...(selLesson ? { lessonId: selLesson.id } : { courseId: selCourse!.id }),
+      ...(questionTitle ? { title: questionTitle } : {}),
     })
       .then((res) => {
         if (cancelled) return;
@@ -271,7 +300,15 @@ export default function SchoolDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [selLesson, questionsSkip, id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selLesson,
+    selCourse,
+    showCourseQuestions,
+    questionsSkip,
+    questionTitle,
+    id,
+  ]);
 
   async function handleDeleteImage() {
     setDeletingImage(true);
@@ -583,15 +620,6 @@ export default function SchoolDetailPage() {
               )}
             </div>
 
-            {browserLoading && (
-              <p className="text-center text-slate-500 py-8">
-                جاري التحميل...
-              </p>
-            )}
-            {!browserLoading && browserError && (
-              <p className="text-center text-red-500 py-8">{browserError}</p>
-            )}
-
             {/* Courses */}
             {!browserLoading && !browserError && !selCourse && (
               <div className="space-y-2">
@@ -614,27 +642,56 @@ export default function SchoolDetailPage() {
               </div>
             )}
 
-            {/* Units */}
-            {!browserLoading && !browserError && selCourse && !selUnit && (
-              <div className="space-y-2">
-                {units.length === 0 && (
-                  <p className="text-center text-slate-400 py-8">
-                    لا توجد وحدات لهذه المادة
-                  </p>
-                )}
-                {units.map((unit) => (
+            {/* Course tabs: units / questions */}
+            {selCourse && !selUnit && !selLesson && (
+              <div className="flex gap-2">
+                {(
+                  [
+                    { key: "units", label: "الوحدات" },
+                    { key: "questions", label: "الأسئلة" },
+                  ] as const
+                ).map((tab) => (
                   <button
-                    key={unit.id}
+                    key={tab.key}
                     type="button"
-                    onClick={() => openUnit(unit)}
-                    className="w-full flex items-center justify-between px-4 py-3 rounded-lg border text-sm hover:bg-slate-50 transition-colors"
+                    onClick={() => switchCourseTab(tab.key)}
+                    className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                      courseTab === tab.key
+                        ? "bg-slate-900 text-white"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
                   >
-                    <span className="font-medium">{unit.title}</span>
-                    <ChevronLeft className="w-4 h-4 text-slate-400" />
+                    {tab.label}
                   </button>
                 ))}
               </div>
             )}
+
+            {/* Units */}
+            {!browserLoading &&
+              !browserError &&
+              selCourse &&
+              !selUnit &&
+              courseTab === "units" && (
+                <div className="space-y-2">
+                  {units.length === 0 && (
+                    <p className="text-center text-slate-400 py-8">
+                      لا توجد وحدات لهذه المادة
+                    </p>
+                  )}
+                  {units.map((unit) => (
+                    <button
+                      key={unit.id}
+                      type="button"
+                      onClick={() => openUnit(unit)}
+                      className="w-full flex items-center justify-between px-4 py-3 rounded-lg border text-sm hover:bg-slate-50 transition-colors"
+                    >
+                      <span className="font-medium">{unit.title}</span>
+                      <ChevronLeft className="w-4 h-4 text-slate-400" />
+                    </button>
+                  ))}
+                </div>
+              )}
 
             {/* Lessons */}
             {!browserLoading && !browserError && selUnit && !selLesson && (
@@ -682,80 +739,205 @@ export default function SchoolDetailPage() {
               </div>
             )}
 
-            {/* Questions */}
-            {!browserLoading && !browserError && selLesson && (
+            {/* Questions (lesson or course level) */}
+            {(selLesson || showCourseQuestions) && (
               <div className="space-y-2">
-                {questions.length === 0 && (
-                  <p className="text-center text-slate-400 py-8">
-                    لا توجد أسئلة لهذا الدرس
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setQuestionsSkip(0);
+                    setQuestionTitle(questionTitleInput.trim());
+                  }}
+                  className="flex gap-2"
+                >
+                  <div className="relative flex-1">
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 h-4 w-4 pointer-events-none" />
+                    <Input
+                      placeholder="بحث في نص السؤال..."
+                      value={questionTitleInput}
+                      onChange={(e) => setQuestionTitleInput(e.target.value)}
+                      className="w-full pr-9"
+                    />
+                  </div>
+                  <Button type="submit" variant="outline" className="h-12 p-6">
+                    بحث
+                  </Button>
+                </form>
+
+                {browserLoading && (
+                  <p className="text-center text-slate-500 py-8">
+                    جاري التحميل...
                   </p>
                 )}
-                {questions.map((question, qi) => (
-                  <div
-                    key={question.id}
-                    className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg border text-sm"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 text-xs flex items-center justify-center shrink-0">
-                        {questionsSkip + qi + 1}
-                      </span>
-                      <span className="font-medium truncate">
-                        {question.title}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs text-slate-500">
-                        {question.type === "options"
-                          ? `${question.options.length} خيارات`
-                          : `${question.matchingItems.length} عناصر`}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs ${
-                          question.type === "options"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-purple-100 text-purple-700"
-                        }`}
-                      >
-                        {question.type === "options"
-                          ? "اختيار من متعدد"
-                          : "مطابقة"}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-
-                {questionsTotal > QUESTIONS_LIMIT && (
-                  <div className="flex items-center justify-center gap-3 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setQuestionsSkip((s) =>
-                          Math.max(0, s - QUESTIONS_LIMIT),
-                        )
-                      }
-                      disabled={questionsSkip === 0}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                    <span className="text-sm text-slate-500">
-                      {Math.floor(questionsSkip / QUESTIONS_LIMIT) + 1} /{" "}
-                      {Math.ceil(questionsTotal / QUESTIONS_LIMIT)}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setQuestionsSkip((s) => s + QUESTIONS_LIMIT)}
-                      disabled={
-                        questionsSkip + QUESTIONS_LIMIT >= questionsTotal
-                      }
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                  </div>
+                {!browserLoading && browserError && (
+                  <p className="text-center text-red-500 py-8">
+                    {browserError}
+                  </p>
                 )}
+
+                {!browserLoading && !browserError && questions.length === 0 && (
+                  <p className="text-center text-slate-400 py-8">
+                    {selLesson
+                      ? "لا توجد أسئلة لهذا الدرس"
+                      : "لا توجد أسئلة لهذه المادة"}
+                  </p>
+                )}
+                {!browserLoading &&
+                  !browserError &&
+                  questions.map((question, qi) => {
+                    const isExpanded = expandedQuestionId === question.id;
+                    const matchItems = question.matchingItems.filter(
+                      (m) => m.type === "match",
+                    );
+                    const baseItems = question.matchingItems.filter(
+                      (m) => m.type === "base",
+                    );
+                    return (
+                      <div
+                        key={question.id}
+                        className="rounded-lg border text-sm"
+                      >
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setExpandedQuestionId(
+                              isExpanded ? null : question.id,
+                            )
+                          }
+                          className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 text-xs flex items-center justify-center shrink-0">
+                              {questionsSkip + qi + 1}
+                            </span>
+                            <span className="font-medium truncate">
+                              {question.title}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs ${
+                                question.purpose === "dailyChallenge"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {question.purpose === "dailyChallenge"
+                                ? "تحدي يومي"
+                                : "درس"}
+                            </span>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs ${
+                                question.type === "options"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-purple-100 text-purple-700"
+                              }`}
+                            >
+                              {question.type === "options"
+                                ? "اختيار من متعدد"
+                                : "مطابقة"}
+                            </span>
+                            <ChevronDown
+                              className={`w-4 h-4 text-slate-400 transition-transform ${
+                                isExpanded ? "rotate-180" : ""
+                              }`}
+                            />
+                          </div>
+                        </button>
+
+                        {isExpanded && (
+                          <div className="border-t border-slate-100 px-4 py-3 space-y-2">
+                            {question.type === "options" &&
+                              question.options.map((option) => (
+                                <div
+                                  key={option.id}
+                                  className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                                    option.isCorrect
+                                      ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                      : "bg-slate-50 border-slate-200 text-slate-600"
+                                  }`}
+                                >
+                                  {option.isCorrect ? (
+                                    <Check className="h-4 w-4 shrink-0" />
+                                  ) : (
+                                    <span className="h-4 w-4 shrink-0" />
+                                  )}
+                                  {option.text}
+                                </div>
+                              ))}
+
+                            {question.type === "match" &&
+                              baseItems.map((base) => {
+                                const paired = matchItems.find(
+                                  (m) => m.id === base.correctMatchId,
+                                );
+                                return (
+                                  <div
+                                    key={base.id}
+                                    className="flex items-center gap-2 text-sm"
+                                  >
+                                    <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-700">
+                                      {base.text}
+                                    </span>
+                                    <ChevronLeft className="h-4 w-4 text-slate-400 shrink-0" />
+                                    <span className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-700">
+                                      {paired?.text ?? "—"}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                {!browserLoading &&
+                  !browserError &&
+                  questionsTotal > QUESTIONS_LIMIT && (
+                    <div className="flex items-center justify-center gap-3 pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setQuestionsSkip((s) =>
+                            Math.max(0, s - QUESTIONS_LIMIT),
+                          )
+                        }
+                        disabled={questionsSkip === 0}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                      <span className="text-sm text-slate-500">
+                        {Math.floor(questionsSkip / QUESTIONS_LIMIT) + 1} /{" "}
+                        {Math.ceil(questionsTotal / QUESTIONS_LIMIT)}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setQuestionsSkip((s) => s + QUESTIONS_LIMIT)
+                        }
+                        disabled={
+                          questionsSkip + QUESTIONS_LIMIT >= questionsTotal
+                        }
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
               </div>
             )}
+
+            {browserLoading && !selLesson && !showCourseQuestions && (
+              <p className="text-center text-slate-500 py-8">جاري التحميل...</p>
+            )}
+            {!browserLoading &&
+              browserError &&
+              !selLesson &&
+              !showCourseQuestions && (
+                <p className="text-center text-red-500 py-8">{browserError}</p>
+              )}
           </CardContent>
         </Card>
       )}

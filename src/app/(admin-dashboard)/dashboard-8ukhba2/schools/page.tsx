@@ -166,29 +166,31 @@ export default function SchoolsManagementPage() {
       </div>
 
       {/* Search */}
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-          <Input
-            placeholder="البحث باسم المدرسة..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="pr-9"
-          />
-        </div>
-        <Button type="submit" variant="outline" className="h-12 p-4 px-8">
-          بحث
-        </Button>
-        {/* {search && (
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => { setSearchInput(""); setSearch(""); setSkip(0); }}
+      <Card className="p-2 border-slate-200 shadow-xs">
+        <CardContent className="p-4">
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col md:flex-row gap-3"
           >
-            مسح
-          </Button>
-        )} */}
-      </form>
+            <div className="relative flex-1">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5 pointer-events-none" />
+              <Input
+                placeholder="البحث باسم المدرسة..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full pr-9 focus-visible:ring-blue-600"
+              />
+            </div>
+            <Button
+              type="submit"
+              variant="outline"
+              className="h-12 border-slate-200 text-slate-600 hover:bg-slate-50 min-w-24"
+            >
+              بحث
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -262,7 +264,7 @@ export default function SchoolsManagementPage() {
           {schools.map((school) => (
             <Card
               key={school.id}
-              className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+              className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow p-0"
               onClick={() =>
                 router.push(`/dashboard-8ukhba2/school/${school.id}`)
               }
@@ -323,7 +325,7 @@ export default function SchoolsManagementPage() {
                   >
                     <Edit2 size={16} className="shrink-0" /> تعديل
                   </Button>
-                  <Button
+                  {/* <Button
                     variant="outline"
                     className="flex-1 gap-2 bg-green-100 text-green-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-green-200"
                   >
@@ -340,7 +342,7 @@ export default function SchoolsManagementPage() {
                     className="flex-1 gap-2 bg-amber-100 text-amber-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-amber-200"
                   >
                     <FileText size={16} className="shrink-0" /> تقرير
-                  </Button>
+                  </Button> */}
                 </div>
               </CardContent>
             </Card>

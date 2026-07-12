@@ -3,6 +3,7 @@ import {
   QuestionResponse,
   QuestionsResponse,
   QuestionType,
+  QuestionPurpose,
   QuestionOptionInput,
   QuestionMatchItemInput,
   BulkCreateQuestionsRequest,
@@ -68,6 +69,7 @@ export async function createQuestion(data: {
   type: QuestionType;
   lessonId?: string;
   courseId?: string;
+  purpose?: QuestionPurpose;
   image?: File;
   options?: QuestionOptionInput[];
   matchingItems?: QuestionMatchItemInput[];
@@ -76,9 +78,10 @@ export async function createQuestion(data: {
   formData.append("title", data.title);
   if (data.lessonId) formData.append("lessonId", data.lessonId);
   if (data.courseId) formData.append("courseId", data.courseId);
+  if (data.purpose) formData.append("purpose", data.purpose);
   if (data.image) formData.append("image", data.image);
   appendAnswers(formData, data.type, data.options, data.matchingItems);
-
+  console.log(formData.forEach((value, key) => console.log(key, value)));
   const res = await apiClient.post<QuestionResponse>(
     "/school/me/questions",
     formData,

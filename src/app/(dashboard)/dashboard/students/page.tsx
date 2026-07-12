@@ -1,147 +1,215 @@
-import {
-  Plus,
-  Search,
-  Filter,
-  Eye,
-  Ban,
-  Send,
-  Calendar,
-  Unlock,
-} from "lucide-react";
+"use client";
+
+import { useEffect, useState } from "react";
+import { Search, Eye, Ban, Unlock, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { ErrorState } from "@/components/ui/error-state";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { getTracks } from "@/api/tracks";
+import {
+  getSchoolStudents,
+  getSchoolStudentById,
+  setStudentActivation,
+} from "@/api/students";
+import { Track } from "@/types/track";
+import { SchoolStudent } from "@/types/student";
+import { ApiError } from "@/lib/errors";
 
-// Mock Data representing the table rows
-const students = [
-  {
-    id: 1,
-    name: "أحمد محمد الخطيب",
-    email: "ahmed.khateeb@example.com",
-    avatar: "أ",
-    track: "بكالوريا علمي",
-    activation: "مفعل",
-    subscription: "مشترك",
-    subEnd: "2027-06-01",
-    lastLogin: "2026-06-07",
-    gems: 450,
-    status: "نشط",
-  },
-  {
-    id: 2,
-    name: "سارة عبد الرحمن النجار",
-    email: "sara.najjar@example.com",
-    avatar: "س",
-    track: "بكالوريا أدبي",
-    activation: "مفعل",
-    subscription: "مشترك",
-    subEnd: "2027-05-15",
-    lastLogin: "2026-06-06",
-    gems: 320,
-    status: "نشط",
-  },
-  {
-    id: 3,
-    name: "محمد يوسف القاسم",
-    email: "mohammad.qasem@example.com",
-    avatar: "م",
-    track: "الصف التاسع",
-    activation: "غير مفعل",
-    subscription: "غير مشترك",
-    subEnd: "—",
-    lastLogin: "—",
-    gems: 0,
-    status: "غير مفعل",
-  },
-  {
-    id: 4,
-    name: "ليلى حسن إبراهيم",
-    email: "layla.hassan@example.com",
-    avatar: "ل",
-    track: "بكالوريا علمي",
-    activation: "مفعل",
-    subscription: "اشتراك منتهي",
-    subEnd: "2026-03-01",
-    lastLogin: "2026-03-15",
-    gems: 180,
-    status: "غير نشط",
-  },
-  {
-    id: 5,
-    name: "خالد إبراهيم المصري",
-    email: "khalid.masri@example.com",
-    avatar: "خ",
-    track: "الصف التاسع",
-    activation: "مفعل",
-    subscription: "مشترك",
-    subEnd: "2026-12-01",
-    lastLogin: "2026-05-01",
-    gems: 120,
-    status: "محظور",
-  },
-  {
-    id: 6,
-    name: "نور الدين علي",
-    email: "noor.ali@example.com",
-    avatar: "ن",
-    track: "بكالوريا علمي",
-    activation: "مفعل",
-    subscription: "مشترك",
-    subEnd: "2027-04-10",
-    lastLogin: "2026-06-08",
-    gems: 780,
-    status: "نشط",
-  },
-];
+const PAGE_SIZE = 10;
 
-// Helper function to render colored badges based on text value
-const getBadgeStyles = (text: string) => {
-  switch (text) {
-    case "مفعل":
-    case "نشط":
-      return "bg-emerald-100 text-emerald-600 border-emerald-200";
-    case "مشترك":
-      return "bg-blue-100 text-blue-600 border-blue-200";
-    case "غير مفعل":
-      return "bg-amber-100 text-amber-600 border-amber-200";
-    case "اشتراك منتهي":
-    case "محظور":
-      return "bg-rose-100 text-rose-600 border-rose-200";
-    case "غير مشترك":
-    case "غير نشط":
-      return "bg-slate-100 text-slate-500 border-slate-200";
-    default:
-      return "bg-slate-100 text-slate-600 border-slate-200";
+function formatError(e: unknown): string {
+  if (e instanceof ApiError && e.code === "BAD_INPUT" && e.serverMessage) {
+    return e.serverMessage;
   }
-};
+  return (e as Error).message;
+}
 
-const filterTabs = [
-  "الكل",
-  "الصف التاسع",
-  "بكالوريا علمي",
-  "بكالوريا أدبي",
-  "مشترك",
-  "غير مشترك",
-  "اشتراك منتهي",
-  "نشط",
-  "غير نشط",
-  "محظور",
-  "غير مفعل",
-];
+function formatDate(iso: string): string {
+  return iso.split("T")[0];
+}
+
+function ActivationBadge({ active }: { active: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${
+        active
+          ? "bg-emerald-100 text-emerald-600 border-emerald-200"
+          : "bg-rose-100 text-rose-600 border-rose-200"
+      }`}
+    >
+      {active ? "مفعل" : "غير مفعل"}
+    </span>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-2 last:border-0">
+      <span className="text-sm text-slate-500 shrink-0">{label}</span>
+      <span className="text-sm font-semibold text-slate-900 text-left break-all">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function StudentDetailsDialog({
+  studentId,
+  onClose,
+}: {
+  studentId: string;
+  onClose: () => void;
+}) {
+  const [student, setStudent] = useState<SchoolStudent | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    getSchoolStudentById(studentId)
+      .then((res) => setStudent(res.data))
+      .catch((e) => setError(formatError(e)))
+      .finally(() => setLoading(false));
+  }, [studentId]);
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent dir="rtl" className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="pt-5">تفاصيل الطالب</DialogTitle>
+        </DialogHeader>
+
+        {loading && (
+          <div className="flex items-center justify-center py-10 text-slate-400">
+            <Loader2 size={24} className="animate-spin ml-2" />
+            جارٍ التحميل...
+          </div>
+        )}
+
+        {!loading && error && <p className="text-sm text-red-500">{error}</p>}
+
+        {!loading && !error && student && (
+          <div className="space-y-4 mt-2">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-xl shrink-0">
+                {student.user.name.charAt(0)}
+              </div>
+              <div>
+                <p className="font-bold text-slate-900">{student.user.name}</p>
+                <ActivationBadge active={student.active} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <DetailRow label="البريد الإلكتروني" value={student.user.email} />
+              <DetailRow
+                label="رقم الهاتف"
+                value={student.user.phoneNumber || "—"}
+              />
+              <DetailRow
+                label="البريد موثق"
+                value={student.user.emailVerfied ? "نعم" : "لا"}
+              />
+              <DetailRow label="المسار" value={student.track.name} />
+              <DetailRow label="المدرسة" value={student.school.name} />
+              <DetailRow
+                label="تاريخ التسجيل"
+                value={formatDate(student.createdAt)}
+              />
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function Students() {
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [trackId, setTrackId] = useState("");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [sort, setSort] = useState<"ASC" | "DESC">("DESC");
+  const [page, setPage] = useState(0);
+
+  const [students, setStudents] = useState<SchoolStudent[]>([]);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    getTracks()
+      .then((res) => setTracks(res.data))
+      .catch(() => setTracks([]));
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  function fetchStudents() {
+    setLoading(true);
+    setError(null);
+    getSchoolStudents({
+      skip: page * PAGE_SIZE,
+      limit: PAGE_SIZE,
+      sort,
+      ...(trackId ? { trackId } : {}),
+      ...(debouncedSearch ? { name: debouncedSearch } : {}),
+    })
+      .then((res) => {
+        setStudents(res.data.list);
+        setTotalRecords(res.data.totalRecords);
+      })
+      .catch((e) => setError(formatError(e)))
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    fetchStudents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, sort, trackId, debouncedSearch]);
+
+  async function toggleActivation(student: SchoolStudent) {
+    setTogglingId(student.id);
+    setActionError(null);
+    try {
+      const res = await setStudentActivation(student.id, !student.active);
+      setStudents((prev) =>
+        prev.map((s) =>
+          s.id === student.id ? { ...s, active: res.data.active } : s,
+        ),
+      );
+    } catch (e) {
+      setActionError(formatError(e));
+    } finally {
+      setTogglingId(null);
+    }
+  }
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8">
+    <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8" dir="rtl">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">إدارة الطلاب</h1>
-          <p className="text-sm text-slate-500 mt-1">6 طالب مسجل في المنصة</p>
-        </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-4 h-10">
-          <p className="">إضافة طالب</p>
-          <Plus className="ml-2 h-4 w-4" />
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">إدارة الطلاب</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          {totalRecords} طالب مسجل في المنصة
+        </p>
       </div>
 
       {/* Filters Card */}
@@ -149,178 +217,224 @@ export default function Students() {
         <CardContent className="p-4 space-y-4">
           <div className="flex flex-col md:flex-row gap-3">
             {/* Search Input */}
-            <div className="relative flex-2/3">
+            <div className="relative flex-1">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5" />
               <Input
-                placeholder="بحث بالاسم، البريد، أو الهاتف..."
-                className="w-full pr-9 focus-visible:ring-blue-600 "
+                placeholder="بحث بالاسم..."
+                className="w-full pr-9 h-12 focus-visible:ring-blue-600"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            {/* Filter Button */}
-            <Button
-              variant="outline"
-              className="h-12 border-slate-200 text-slate-600 hover:bg-slate-50 min-w-36"
+            {/* Sort */}
+            <select
+              className="h-12 rounded-lg border border-slate-200 bg-slate-100/50 px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-blue-200 min-w-36"
+              value={sort}
+              onChange={(e) => {
+                setSort(e.target.value as "ASC" | "DESC");
+                setPage(0);
+              }}
             >
-              <Filter className="ml-2 h-4 w-4" />
-              تصفية
-            </Button>
+              <option value="DESC">الأحدث أولاً</option>
+              <option value="ASC">الأقدم أولاً</option>
+            </select>
           </div>
 
-          {/* Filter Tabs */}
+          {/* Track Filter Tabs */}
           <div className="flex flex-wrap gap-2 pt-2">
-            {filterTabs.map((tab, index) => (
+            <button
+              onClick={() => {
+                setTrackId("");
+                setPage(0);
+              }}
+              className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                trackId === ""
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              الكل
+            </button>
+            {tracks.map((track) => (
               <button
-                key={tab}
+                key={track.id}
+                onClick={() => {
+                  setTrackId(track.id);
+                  setPage(0);
+                }}
                 className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                  index === 0
+                  trackId === track.id
                     ? "bg-slate-900 text-white"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                {tab}
+                {track.name}
               </button>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Table Card */}
-      <Card className="border-slate-200 shadow-xs overflow-hidden p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-right">
-            <thead className="bg-slate-100/50 text-slate-500 font-medium border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-4">الطالب</th>
-                <th className="px-6 py-4 text-center">المسار</th>
-                <th className="px-6 py-4 text-center">التفعيل</th>
-                <th className="px-6 py-4 text-center">الاشتراك</th>
-                <th className="px-6 py-4 text-center">انتهاء الاشتراك</th>
-                <th className="px-6 py-4 text-center">آخر دخول</th>
-                <th className="px-6 py-4 text-center">الجواهر</th>
-                <th className="px-6 py-4 text-center">الحالة</th>
-                <th className="px-6 py-4 text-center">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {students.map((student) => (
-                <tr
-                  key={student.id}
-                  className="hover:bg-slate-50/50 transition-colors"
-                >
-                  {/* Student Info */}
-                  <td className="px-6 py-3 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg shrink-0">
-                        {student.avatar}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-slate-900">
-                          {student.name}
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          {student.email}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Track */}
-                  <td className="px-6 py-3 text-center text-slate-600 whitespace-nowrap">
-                    {student.track}
-                  </td>
-
-                  {/* Activation Badge */}
-                  <td className="px-6 py-3 text-center whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${getBadgeStyles(
-                        student.activation,
-                      )}`}
-                    >
-                      {student.activation}
-                    </span>
-                  </td>
-
-                  {/* Subscription Badge */}
-                  <td className="px-6 py-3 text-center whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border  ${getBadgeStyles(
-                        student.subscription,
-                      )}`}
-                    >
-                      {student.subscription}
-                    </span>
-                  </td>
-
-                  {/* Sub End Date */}
-                  <td className="px-6 py-3 text-center text-slate-500 whitespace-nowrap">
-                    {student.subEnd}
-                  </td>
-
-                  {/* Last Login Date */}
-                  <td className="px-6 py-3 text-center text-slate-500 whitespace-nowrap">
-                    {student.lastLogin}
-                  </td>
-
-                  {/* Gems */}
-                  <td className="px-6 py-3 text-center font-semibold text-amber-500 whitespace-nowrap">
-                    {student.gems}
-                  </td>
-
-                  {/* Status Badge */}
-                  <td className="px-6 py-3 text-center whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${getBadgeStyles(
-                        student.status,
-                      )}`}
-                    >
-                      {student.status}
-                    </span>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-6 py-3 whitespace-nowrap">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="عرض"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      {student.status === "محظور" ? (
-                        <button
-                          className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors"
-                          title="فك الحظر"
-                        >
-                          <Unlock className="h-4 w-4" />
-                        </button>
-                      ) : (
-                        <button
-                          className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                          title="حظر"
-                        >
-                          <Ban className="h-4 w-4" />
-                        </button>
-                      )}
-                      <button
-                        className="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
-                        title="إرسال رسالة"
-                      >
-                        <Send className="h-4 w-4" />
-                      </button>
-                      <button
-                        className="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
-                        title="تعديل التواريخ"
-                      >
-                        <Calendar className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {actionError && (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {actionError}
+          <button onClick={() => setActionError(null)}>
+            <X className="h-4 w-4" />
+          </button>
         </div>
-      </Card>
+      )}
+
+      {loading && (
+        <div className="flex items-center justify-center py-16 text-slate-400">
+          <Loader2 size={24} className="animate-spin ml-2" />
+          جارٍ التحميل...
+        </div>
+      )}
+
+      {!loading && error && (
+        <ErrorState message={error} onRetry={fetchStudents} />
+      )}
+
+      {!loading && !error && students.length === 0 && (
+        <p className="text-center text-slate-400 py-16">لا يوجد طلاب</p>
+      )}
+
+      {/* Table Card */}
+      {!loading && !error && students.length > 0 && (
+        <Card className="border-slate-200 shadow-xs overflow-hidden p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-right">
+              <thead className="bg-slate-100/50 text-slate-500 font-medium border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-4">الطالب</th>
+                  <th className="px-6 py-4 text-center">رقم الهاتف</th>
+                  <th className="px-6 py-4 text-center">المسار</th>
+                  <th className="px-6 py-4 text-center">التفعيل</th>
+                  <th className="px-6 py-4 text-center">تاريخ التسجيل</th>
+                  <th className="px-6 py-4 text-center">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {students.map((student) => (
+                  <tr
+                    key={student.id}
+                    className="hover:bg-slate-50/50 transition-colors"
+                  >
+                    {/* Student Info */}
+                    <td className="px-6 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg shrink-0">
+                          {student.user.name.charAt(0)}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-slate-900">
+                            {student.user.name}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {student.user.email}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Phone */}
+                    <td className="px-6 py-3 text-center text-slate-600 whitespace-nowrap">
+                      <span dir="ltr">{student.user.phoneNumber || "—"}</span>
+                    </td>
+
+                    {/* Track */}
+                    <td className="px-6 py-3 text-center text-slate-600 whitespace-nowrap">
+                      {student.track.name}
+                    </td>
+
+                    {/* Activation Badge */}
+                    <td className="px-6 py-3 text-center whitespace-nowrap">
+                      <ActivationBadge active={student.active} />
+                    </td>
+
+                    {/* Registration Date */}
+                    <td className="px-6 py-3 text-center text-slate-500 whitespace-nowrap">
+                      {formatDate(student.createdAt)}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="px-6 py-3 whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="عرض"
+                          onClick={() => setViewingId(student.id)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        {student.active ? (
+                          <button
+                            className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="إلغاء التفعيل"
+                            disabled={togglingId === student.id}
+                            onClick={() => toggleActivation(student)}
+                          >
+                            {togglingId === student.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Ban className="h-4 w-4" />
+                            )}
+                          </button>
+                        ) : (
+                          <button
+                            className="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="تفعيل"
+                            disabled={togglingId === student.id}
+                            onClick={() => toggleActivation(student)}
+                          >
+                            {togglingId === student.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Unlock className="h-4 w-4" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* Pagination */}
+      {!loading && !error && totalRecords > 0 && (
+        <div className="flex items-center justify-center gap-3">
+          <Button
+            variant="outline"
+            disabled={page === 0}
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+          >
+            السابق
+          </Button>
+          <span className="text-sm text-slate-500">
+            صفحة {page + 1} من{" "}
+            {Math.max(1, Math.ceil(totalRecords / PAGE_SIZE))}
+          </span>
+          <Button
+            variant="outline"
+            disabled={(page + 1) * PAGE_SIZE >= totalRecords}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            التالي
+          </Button>
+        </div>
+      )}
+
+      {/* Student Details Dialog */}
+      {viewingId && (
+        <StudentDetailsDialog
+          studentId={viewingId}
+          onClose={() => setViewingId(null)}
+        />
+      )}
     </div>
   );
 }

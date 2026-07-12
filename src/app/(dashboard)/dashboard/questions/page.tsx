@@ -300,6 +300,7 @@ function QuestionFormDialog({
           title: title.trim(),
           type,
           courseId,
+          purpose: "dailyChallenge",
           ...(imageFile ? { image: imageFile } : {}),
           ...(type === "options"
             ? { options: buildOptionInputs() }
@@ -308,6 +309,7 @@ function QuestionFormDialog({
       }
       onSaved();
     } catch (err) {
+      console.log(err);
       setFormError(formatError(err));
     } finally {
       setSubmitting(false);

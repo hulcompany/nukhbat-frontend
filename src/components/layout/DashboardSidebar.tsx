@@ -131,11 +131,11 @@ export function DashboardSidebar() {
     //   href: "/dashboard-8ukhba2/support",
     // },
     { title: "صفحة الهبوط", icon: Globe, href: "/dashboard-8ukhba2/landing" },
-    {
-      title: "صلاحيات الأدمن",
-      icon: ShieldCheck,
-      href: "/dashboard-8ukhba2/permissions",
-    },
+    // {
+    //   title: "صلاحيات الأدمن",
+    //   icon: ShieldCheck,
+    //   href: "/dashboard-8ukhba2/permissions",
+    // },
     // {
     //   title: "سجل العمليات",
     //   icon: ClipboardList,
