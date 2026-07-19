@@ -35,6 +35,10 @@ const TYPE_META: Record<QuestionType, { label: string; className: string }> = {
     label: "توصيل",
     className: "bg-violet-100 text-violet-600 border-violet-200",
   },
+  trueFalse: {
+    label: "صح أو خطأ",
+    className: "bg-amber-100 text-amber-600 border-amber-200",
+  },
 };
 
 function FileImage({
@@ -548,6 +552,14 @@ export default function DailyChallengePage() {
                     </div>
                   );
                 })()}
+
+              {questionDetails.type === "trueFalse" && (
+                <div className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm bg-emerald-50 border-emerald-200 text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  الإجابة الصحيحة:{" "}
+                  {questionDetails.trueOrFalseAnswer ? "صح" : "خطأ"}
+                </div>
+              )}
             </div>
           )}
         </DialogContent>

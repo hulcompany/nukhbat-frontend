@@ -1,4 +1,4 @@
-export type QuestionType = "options" | "match";
+export type QuestionType = "options" | "match" | "trueFalse";
 export type QuestionMatchType = "base" | "match";
 export type QuestionPurpose = "lesson" | "dailyChallenge";
 
@@ -39,6 +39,7 @@ export interface Question {
   school?: QuestionSchool;
   options: QuestionOption[];
   matchingItems: QuestionMatchItem[];
+  trueOrFalseAnswer: boolean | null;
 }
 
 export interface QuestionsListData {
@@ -81,9 +82,17 @@ export interface BulkMatchQuestionInput {
   matchingItems: QuestionMatchItemInput[];
 }
 
+export interface BulkTrueFalseQuestionInput {
+  title: string;
+  type: "trueFalse";
+  lessonId: string;
+  correctAnswer: boolean;
+}
+
 export type BulkQuestionInput =
   | BulkOptionsQuestionInput
-  | BulkMatchQuestionInput;
+  | BulkMatchQuestionInput
+  | BulkTrueFalseQuestionInput;
 
 export interface BulkCreateQuestionsRequest {
   questions: BulkQuestionInput[];

@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowRight,
-  ArrowUp,
-  ArrowDown,
   ArrowLeft,
   Edit2,
   X,
@@ -38,7 +36,6 @@ import {
   updateQuestion,
   deleteQuestionImage,
   deleteQuestion,
-  reorderQuestions,
   bulkCreateQuestions,
   bulkDeleteQuestions,
 } from "@/api/question";
@@ -62,6 +59,10 @@ const TYPE_META: Record<QuestionType, { label: string; className: string }> = {
   match: {
     label: "توصيل",
     className: "bg-violet-100 text-violet-600 border-violet-200",
+  },
+  trueFalse: {
+    label: "صح أو خطأ",
+    className: "bg-amber-100 text-amber-600 border-amber-200",
   },
 };
 
@@ -120,7 +121,19 @@ function parseBulkQuestions(
       };
     }
 
-    throw new Error(`${label}: نوع السؤال يجب أن يكون options أو match`);
+    if (item.type === "trueFalse") {
+      if (typeof item.correctAnswer !== "boolean") {
+        throw new Error(`${label}: يجب تحديد الإجابة الصحيحة (true أو false)`);
+      }
+      return {
+        title: item.title,
+        type: "trueFalse",
+        lessonId,
+        correctAnswer: item.correctAnswer,
+      };
+    }
+
+    throw new Error(`${label}: نوع السؤال يجب أن يكون options أو match أو trueFalse`);
   });
 }
 
@@ -231,7 +244,8 @@ function BulkImportDialog({
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
               يجب أن يحتوي الملف على مصفوفة questions، وكل سؤال من نوع options
-              أو match. سيتم ربط جميع الأسئلة المستوردة بهذا الدرس تلقائياً.
+              أو match أو trueFalse. سيتم ربط جميع الأسئلة المستوردة بهذا الدرس
+              تلقائياً.
             </p>
           </div>
 
@@ -368,6 +382,10 @@ function QuestionFormDialog({
     return [{ text: "" }, { text: "" }];
   });
 
+  const [trueFalseAnswer, setTrueFalseAnswer] = useState<boolean>(
+    editing?.type === "trueFalse" ? (editing.trueOrFalseAnswer ?? true) : true,
+  );
+
   useEffect(() => {
     return () => {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
@@ -402,6 +420,8 @@ function QuestionFormDialog({
         return "يجب تحديد إجابة صحيحة واحدة";
       return null;
     }
+
+    if (type === "trueFalse") return null;
 
     if (bases.length < 1) return "أضف عنصراً أساسياً واحداً على الأقل";
     if (bases.length + matches.length < 3)
@@ -462,7 +482,9 @@ function QuestionFormDialog({
           ...(answersDirty
             ? type === "options"
               ? { type, options: buildOptionInputs() }
-              : { type, matchingItems: buildMatchInputs() }
+              : type === "match"
+                ? { type, matchingItems: buildMatchInputs() }
+                : { type, correctAnswer: trueFalseAnswer }
             : {}),
         });
       } else {
@@ -473,7 +495,9 @@ function QuestionFormDialog({
           ...(imageFile ? { image: imageFile } : {}),
           ...(type === "options"
             ? { options: buildOptionInputs() }
-            : { matchingItems: buildMatchInputs() }),
+            : type === "match"
+              ? { matchingItems: buildMatchInputs() }
+              : { correctAnswer: trueFalseAnswer }),
         });
       }
       onSaved();
@@ -776,6 +800,36 @@ function QuestionFormDialog({
             </div>
           )}
 
+          {type === "trueFalse" && (
+            <div className="space-y-3">
+              <Label>الإجابة الصحيحة</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={trueFalseAnswer ? "default" : "outline"}
+                  className="h-10 flex-1"
+                  onClick={() => {
+                    setTrueFalseAnswer(true);
+                    setAnswersDirty(true);
+                  }}
+                >
+                  صح
+                </Button>
+                <Button
+                  type="button"
+                  variant={!trueFalseAnswer ? "default" : "outline"}
+                  className="h-10 flex-1"
+                  onClick={() => {
+                    setTrueFalseAnswer(false);
+                    setAnswersDirty(true);
+                  }}
+                >
+                  خطأ
+                </Button>
+              </div>
+            </div>
+          )}
+
           {formError && <p className="text-sm text-red-500">{formError}</p>}
 
           <div className="flex gap-3 justify-end pt-2">
@@ -909,31 +963,6 @@ export default function LessonQuestionsPage() {
     }
   }
 
-  async function moveQuestion(index: number, direction: -1 | 1) {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= questions.length) return;
-
-    const reordered = [...questions];
-    [reordered[index], reordered[targetIndex]] = [
-      reordered[targetIndex],
-      reordered[index],
-    ];
-    setQuestions(reordered);
-    setReorderError(null);
-    setSavingOrder(true);
-    try {
-      await reorderQuestions(
-        lessonId,
-        reordered.map((q) => q.id),
-      );
-    } catch (e) {
-      setReorderError(formatError(e));
-      fetchData();
-    } finally {
-      setSavingOrder(false);
-    }
-  }
-
   function closeForm() {
     setFormOpen(false);
     setEditingQuestion(null);
@@ -1038,7 +1067,10 @@ export default function LessonQuestionsPage() {
         <div className="flex flex-col gap-4">
           {questions.map((question, index) => {
             const isExpanded = expandedId === question.id;
-            const typeMeta = TYPE_META[question.type];
+            const typeMeta = TYPE_META[question.type] ?? {
+              label: question.type ?? "غير معروف",
+              className: "bg-slate-100 text-slate-600 border-slate-200",
+            };
             const matchItems = question.matchingItems.filter(
               (m) => m.type === "match",
             );
@@ -1090,24 +1122,6 @@ export default function LessonQuestionsPage() {
                   >
                     {!locked && (
                       <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          disabled={index === 0 || savingOrder}
-                          onClick={() => moveQuestion(index, -1)}
-                        >
-                          <ArrowUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          disabled={
-                            index === questions.length - 1 || savingOrder
-                          }
-                          onClick={() => moveQuestion(index, 1)}
-                        >
-                          <ArrowDown className="h-4 w-4" />
-                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -1207,6 +1221,13 @@ export default function LessonQuestionsPage() {
                             إجابات تمويه: {decoys.map((d) => d.text).join("، ")}
                           </p>
                         )}
+                      </div>
+                    )}
+
+                    {question.type === "trueFalse" && (
+                      <div className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm bg-emerald-50 border-emerald-200 text-emerald-700">
+                        <CheckCircle2 className="h-4 w-4 shrink-0" />
+                        الإجابة الصحيحة: {question.trueOrFalseAnswer ? "صح" : "خطأ"}
                       </div>
                     )}
                   </div>

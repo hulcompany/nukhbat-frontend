@@ -56,6 +56,10 @@ const TYPE_META: Record<QuestionType, { label: string; className: string }> = {
     label: "توصيل",
     className: "bg-violet-100 text-violet-600 border-violet-200",
   },
+  trueFalse: {
+    label: "صح أو خطأ",
+    className: "bg-amber-100 text-amber-600 border-amber-200",
+  },
 };
 
 const PURPOSE_META: Record<string, { label: string; className: string }> = {
@@ -187,6 +191,10 @@ function QuestionFormDialog({
     return [{ text: "" }, { text: "" }];
   });
 
+  const [trueFalseAnswer, setTrueFalseAnswer] = useState<boolean>(
+    editing?.type === "trueFalse" ? (editing.trueOrFalseAnswer ?? true) : true,
+  );
+
   useEffect(() => {
     if (editing) return;
     getTracks()
@@ -237,6 +245,8 @@ function QuestionFormDialog({
         return "يجب تحديد إجابة صحيحة واحدة";
       return null;
     }
+
+    if (type === "trueFalse") return null;
 
     if (bases.length < 1) return "أضف عنصراً أساسياً واحداً على الأقل";
     if (bases.length + matches.length < 3)
@@ -292,7 +302,9 @@ function QuestionFormDialog({
           ...(answersDirty
             ? type === "options"
               ? { type, options: buildOptionInputs() }
-              : { type, matchingItems: buildMatchInputs() }
+              : type === "match"
+                ? { type, matchingItems: buildMatchInputs() }
+                : { type, correctAnswer: trueFalseAnswer }
             : {}),
         });
       } else {
@@ -304,7 +316,9 @@ function QuestionFormDialog({
           ...(imageFile ? { image: imageFile } : {}),
           ...(type === "options"
             ? { options: buildOptionInputs() }
-            : { matchingItems: buildMatchInputs() }),
+            : type === "match"
+              ? { matchingItems: buildMatchInputs() }
+              : { correctAnswer: trueFalseAnswer }),
         });
       }
       onSaved();
@@ -675,6 +689,36 @@ function QuestionFormDialog({
             </div>
           )}
 
+          {type === "trueFalse" && (
+            <div className="space-y-3">
+              <Label>الإجابة الصحيحة</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={trueFalseAnswer ? "default" : "outline"}
+                  className="h-10 flex-1"
+                  onClick={() => {
+                    setTrueFalseAnswer(true);
+                    setAnswersDirty(true);
+                  }}
+                >
+                  صح
+                </Button>
+                <Button
+                  type="button"
+                  variant={!trueFalseAnswer ? "default" : "outline"}
+                  className="h-10 flex-1"
+                  onClick={() => {
+                    setTrueFalseAnswer(false);
+                    setAnswersDirty(true);
+                  }}
+                >
+                  خطأ
+                </Button>
+              </div>
+            </div>
+          )}
+
           {formError && <p className="text-sm text-red-500">{formError}</p>}
 
           <div className="flex gap-3 justify-end pt-2">
@@ -1009,6 +1053,13 @@ export default function Questions() {
                             إجابات تمويه: {decoys.map((d) => d.text).join("، ")}
                           </p>
                         )}
+                      </div>
+                    )}
+
+                    {question.type === "trueFalse" && (
+                      <div className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm bg-emerald-50 border-emerald-200 text-emerald-700">
+                        <CheckCircle2 className="h-4 w-4 shrink-0" />
+                        الإجابة الصحيحة: {question.trueOrFalseAnswer ? "صح" : "خطأ"}
                       </div>
                     )}
                   </div>

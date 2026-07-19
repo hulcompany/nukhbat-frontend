@@ -830,12 +830,16 @@ export default function SchoolDetailPage() {
                               className={`px-2 py-0.5 rounded-full text-xs ${
                                 question.type === "options"
                                   ? "bg-blue-100 text-blue-700"
-                                  : "bg-purple-100 text-purple-700"
+                                  : question.type === "match"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : "bg-amber-100 text-amber-700"
                               }`}
                             >
                               {question.type === "options"
                                 ? "اختيار من متعدد"
-                                : "مطابقة"}
+                                : question.type === "match"
+                                  ? "مطابقة"
+                                  : "صح أو خطأ"}
                             </span>
                             <ChevronDown
                               className={`w-4 h-4 text-slate-400 transition-transform ${
@@ -886,6 +890,14 @@ export default function SchoolDetailPage() {
                                   </div>
                                 );
                               })}
+
+                            {question.type === "trueFalse" && (
+                              <div className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm bg-emerald-50 border-emerald-200 text-emerald-700">
+                                <Check className="h-4 w-4 shrink-0" />
+                                الإجابة الصحيحة:{" "}
+                                {question.trueOrFalseAnswer ? "صح" : "خطأ"}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

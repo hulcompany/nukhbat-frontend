@@ -17,6 +17,7 @@ function appendAnswers(
   type: QuestionType,
   options?: QuestionOptionInput[],
   matchingItems?: QuestionMatchItemInput[],
+  correctAnswer?: boolean,
 ) {
   formData.append("type", type);
   if (type === "options" && options) {
@@ -36,6 +37,9 @@ function appendAnswers(
         );
       }
     });
+  }
+  if (type === "trueFalse" && correctAnswer !== undefined) {
+    formData.append("correctAnswer", String(correctAnswer));
   }
 }
 
@@ -73,6 +77,7 @@ export async function createQuestion(data: {
   image?: File;
   options?: QuestionOptionInput[];
   matchingItems?: QuestionMatchItemInput[];
+  correctAnswer?: boolean;
 }): Promise<QuestionResponse> {
   const formData = new FormData();
   formData.append("title", data.title);
@@ -80,8 +85,13 @@ export async function createQuestion(data: {
   if (data.courseId) formData.append("courseId", data.courseId);
   if (data.purpose) formData.append("purpose", data.purpose);
   if (data.image) formData.append("image", data.image);
-  appendAnswers(formData, data.type, data.options, data.matchingItems);
-  console.log(formData.forEach((value, key) => console.log(key, value)));
+  appendAnswers(
+    formData,
+    data.type,
+    data.options,
+    data.matchingItems,
+    data.correctAnswer,
+  );
   const res = await apiClient.post<QuestionResponse>(
     "/school/me/questions",
     formData,
@@ -99,13 +109,20 @@ export async function updateQuestion(
     type?: QuestionType;
     options?: QuestionOptionInput[];
     matchingItems?: QuestionMatchItemInput[];
+    correctAnswer?: boolean;
   },
 ): Promise<QuestionResponse> {
   const formData = new FormData();
   if (data.title !== undefined) formData.append("title", data.title);
   if (data.image) formData.append("image", data.image);
   if (data.type) {
-    appendAnswers(formData, data.type, data.options, data.matchingItems);
+    appendAnswers(
+      formData,
+      data.type,
+      data.options,
+      data.matchingItems,
+      data.correctAnswer,
+    );
   }
 
   const res = await apiClient.patch<QuestionResponse>(
@@ -142,11 +159,4 @@ export async function bulkDeleteQuestions(
     { ids },
   );
   return res.data;
-}
-
-export async function reorderQuestions(
-  lessonId: string,
-  ids: string[],
-): Promise<void> {
-  await apiClient.post(`/school/me/questions/order/${lessonId}`, { ids });
 }
