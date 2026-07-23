@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { GridCardSkeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/error-state";
 import { getMySchool } from "@/api/schools";
 import { Track } from "@/types/track";
 
@@ -66,13 +67,17 @@ function CurriculaContent() {
   const [tracksLoading, setTracksLoading] = useState(true);
   const [tracksError, setTracksError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function fetchTracks() {
     setTracksLoading(true);
     setTracksError(null);
     getMySchool()
       .then((res) => setTracks(res.data.allowedTracks ?? []))
       .catch((e) => setTracksError((e as Error).message))
       .finally(() => setTracksLoading(false));
+  }
+
+  useEffect(() => {
+    fetchTracks();
   }, []);
 
   // Helper to update URL params
@@ -172,7 +177,7 @@ function CurriculaContent() {
           {tracksLoading && <GridCardSkeleton />}
 
           {!tracksLoading && tracksError && (
-            <p className="text-center text-red-500 py-16">{tracksError}</p>
+            <ErrorState message={tracksError} onRetry={fetchTracks} />
           )}
 
           {!tracksLoading && !tracksError && tracks.length === 0 && (

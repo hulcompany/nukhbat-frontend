@@ -6,7 +6,7 @@ export async function getCourseUnits(
   title?: string,
 ): Promise<UnitsResponse> {
   const res = await apiClient.get<UnitsResponse>(
-    `/school/me/units/${courseId}`,
+    `/curriculum/school/units/${courseId}`,
     { params: title ? { title } : undefined },
   );
   return res.data;
@@ -16,7 +16,10 @@ export async function createUnit(data: {
   title: string;
   courseId: string;
 }): Promise<UnitResponse> {
-  const res = await apiClient.post<UnitResponse>("/school/me/units", data);
+  const res = await apiClient.post<UnitResponse>(
+    "/curriculum/school/units",
+    data,
+  );
   return res.data;
 }
 
@@ -24,16 +27,16 @@ export async function updateUnit(
   id: string,
   data: { title?: string },
 ): Promise<void> {
-  await apiClient.patch(`/school/me/units/${id}`, data);
+  await apiClient.patch(`/curriculum/school/units/${id}`, data);
 }
 
 export async function deleteUnit(id: string): Promise<void> {
-  await apiClient.delete(`/school/me/units/${id}`);
+  await apiClient.delete(`/curriculum/school/units/${id}`);
 }
 
 export async function reorderUnits(
   courseId: string,
   ids: string[],
 ): Promise<void> {
-  await apiClient.post(`/school/me/units/order/${courseId}`, { ids });
+  await apiClient.post(`/curriculum/school/units/order/${courseId}`, { ids });
 }

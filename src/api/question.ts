@@ -10,7 +10,6 @@ import {
   BulkCreateQuestionsResponse,
   BulkDeleteQuestionsResponse,
 } from "@/types/question";
-import { stringify } from "querystring";
 
 function appendAnswers(
   formData: FormData,
@@ -55,15 +54,18 @@ export interface GetQuestionsParams {
 export async function getLessonQuestions(
   params: GetQuestionsParams,
 ): Promise<QuestionsResponse> {
-  const res = await apiClient.get<QuestionsResponse>("/school/me/questions", {
-    params,
-  });
+  const res = await apiClient.get<QuestionsResponse>(
+    "/curriculum/school/questions",
+    {
+      params,
+    },
+  );
   return res.data;
 }
 
 export async function getQuestionById(id: string): Promise<QuestionResponse> {
   const res = await apiClient.get<QuestionResponse>(
-    `/school/me/questions/${id}`,
+    `/curriculum/school/questions/${id}`,
   );
   return res.data;
 }
@@ -93,7 +95,7 @@ export async function createQuestion(data: {
     data.correctAnswer,
   );
   const res = await apiClient.post<QuestionResponse>(
-    "/school/me/questions",
+    "/curriculum/school/questions",
     formData,
     { headers: { "Content-Type": "multipart/form-data" } },
   );
@@ -126,7 +128,7 @@ export async function updateQuestion(
   }
 
   const res = await apiClient.patch<QuestionResponse>(
-    `/school/me/questions/${id}`,
+    `/curriculum/school/questions/${id}`,
     formData,
     { headers: { "Content-Type": "multipart/form-data" } },
   );
@@ -134,28 +136,28 @@ export async function updateQuestion(
 }
 
 export async function deleteQuestionImage(id: string): Promise<void> {
-  await apiClient.delete(`/school/me/questions/${id}/deleteImage`);
+  await apiClient.delete(`/curriculum/school/questions/${id}/deleteImage`);
 }
 
 export async function bulkCreateQuestions(
   data: BulkCreateQuestionsRequest,
 ): Promise<BulkCreateQuestionsResponse> {
   const res = await apiClient.post<BulkCreateQuestionsResponse>(
-    "/school/me/questions/bulk",
+    "/curriculum/school/questions/bulk",
     data,
   );
   return res.data;
 }
 
 export async function deleteQuestion(id: string): Promise<void> {
-  await apiClient.delete(`/school/me/questions/${id}`);
+  await apiClient.delete(`/curriculum/school/questions/${id}`);
 }
 
 export async function bulkDeleteQuestions(
   ids: string[],
 ): Promise<BulkDeleteQuestionsResponse> {
   const res = await apiClient.post<BulkDeleteQuestionsResponse>(
-    "/school/me/questions/bulk-delete",
+    "/curriculum/school/questions/bulk-delete",
     { ids },
   );
   return res.data;

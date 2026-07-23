@@ -2,7 +2,7 @@ import apiClient from "@/lib/axios";
 import { TracksResponse } from "@/types/track";
 
 export async function getTracks(): Promise<TracksResponse> {
-  const res = await apiClient.get<TracksResponse>("/learning/tracks");
+  const res = await apiClient.get<TracksResponse>("/curriculum/tracks");
   return res.data;
 }
 

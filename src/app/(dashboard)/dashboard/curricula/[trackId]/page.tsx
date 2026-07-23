@@ -6,6 +6,7 @@ import { ArrowRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GridCardSkeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/error-state";
 import { getSchoolCourses } from "@/api/courses";
 import { Subject } from "@/types/courses";
 
@@ -17,13 +18,18 @@ export default function TrackCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  function fetchCourses() {
     setLoading(true);
     setError(null);
     getSchoolCourses(trackId)
       .then((res) => setCourses(res.data))
       .catch((e) => setError((e as Error).message))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    fetchCourses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trackId]);
 
   return (
@@ -49,7 +55,7 @@ export default function TrackCoursesPage() {
       {loading && <GridCardSkeleton />}
 
       {!loading && error && (
-        <p className="text-center text-red-500 py-16">{error}</p>
+        <ErrorState message={error} onRetry={fetchCourses} />
       )}
 
       {!loading && !error && courses.length === 0 && (

@@ -5,7 +5,7 @@ import {
   StudentActivationResponse,
 } from "@/types/student";
 
-// --------- For Admin ---------
+// -------- For Admin --------
 
 export interface GetStudentsParams {
   skip?: number;
@@ -30,7 +30,7 @@ export async function getStudentById(id: string): Promise<StudentResponse> {
   return res.data;
 }
 
-// --------- For School ---------
+// -------- For School --------
 
 export interface GetSchoolStudentsParams {
   skip?: number;

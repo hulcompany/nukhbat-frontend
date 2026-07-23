@@ -2,7 +2,7 @@ import apiClient from "@/lib/axios";
 import { BookResponse, BooksResponse, DeleteBookResponse } from "@/types/book";
 
 export async function getMyBooks(): Promise<BooksResponse> {
-  const res = await apiClient.get<BooksResponse>("/school/me/books");
+  const res = await apiClient.get<BooksResponse>("/books/school/books");
   return res.data;
 }
 
@@ -14,9 +14,13 @@ export async function createBook(data: {
   formData.append("name", data.name);
   formData.append("attachment", data.attachment);
 
-  const res = await apiClient.post<BookResponse>("/school/me/books", formData, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  const res = await apiClient.post<BookResponse>(
+    "/books/school/books",
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    },
+  );
   return res.data;
 }
 
@@ -29,7 +33,7 @@ export async function updateBook(
   if (data.attachment) formData.append("attachment", data.attachment);
 
   const res = await apiClient.patch<BookResponse>(
-    `/school/me/books/${id}`,
+    `/books/school/books/${id}`,
     formData,
     { headers: { "Content-Type": "multipart/form-data" } },
   );
@@ -38,7 +42,7 @@ export async function updateBook(
 
 export async function deleteBook(id: string): Promise<DeleteBookResponse> {
   const res = await apiClient.delete<DeleteBookResponse>(
-    `/school/me/books/${id}`,
+    `/books/school/books/${id}`,
   );
   return res.data;
 }

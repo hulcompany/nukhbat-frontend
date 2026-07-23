@@ -34,6 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ListCardSkeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/error-state";
 import {
   getUnitLessons,
   createLesson,
@@ -272,7 +273,7 @@ export default function UnitLessonsPage() {
       {loading && <ListCardSkeleton />}
 
       {!loading && error && (
-        <p className="text-center text-red-500 py-16">{error}</p>
+        <ErrorState message={error} onRetry={fetchLessons} />
       )}
 
       {!loading && !error && lessons.length === 0 && (

@@ -30,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ListCardSkeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/error-state";
 import {
   getLessonQuestions,
   createQuestion,
@@ -1054,7 +1055,7 @@ export default function LessonQuestionsPage() {
       {loading && <ListCardSkeleton />}
 
       {!loading && error && (
-        <p className="text-center text-red-500 py-16">{error}</p>
+        <ErrorState message={error} onRetry={fetchData} />
       )}
 
       {!loading && !error && questions.length === 0 && (

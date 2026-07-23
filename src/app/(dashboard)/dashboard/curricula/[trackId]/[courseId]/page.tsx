@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ListCardSkeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/error-state";
 import {
   getCourseUnits,
   createUnit,
@@ -224,7 +225,7 @@ export default function CourseUnitsPage() {
       {loading && <ListCardSkeleton />}
 
       {!loading && error && (
-        <p className="text-center text-red-500 py-16">{error}</p>
+        <ErrorState message={error} onRetry={fetchUnits} />
       )}
 
       {!loading && !error && units.length === 0 && (

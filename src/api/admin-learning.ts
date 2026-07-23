@@ -10,7 +10,7 @@ export async function getAdminCourses(params: {
   trackId?: string;
 }): Promise<AdminCoursesResponse> {
   const res = await apiClient.get<AdminCoursesResponse>(
-    "/learning/admin/courses",
+    "/curriculum/admin/courses",
     { params },
   );
   return res.data;
@@ -21,9 +21,12 @@ export async function getAdminUnits(params: {
   courseId?: string;
   title?: string;
 }): Promise<AdminUnitsResponse> {
-  const res = await apiClient.get<AdminUnitsResponse>("/learning/admin/units", {
-    params,
-  });
+  const res = await apiClient.get<AdminUnitsResponse>(
+    "/curriculum/admin/units",
+    {
+      params,
+    },
+  );
   return res.data;
 }
 
@@ -34,7 +37,7 @@ export async function getAdminLessons(params: {
   title?: string;
 }): Promise<AdminLessonsResponse> {
   const res = await apiClient.get<AdminLessonsResponse>(
-    "/learning/admin/lessons",
+    "/curriculum/admin/lessons",
     { params },
   );
   return res.data;
@@ -50,7 +53,7 @@ export async function getAdminQuestions(params: {
   trackId?: string;
 }): Promise<QuestionsResponse> {
   const res = await apiClient.get<QuestionsResponse>(
-    "/learning/admin/questions",
+    "/curriculum/admin/questions",
     { params },
   );
   return res.data;
