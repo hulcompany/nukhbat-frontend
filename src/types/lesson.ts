@@ -1,4 +1,4 @@
-export type LessonStatus = "active" | "draft" | "unActive";
+export type LessonStatus = "active" | "draft" | "unActive" | "published";
 
 export interface Lesson {
   id: string;
@@ -8,7 +8,8 @@ export interface Lesson {
   schoolId: string;
   index: number;
   status: LessonStatus;
-  questionCount: number | null;
+  questionCount?: number | null;
+  used: boolean;
 }
 
 export interface LessonsResponse {

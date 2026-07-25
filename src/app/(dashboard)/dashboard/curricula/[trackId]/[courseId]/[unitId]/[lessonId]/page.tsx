@@ -330,6 +330,8 @@ function QuestionFormDialog({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageRemoved, setImageRemoved] = useState(false);
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [answersDirty, setAnswersDirty] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -393,17 +395,30 @@ function QuestionFormDialog({
     };
   }, [imagePreview]);
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0] ?? null;
+  function selectImage(file: File | null) {
+    if (file && !file.type.startsWith("image/")) {
+      setFormError("يُقبل فقط ملفات الصور");
+      return;
+    }
+    setFormError(null);
     setImageFile(file);
-    setImagePreview(file ? URL.createObjectURL(file) : null);
+    setImagePreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return file ? URL.createObjectURL(file) : null;
+    });
     if (file) setImageRemoved(false);
+    if (!file && imageInputRef.current) imageInputRef.current.value = "";
   }
 
-  function handleRemoveImage() {
+  function handleRemoveImage(e?: React.MouseEvent) {
+    e?.stopPropagation();
     setImageFile(null);
-    setImagePreview(null);
+    setImagePreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
     setImageRemoved(true);
+    if (imageInputRef.current) imageInputRef.current.value = "";
   }
 
   function switchType(next: QuestionType) {
@@ -536,50 +551,72 @@ function QuestionFormDialog({
 
           <div className="space-y-3">
             <Label htmlFor="question-image">صورة السؤال (اختياري)</Label>
-            <Input
+            <input
               id="question-image"
               type="file"
               accept="image/*"
-              onChange={handleImageChange}
+              ref={imageInputRef}
+              className="hidden"
+              onChange={(e) => selectImage(e.target.files?.[0] ?? null)}
             />
-            {imagePreview ? (
-              <div className="flex items-center gap-3">
-                <img
-                  src={imagePreview}
-                  alt="معاينة صورة السؤال"
-                  className="max-h-40 rounded-lg border border-slate-200"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRemoveImage}
-                  className="text-red-500 hover:text-red-600"
-                >
-                  إزالة الصورة
-                </Button>
-              </div>
-            ) : (
-              editing?.imageId &&
-              !imageRemoved && (
-                <div className="flex items-center gap-3">
-                  <FileImage
-                    fileId={editing.imageId}
-                    alt="صورة السؤال الحالية"
-                    className="max-h-40 rounded-lg border border-slate-200"
-                  />
+            <div
+              onClick={() => imageInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingImage(true);
+              }}
+              onDragLeave={() => setIsDraggingImage(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDraggingImage(false);
+                selectImage(e.dataTransfer.files?.[0] ?? null);
+              }}
+              className={`relative border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
+                isDraggingImage
+                  ? "bg-blue-50 border-blue-400"
+                  : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-blue-300"
+              }`}
+            >
+              {imagePreview || (editing?.imageId && !imageRemoved) ? (
+                <div className="relative">
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt="معاينة صورة السؤال"
+                      className="max-h-40 rounded-lg border border-slate-200"
+                    />
+                  ) : (
+                    <FileImage
+                      fileId={editing!.imageId!}
+                      alt="صورة السؤال الحالية"
+                      className="max-h-40 rounded-lg border border-slate-200"
+                    />
+                  )}
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={handleRemoveImage}
-                    className="text-red-500 hover:text-red-600"
+                    className="absolute -top-2 -left-2 h-7 w-7 p-0 rounded-full bg-white text-red-500 hover:text-red-600 shadow-sm"
+                    title="إزالة الصورة"
                   >
-                    إزالة الصورة
+                    <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
-              )
-            )}
+              ) : (
+                <>
+                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-2">
+                    <ImageIcon className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-900">
+                    اسحب صورة هنا
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    أو انقر لاختيار صورة
+                  </p>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -888,6 +925,7 @@ export default function LessonQuestionsPage() {
   const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
 
   const locked = lesson?.status === "active";
+  const canAddQuestions = !locked && !lesson?.used;
 
   async function fetchData() {
     setLoading(true);
@@ -991,7 +1029,7 @@ export default function LessonQuestionsPage() {
             </p>
           </div>
         </div>
-        {!locked && (
+        {canAddQuestions && (
           <div className="flex items-center gap-2">
             <ActionButton
               label="استيراد أسئلة"
@@ -1045,6 +1083,13 @@ export default function LessonQuestionsPage() {
         <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
           <Lock className="h-4 w-4 shrink-0" />
           الدرس نشط حالياً — قم بإلغاء تفعيل الدرس لتتمكن من تعديل أسئلته.
+        </div>
+      )}
+
+      {!locked && lesson?.used && (
+        <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <Lock className="h-4 w-4 shrink-0" />
+          هذا الدرس مستخدم بالفعل — لا يمكن إضافة أسئلة جديدة إليه.
         </div>
       )}
 

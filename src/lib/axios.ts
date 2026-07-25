@@ -83,7 +83,9 @@ apiClient.interceptors.response.use(
     }
 
     const code = error.response?.data?.code;
-    return Promise.reject(new ApiError(code, error.response?.data?.message));
+    return Promise.reject(
+      new ApiError(code, error.response?.data?.message, error.response?.status)
+    );
   }
 );
 

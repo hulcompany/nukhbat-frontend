@@ -3,9 +3,12 @@ import { LessonResponse, LessonsResponse, LessonStatus } from "@/types/lesson";
 
 // ---- School
 export async function getUnitLessons(unitId: string): Promise<LessonsResponse> {
+  console.log(unitId);
   const res = await apiClient.get<LessonsResponse>(
     `/curriculum/school/lessons/${unitId}`,
   );
+
+  console.log(res.data);
   return res.data;
 }
 

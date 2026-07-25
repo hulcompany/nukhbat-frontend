@@ -14,6 +14,7 @@ import {
   FileText,
   Plus,
   ChevronDown,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -57,6 +58,10 @@ const STATUS_META: Record<LessonStatus, { label: string; className: string }> =
     unActive: {
       label: "غير نشط",
       className: "bg-slate-100 text-slate-500 border-slate-200",
+    },
+    published: {
+      label: "نُشِر",
+      className: "bg-emerald-100 text-emerald-600 border-emerald-200",
     },
   };
 
@@ -331,9 +336,20 @@ export default function UnitLessonsPage() {
                     </div>
                   ) : (
                     <div className="min-w-0">
-                      <h3 className="font-bold text-slate-900 truncate">
-                        {lesson.title}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-slate-900 truncate">
+                          {lesson.title}
+                        </h3>
+                        {lesson.used && (
+                          <span
+                            title="هذا الدرس مستخدم بالفعل ولا يمكن تعديله أو إضافة أسئلة جديدة إليه"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200 shrink-0"
+                          >
+                            <Lock className="h-3 w-3" />
+                            مستخدم
+                          </span>
+                        )}
+                      </div>
                       {lesson.description && (
                         <p className="text-sm text-slate-500 truncate mt-0.5">
                           {lesson.description}
@@ -424,6 +440,12 @@ export default function UnitLessonsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      disabled={lesson.used}
+                      title={
+                        lesson.used
+                          ? "هذا الدرس مستخدم بالفعل ولا يمكن تعديله"
+                          : undefined
+                      }
                       onClick={() => startEdit(lesson)}
                     >
                       <Edit2 className="h-4 w-4" />

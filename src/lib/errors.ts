@@ -46,13 +46,15 @@ export interface ApiErrorResponse {
 export class ApiError extends Error {
   code?: string;
   serverMessage?: string;
+  status?: number;
 
-  constructor(code?: string, serverMessage?: string | string[]) {
+  constructor(code?: string, serverMessage?: string | string[], status?: number) {
     super(getArabicError(code));
     this.name = "ApiError";
     this.code = code;
     this.serverMessage = Array.isArray(serverMessage)
       ? serverMessage.join("، ")
       : serverMessage;
+    this.status = status;
   }
 }

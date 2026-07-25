@@ -18,11 +18,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { getMyBooks, createBook, updateBook, deleteBook } from "@/api/books";
 import { downloadFile } from "@/api/files";
 import { Book } from "@/types/book";
+import { ApiError } from "@/lib/errors";
 
 export default function BooksPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | Error | null>(null);
 
   // Add / Edit dialog
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -49,7 +50,7 @@ export default function BooksPage() {
       const res = await getMyBooks();
       setBooks(res.data);
     } catch (e) {
-      setError((e as Error).message);
+      setError(e as Error);
     } finally {
       setLoading(false);
     }
@@ -123,7 +124,7 @@ export default function BooksPage() {
       await deleteBook(book.id);
       setBooks((list) => list.filter((b) => b.id !== book.id));
     } catch (e) {
-      setError((e as Error).message);
+      setError(e as Error);
     } finally {
       setDeletingId(null);
     }
@@ -179,7 +180,13 @@ export default function BooksPage() {
       </div>
 
       {/* States */}
-      {error && !loading && <ErrorState message={error} onRetry={fetchBooks} />}
+      {error && !loading && (
+        <ErrorState
+          message={error.message}
+          status={error instanceof ApiError ? error.status : undefined}
+          onRetry={fetchBooks}
+        />
+      )}
 
       {/* Skeleton */}
       {loading && <HorizontalCardSkeleton />}
