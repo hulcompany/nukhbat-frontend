@@ -3,6 +3,7 @@ import {
   CreateSubscriptionKeysRequest,
   CreateSubscriptionKeysResponse,
   SubscriptionKeyListResponse,
+  SchoolSubscriptionKeyListResponse,
   BulkDeleteSubscriptionKeysResponse,
 } from "@/types/subscription-key";
 
@@ -16,6 +17,18 @@ export async function getSubscriptionKeys(
 ): Promise<SubscriptionKeyListResponse> {
   const res = await apiClient.get<SubscriptionKeyListResponse>(
     "/subscription/keys",
+    { params },
+  );
+  return res.data;
+}
+
+// ---- For School ----
+
+export async function getSchoolSubscriptionKeys(
+  params: GetSubscriptionKeysParams = {},
+): Promise<SchoolSubscriptionKeyListResponse> {
+  const res = await apiClient.get<SchoolSubscriptionKeyListResponse>(
+    "/subscription/keys/school",
     { params },
   );
   return res.data;

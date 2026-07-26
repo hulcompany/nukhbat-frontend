@@ -134,7 +134,9 @@ function parseBulkQuestions(
       };
     }
 
-    throw new Error(`${label}: نوع السؤال يجب أن يكون options أو match أو trueFalse`);
+    throw new Error(
+      `${label}: نوع السؤال يجب أن يكون options أو match أو trueFalse`,
+    );
   });
 }
 
@@ -429,6 +431,10 @@ function QuestionFormDialog({
   }
 
   function validate(): string | null {
+    // Editing only touches title/image now, so answer validation below
+    // only applies when creating a new question.
+    if (editing) return null;
+
     if (type === "options") {
       if (options.length < 2) return "يجب إضافة خيارين على الأقل";
       if (options.some((o) => !o.text.trim())) return "أدخل نص جميع الخيارات";
@@ -495,19 +501,22 @@ function QuestionFormDialog({
         await updateQuestion(editing.id, {
           title: title.trim(),
           ...(imageFile ? { image: imageFile } : {}),
-          ...(answersDirty
-            ? type === "options"
-              ? { type, options: buildOptionInputs() }
-              : type === "match"
-                ? { type, matchingItems: buildMatchInputs() }
-                : { type, correctAnswer: trueFalseAnswer }
-            : {}),
+          // editing is now limited to title and image only, answers can no
+          // longer be changed from here
+          // ...(answersDirty
+          //   ? type === "options"
+          //     ? { type, options: buildOptionInputs() }
+          //     : type === "match"
+          //       ? { type, matchingItems: buildMatchInputs() }
+          //       : { type, correctAnswer: trueFalseAnswer }
+          //   : {}),
         });
       } else {
         await createQuestion({
           title: title.trim(),
           type,
           lessonId,
+          purpose: "lesson",
           ...(imageFile ? { image: imageFile } : {}),
           ...(type === "options"
             ? { options: buildOptionInputs() }
@@ -619,24 +628,28 @@ function QuestionFormDialog({
             </div>
           </div>
 
-          <div className="space-y-3">
-            <Label>نوع السؤال</Label>
-            <div className="flex gap-2">
-              {(Object.keys(TYPE_META) as QuestionType[]).map((t) => (
-                <Button
-                  key={t}
-                  type="button"
-                  variant={type === t ? "default" : "outline"}
-                  onClick={() => switchType(t)}
-                  className="h-10"
-                >
-                  {TYPE_META[t].label}
-                </Button>
-              ))}
+          {/* Editing is now limited to title and image only — question
+              type/answers can no longer be changed once created. */}
+          {!editing && (
+            <div className="space-y-3">
+              <Label>نوع السؤال</Label>
+              <div className="flex gap-2">
+                {(Object.keys(TYPE_META) as QuestionType[]).map((t) => (
+                  <Button
+                    key={t}
+                    type="button"
+                    variant={type === t ? "default" : "outline"}
+                    onClick={() => switchType(t)}
+                    className="h-10"
+                  >
+                    {TYPE_META[t].label}
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {type === "options" && (
+          {!editing && type === "options" && (
             <div className="space-y-3">
               <Label>الخيارات (حدد الإجابة الصحيحة)</Label>
               {options.map((option, i) => (
@@ -704,7 +717,7 @@ function QuestionFormDialog({
             </div>
           )}
 
-          {type === "match" && (
+          {!editing && type === "match" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <Label>العناصر الأساسية</Label>
@@ -838,7 +851,7 @@ function QuestionFormDialog({
             </div>
           )}
 
-          {type === "trueFalse" && (
+          {!editing && type === "trueFalse" && (
             <div className="space-y-3">
               <Label>الإجابة الصحيحة</Label>
               <div className="flex gap-2">
@@ -924,7 +937,7 @@ export default function LessonQuestionsPage() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
 
-  const locked = lesson?.status === "active";
+  const locked = lesson?.status === "published";
   const canAddQuestions = !locked && !lesson?.used;
 
   async function fetchData() {
@@ -1099,9 +1112,7 @@ export default function LessonQuestionsPage() {
 
       {loading && <ListCardSkeleton />}
 
-      {!loading && error && (
-        <ErrorState message={error} onRetry={fetchData} />
-      )}
+      {!loading && error && <ErrorState message={error} onRetry={fetchData} />}
 
       {!loading && !error && questions.length === 0 && (
         <p className="text-center text-slate-400 py-16">
@@ -1273,7 +1284,8 @@ export default function LessonQuestionsPage() {
                     {question.type === "trueFalse" && (
                       <div className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm bg-emerald-50 border-emerald-200 text-emerald-700">
                         <CheckCircle2 className="h-4 w-4 shrink-0" />
-                        الإجابة الصحيحة: {question.trueOrFalseAnswer ? "صح" : "خطأ"}
+                        الإجابة الصحيحة:{" "}
+                        {question.trueOrFalseAnswer ? "صح" : "خطأ"}
                       </div>
                     )}
                   </div>

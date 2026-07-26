@@ -77,9 +77,9 @@ const QUESTIONS_LIMIT = 10;
 
 const lessonStatusStyles: Record<LessonStatus, { label: string; cls: string }> =
   {
-    active: { label: "مفعل", cls: "bg-emerald-100 text-emerald-700" },
+    published: { label: "مفعل", cls: "bg-emerald-100 text-emerald-700" },
     draft: { label: "مسودة", cls: "bg-amber-100 text-amber-700" },
-    unActive: { label: "غير مفعل", cls: "bg-slate-100 text-slate-500" },
+    // unActive: { label: "غير مفعل", cls: "bg-slate-100 text-slate-500" },
   };
 
 export default function SchoolDetailPage() {

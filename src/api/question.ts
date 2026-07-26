@@ -108,24 +108,24 @@ export async function updateQuestion(
   data: {
     title?: string;
     image?: File;
-    type?: QuestionType;
-    options?: QuestionOptionInput[];
-    matchingItems?: QuestionMatchItemInput[];
-    correctAnswer?: boolean;
+    // type?: QuestionType;
+    // options?: QuestionOptionInput[];
+    // matchingItems?: QuestionMatchItemInput[];
+    // correctAnswer?: boolean;
   },
 ): Promise<QuestionResponse> {
   const formData = new FormData();
   if (data.title !== undefined) formData.append("title", data.title);
   if (data.image) formData.append("image", data.image);
-  if (data.type) {
-    appendAnswers(
-      formData,
-      data.type,
-      data.options,
-      data.matchingItems,
-      data.correctAnswer,
-    );
-  }
+  // if (data.type) {
+  //   appendAnswers(
+  //     formData,
+  //     data.type,
+  //     data.options,
+  //     data.matchingItems,
+  //     data.correctAnswer,
+  //   );
+  // }
 
   const res = await apiClient.patch<QuestionResponse>(
     `/curriculum/school/questions/${id}`,

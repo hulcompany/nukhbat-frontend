@@ -44,28 +44,44 @@ import {
   reorderLessons,
 } from "@/api/lesson";
 import { Lesson, LessonStatus } from "@/types/lesson";
+import { ApiError } from "@/lib/errors";
+
+function formatStatusError(e: unknown): string {
+  if (
+    e instanceof ApiError &&
+    e.code === "BAD_INPUT" &&
+    e.serverMessage?.toLowerCase().includes("publish") &&
+    e.serverMessage?.toLowerCase().includes("question")
+  ) {
+    return "لا يمكن نشر الدرس قبل إضافة سؤال واحد على الأقل له";
+  }
+  if (e instanceof ApiError && e.code === "BAD_INPUT" && e.serverMessage) {
+    return e.serverMessage;
+  }
+  return (e as Error).message;
+}
 
 const STATUS_META: Record<LessonStatus, { label: string; className: string }> =
   {
-    active: {
-      label: "نشط",
-      className: "bg-emerald-100 text-emerald-600 border-emerald-200",
-    },
+    // active: {
+    //   label: "نشط",
+    //   className: "bg-emerald-100 text-emerald-600 border-emerald-200",
+    // },
     draft: {
       label: "مسودة",
       className: "bg-amber-100 text-amber-600 border-amber-200",
     },
-    unActive: {
-      label: "غير نشط",
-      className: "bg-slate-100 text-slate-500 border-slate-200",
-    },
+    // unActive: {
+    //   label: "غير نشط",
+    //   className: "bg-slate-100 text-slate-500 border-slate-200",
+    // },
     published: {
       label: "نُشِر",
       className: "bg-emerald-100 text-emerald-600 border-emerald-200",
     },
   };
 
-const STATUS_OPTIONS: LessonStatus[] = ["active", "unActive"];
+const STATUS_OPTIONS: LessonStatus[] = ["draft", "published"];
 
 export default function UnitLessonsPage() {
   const { trackId, courseId, unitId } = useParams<{
@@ -189,7 +205,7 @@ export default function UnitLessonsPage() {
         prev.map((l) => (l.id === lesson.id ? { ...l, status } : l)),
       );
     } catch (e) {
-      setStatusError((e as Error).message);
+      setStatusError(formatStatusError(e));
     } finally {
       setStatusUpdatingId(null);
     }

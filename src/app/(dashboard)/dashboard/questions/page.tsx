@@ -238,6 +238,10 @@ function QuestionFormDialog({
     if (!editing && !courseId) return "يجب اختيار المسار والمادة";
     if (!title.trim()) return "يجب إدخال نص السؤال";
 
+    // Editing only touches title/image now, so answer validation below
+    // only applies when creating a new question.
+    if (editing) return null;
+
     if (type === "options") {
       if (options.length < 2) return "يجب إضافة خيارين على الأقل";
       if (options.some((o) => !o.text.trim())) return "أدخل نص جميع الخيارات";
@@ -299,13 +303,15 @@ function QuestionFormDialog({
         await updateQuestion(editing.id, {
           title: title.trim(),
           ...(imageFile ? { image: imageFile } : {}),
-          ...(answersDirty
-            ? type === "options"
-              ? { type, options: buildOptionInputs() }
-              : type === "match"
-                ? { type, matchingItems: buildMatchInputs() }
-                : { type, correctAnswer: trueFalseAnswer }
-            : {}),
+          // editing is now limited to title and image only, answers can no
+          // longer be changed from here
+          // ...(answersDirty
+          //   ? type === "options"
+          //     ? { type, options: buildOptionInputs() }
+          //     : type === "match"
+          //       ? { type, matchingItems: buildMatchInputs() }
+          //       : { type, correctAnswer: trueFalseAnswer }
+          //   : {}),
         });
       } else {
         await createQuestion({
@@ -470,24 +476,28 @@ function QuestionFormDialog({
             </div>
           </div>
 
-          <div className="space-y-3">
-            <Label>نوع السؤال</Label>
-            <div className="flex gap-2">
-              {(Object.keys(TYPE_META) as QuestionType[]).map((t) => (
-                <Button
-                  key={t}
-                  type="button"
-                  variant={type === t ? "default" : "outline"}
-                  onClick={() => switchType(t)}
-                  className="h-10"
-                >
-                  {TYPE_META[t].label}
-                </Button>
-              ))}
+          {/* Editing is now limited to title and image only — question
+              type/answers can no longer be changed once created. */}
+          {!editing && (
+            <div className="space-y-3">
+              <Label>نوع السؤال</Label>
+              <div className="flex gap-2">
+                {(Object.keys(TYPE_META) as QuestionType[]).map((t) => (
+                  <Button
+                    key={t}
+                    type="button"
+                    variant={type === t ? "default" : "outline"}
+                    onClick={() => switchType(t)}
+                    className="h-10"
+                  >
+                    {TYPE_META[t].label}
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {type === "options" && (
+          {!editing && type === "options" && (
             <div className="space-y-3">
               <Label>الخيارات (حدد الإجابة الصحيحة)</Label>
               {options.map((option, i) => (
@@ -555,7 +565,7 @@ function QuestionFormDialog({
             </div>
           )}
 
-          {type === "match" && (
+          {!editing && type === "match" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <Label>العناصر الأساسية</Label>
@@ -689,7 +699,7 @@ function QuestionFormDialog({
             </div>
           )}
 
-          {type === "trueFalse" && (
+          {!editing && type === "trueFalse" && (
             <div className="space-y-3">
               <Label>الإجابة الصحيحة</Label>
               <div className="flex gap-2">

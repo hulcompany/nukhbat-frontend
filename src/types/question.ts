@@ -40,7 +40,7 @@ export interface Question {
   options: QuestionOption[];
   matchingItems: QuestionMatchItem[];
   trueOrFalseAnswer: boolean | null;
-  tips: [];
+  tips: string[];
 }
 
 export interface QuestionsListData {

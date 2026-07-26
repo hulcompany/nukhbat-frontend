@@ -43,9 +43,9 @@ const contentItems = [
   { title: "التحدي اليومي", icon: Zap, href: `${BASE}/daily-challenge` },
 ];
 
-const reportItems = [
-  { title: "الإحصائيات", icon: BarChart2, href: `${BASE}/analytics` },
-];
+// const reportItems = [
+//   { title: "الإحصائيات", icon: BarChart2, href: `${BASE}/analytics` },
+// ];
 
 const otherItems = [
   { title: "ملف المدرسة", icon: Building2, href: `${BASE}/profile` },
@@ -57,7 +57,7 @@ const otherItems = [
 const sections = [
   { label: null, items: mainItems },
   { label: "المحتوى", items: contentItems },
-  { label: "التقارير", items: reportItems },
+  // { label: "التقارير", items: reportItems },
   { label: "أخرى", items: otherItems },
 ];
 
