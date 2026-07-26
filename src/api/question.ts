@@ -11,6 +11,13 @@ import {
   BulkDeleteQuestionsResponse,
 } from "@/types/question";
 
+function appendTips(formData: FormData, tips?: string[]) {
+  if (!tips) return;
+  tips.forEach((tip, i) => {
+    formData.append(`tips[${i}]`, tip);
+  });
+}
+
 function appendAnswers(
   formData: FormData,
   type: QuestionType,
@@ -80,6 +87,7 @@ export async function createQuestion(data: {
   options?: QuestionOptionInput[];
   matchingItems?: QuestionMatchItemInput[];
   correctAnswer?: boolean;
+  tips?: string[];
 }): Promise<QuestionResponse> {
   const formData = new FormData();
   formData.append("title", data.title);
@@ -94,6 +102,7 @@ export async function createQuestion(data: {
     data.matchingItems,
     data.correctAnswer,
   );
+  appendTips(formData, data.tips);
   const res = await apiClient.post<QuestionResponse>(
     "/curriculum/school/questions",
     formData,
@@ -108,6 +117,7 @@ export async function updateQuestion(
   data: {
     title?: string;
     image?: File;
+    tips?: string[];
     // type?: QuestionType;
     // options?: QuestionOptionInput[];
     // matchingItems?: QuestionMatchItemInput[];
@@ -117,6 +127,7 @@ export async function updateQuestion(
   const formData = new FormData();
   if (data.title !== undefined) formData.append("title", data.title);
   if (data.image) formData.append("image", data.image);
+  appendTips(formData, data.tips);
   // if (data.type) {
   //   appendAnswers(
   //     formData,

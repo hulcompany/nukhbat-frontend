@@ -1,3 +1,5 @@
+import { Lesson } from "./lesson";
+
 export type QuestionType = "options" | "match" | "trueFalse";
 export type QuestionMatchType = "base" | "match";
 export type QuestionPurpose = "lesson" | "dailyChallenge";
@@ -33,6 +35,7 @@ export interface Question {
   index: number;
   purpose: QuestionPurpose;
   lessonId: string | null;
+  lesson: Lesson;
   courseId: string | null;
   imageId: string | null;
   schoolId: string;

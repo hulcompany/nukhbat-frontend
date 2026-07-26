@@ -356,13 +356,20 @@ export default function UnitLessonsPage() {
                         <h3 className="font-bold text-slate-900 truncate">
                           {lesson.title}
                         </h3>
-                        {lesson.used && (
+                        {lesson.used ? (
                           <span
                             title="هذا الدرس مستخدم بالفعل ولا يمكن تعديله أو إضافة أسئلة جديدة إليه"
                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200 shrink-0"
                           >
                             <Lock className="h-3 w-3" />
                             مستخدم
+                          </span>
+                        ) : (
+                          <span
+                            title="هذا الدرس غير مستخدم بعد"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200 shrink-0"
+                          >
+                            غير مستخدم
                           </span>
                         )}
                       </div>

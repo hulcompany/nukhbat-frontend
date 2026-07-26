@@ -17,6 +17,7 @@ import {
   Lock,
   ImageIcon,
   FileJson,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -391,6 +392,10 @@ function QuestionFormDialog({
     editing?.type === "trueFalse" ? (editing.trueOrFalseAnswer ?? true) : true,
   );
 
+  const [tips, setTips] = useState<string[]>(() =>
+    editing?.tips && editing.tips.length > 0 ? editing.tips : [""],
+  );
+
   useEffect(() => {
     return () => {
       if (imagePreview) URL.revokeObjectURL(imagePreview);
@@ -493,6 +498,7 @@ function QuestionFormDialog({
 
     setSubmitting(true);
     setFormError(null);
+    const tipsPayload = tips.map((t) => t.trim()).filter(Boolean);
     try {
       if (editing) {
         if (imageRemoved && !imageFile && editing.imageId) {
@@ -500,6 +506,7 @@ function QuestionFormDialog({
         }
         await updateQuestion(editing.id, {
           title: title.trim(),
+          tips: tipsPayload,
           ...(imageFile ? { image: imageFile } : {}),
           // editing is now limited to title and image only, answers can no
           // longer be changed from here
@@ -517,6 +524,7 @@ function QuestionFormDialog({
           type,
           lessonId,
           purpose: "lesson",
+          tips: tipsPayload,
           ...(imageFile ? { image: imageFile } : {}),
           ...(type === "options"
             ? { options: buildOptionInputs() }
@@ -626,6 +634,44 @@ function QuestionFormDialog({
                 </>
               )}
             </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label>نصائح (اختياري)</Label>
+            {tips.map((tip, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input
+                  value={tip}
+                  placeholder={`نصيحة ${i + 1}`}
+                  onChange={(e) => {
+                    setTips((prev) =>
+                      prev.map((t, j) => (j === i ? e.target.value : t)),
+                    );
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0"
+                  disabled={tips.length <= 1}
+                  onClick={() => {
+                    setTips((prev) => prev.filter((_, j) => j !== i));
+                  }}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setTips((prev) => [...prev, ""])}
+            >
+              <Plus className="h-4 w-4 ml-1" />
+              إضافة نصيحة
+            </Button>
           </div>
 
           {/* Editing is now limited to title and image only — question
@@ -937,21 +983,26 @@ export default function LessonQuestionsPage() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
 
-  const locked = lesson?.status === "published";
-  const canAddQuestions = !locked && !lesson?.used;
+  // const locked = lesson?.status === "published";
+  const canAddQuestions = !lesson?.used;
+  // const canEditQuestions = !locked;
+  const canDeleteQuestions = !lesson?.used;
 
   async function fetchData() {
     setLoading(true);
     setError(null);
     try {
-      const [questionsRes, lessonsRes] = await Promise.all([
-        getLessonQuestions({ lessonId }),
-        getUnitLessons(unitId),
-      ]);
-      setQuestions(
-        [...questionsRes.data.list].sort((a, b) => a.index - b.index),
+      const questionsRes = await getLessonQuestions({ lessonId });
+      const list = [...questionsRes.data.list].sort(
+        (a, b) => a.index - b.index,
       );
-      setLesson(lessonsRes.data.find((l) => l.id === lessonId) ?? null);
+      setQuestions(list);
+      if (list.length > 0) {
+        setLesson(list[0].lesson);
+      } else {
+        const lessonsRes = await getUnitLessons(unitId);
+        setLesson(lessonsRes.data.find((l) => l.id === lessonId) ?? null);
+      }
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -1034,7 +1085,26 @@ export default function LessonQuestionsPage() {
             <ArrowRight className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-xl md:text-2xl font-bold">أسئلة الدرس</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl md:text-2xl font-bold">أسئلة الدرس</h1>
+              {lesson &&
+                (lesson.used ? (
+                  <span
+                    title="هذا الدرس مستخدم بالفعل — لا يمكن حذف أسئلته أو إضافة أسئلة جديدة"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200 shrink-0"
+                  >
+                    <Lock className="h-3 w-3" />
+                    مستخدم
+                  </span>
+                ) : (
+                  <span
+                    title="هذا الدرس غير مستخدم بعد"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200 shrink-0"
+                  >
+                    غير مستخدم
+                  </span>
+                ))}
+            </div>
             <p className="text-sm text-slate-500 mt-0.5">
               {lesson
                 ? `إدارة أسئلة درس "${lesson.title}"`
@@ -1063,7 +1133,7 @@ export default function LessonQuestionsPage() {
         )}
       </div>
 
-      {!locked && selectedIds.size > 0 && (
+      {canDeleteQuestions && selectedIds.size > 0 && (
         <div className="flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
           <span className="text-sm text-red-700 font-medium">
             تم تحديد {selectedIds.size} سؤال
@@ -1092,14 +1162,14 @@ export default function LessonQuestionsPage() {
         </div>
       )}
 
-      {locked && (
+      {/* {locked && (
         <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
           <Lock className="h-4 w-4 shrink-0" />
           الدرس نشط حالياً — قم بإلغاء تفعيل الدرس لتتمكن من تعديل أسئلته.
         </div>
-      )}
+      )} */}
 
-      {!locked && lesson?.used && (
+      {lesson?.used && (
         <div className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
           <Lock className="h-4 w-4 shrink-0" />
           هذا الدرس مستخدم بالفعل — لا يمكن إضافة أسئلة جديدة إليه.
@@ -1145,7 +1215,7 @@ export default function LessonQuestionsPage() {
               >
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div className="flex items-center gap-4 flex-1 w-full md:w-auto min-w-0">
-                    {!locked && (
+                    {canDeleteQuestions && (
                       <input
                         type="checkbox"
                         className="h-4 w-4 shrink-0 accent-blue-600"
@@ -1177,29 +1247,28 @@ export default function LessonQuestionsPage() {
                     className="flex items-center gap-1 shrink-0 w-full md:w-auto justify-end border-t border-slate-50 md:border-0 pt-3 md:pt-0"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {!locked && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setEditingQuestion(question);
-                            setFormOpen(true);
-                          }}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setDeleteError(null);
-                            setDeleteTarget(question);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setEditingQuestion(question);
+                        setFormOpen(true);
+                      }}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+
+                    {canDeleteQuestions && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setDeleteError(null);
+                          setDeleteTarget(question);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
                     )}
                     <Button
                       variant="ghost"
@@ -1286,6 +1355,23 @@ export default function LessonQuestionsPage() {
                         <CheckCircle2 className="h-4 w-4 shrink-0" />
                         الإجابة الصحيحة:{" "}
                         {question.trueOrFalseAnswer ? "صح" : "خطأ"}
+                      </div>
+                    )}
+
+                    {question.tips && question.tips.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold text-slate-500">
+                          نصائح
+                        </p>
+                        {question.tips.map((tip, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700"
+                          >
+                            <Lightbulb className="h-4 w-4 shrink-0" />
+                            {tip}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>

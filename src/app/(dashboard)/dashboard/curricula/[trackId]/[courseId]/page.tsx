@@ -101,6 +101,7 @@ export default function CourseUnitsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
+  // --- Create Unit
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setCreating(true);
@@ -224,9 +225,7 @@ export default function CourseUnitsPage() {
 
       {loading && <ListCardSkeleton />}
 
-      {!loading && error && (
-        <ErrorState message={error} onRetry={fetchUnits} />
-      )}
+      {!loading && error && <ErrorState message={error} onRetry={fetchUnits} />}
 
       {!loading && !error && units.length === 0 && (
         <p className="text-center text-slate-400 py-16">
