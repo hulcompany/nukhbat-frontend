@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, Eye, Ban, Unlock, Loader2, X } from "lucide-react";
+import { Search, Eye, Ban, Unlock, Loader2, X, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ErrorState } from "@/components/ui/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dialog,
   DialogContent,
@@ -296,7 +297,15 @@ export default function Students() {
       )}
 
       {!loading && !error && students.length === 0 && (
-        <p className="text-center text-slate-400 py-16">لا يوجد طلاب</p>
+        <EmptyState
+          icon={Users}
+          title="لا يوجد طلاب"
+          description={
+            debouncedSearch || trackId
+              ? "لم يتم العثور على طلاب يطابقون معايير البحث المحددة."
+              : "لم يتم تسجيل أي طالب في المنصة بعد."
+          }
+        />
       )}
 
       {/* Table Card */}

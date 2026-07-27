@@ -19,6 +19,7 @@ import {
   Book,
   HelpCircle,
   Zap,
+  Trophy,
   BarChart2,
   Bell,
   HeadphonesIcon,
@@ -41,6 +42,7 @@ const contentItems = [
   { title: "الكتب", icon: Book, href: `${BASE}/books` },
   { title: "الأسئلة", icon: HelpCircle, href: `${BASE}/questions` },
   { title: "التحدي اليومي", icon: Zap, href: `${BASE}/daily-challenge` },
+  { title: "المنافسة", icon: Trophy, href: `${BASE}/competition` },
 ];
 
 // const reportItems = [
@@ -49,8 +51,8 @@ const contentItems = [
 
 const otherItems = [
   { title: "ملف المدرسة", icon: Building2, href: `${BASE}/profile` },
-  // { title: "الإشعارات", icon: Bell, href: `${BASE}/notifications` },
-  { title: "الدعم", icon: HeadphonesIcon, href: `${BASE}/support` },
+  { title: "الإشعارات", icon: Bell, href: `${BASE}/notifications` },
+  // { title: "الدعم", icon: HeadphonesIcon, href: `${BASE}/support` },
   { title: "الإعدادات", icon: Settings, href: `${BASE}/settings` },
 ];
 

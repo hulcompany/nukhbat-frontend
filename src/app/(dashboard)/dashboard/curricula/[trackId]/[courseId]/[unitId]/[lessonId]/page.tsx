@@ -32,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ListCardSkeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/error-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   getLessonQuestions,
   createQuestion,
@@ -1074,8 +1075,8 @@ export default function LessonQuestionsPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8" dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
           <Button
             variant="ghost"
             size="icon"
@@ -1084,8 +1085,8 @@ export default function LessonQuestionsPage() {
           >
             <ArrowRight className="w-5 h-5" />
           </Button>
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl md:text-2xl font-bold">أسئلة الدرس</h1>
               {lesson &&
                 (lesson.used ? (
@@ -1105,7 +1106,7 @@ export default function LessonQuestionsPage() {
                   </span>
                 ))}
             </div>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="text-sm text-slate-500 mt-0.5 wrap-break-word">
               {lesson
                 ? `إدارة أسئلة درس "${lesson.title}"`
                 : "إدارة أسئلة هذا الدرس"}
@@ -1113,17 +1114,19 @@ export default function LessonQuestionsPage() {
           </div>
         </div>
         {canAddQuestions && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <ActionButton
               label="استيراد أسئلة"
               icon={Upload}
               bgClassName="bg-slate-600 hover:bg-slate-700 shadow-slate-200"
+              className="flex-1 justify-center sm:flex-none"
               onClick={() => setBulkOpen(true)}
             />
             <ActionButton
               label="إضافة سؤال"
               icon={Plus}
               bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+              className="flex-1 justify-center sm:flex-none"
               onClick={() => {
                 setEditingQuestion(null);
                 setFormOpen(true);
@@ -1185,9 +1188,24 @@ export default function LessonQuestionsPage() {
       {!loading && error && <ErrorState message={error} onRetry={fetchData} />}
 
       {!loading && !error && questions.length === 0 && (
-        <p className="text-center text-slate-400 py-16">
-          لا توجد أسئلة لهذا الدرس بعد
-        </p>
+        <EmptyState
+          icon={HelpCircle}
+          title="لا توجد أسئلة لهذا الدرس بعد"
+          description={
+            canAddQuestions
+              ? "ابدأ بإضافة السؤال الأول لهذا الدرس."
+              : undefined
+          }
+          actionLabel={canAddQuestions ? "إضافة سؤال" : undefined}
+          onAction={
+            canAddQuestions
+              ? () => {
+                  setEditingQuestion(null);
+                  setFormOpen(true);
+                }
+              : undefined
+          }
+        />
       )}
 
       {!loading && !error && questions.length > 0 && (
@@ -1232,7 +1250,10 @@ export default function LessonQuestionsPage() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-bold text-slate-900 truncate">
+                      <h3
+                        title={question.title}
+                        className="font-bold text-slate-900 truncate"
+                      >
                         {question.title}
                       </h3>
                       <span
@@ -1291,6 +1312,10 @@ export default function LessonQuestionsPage() {
                     className="border-t border-slate-100 pt-4 space-y-3"
                     onClick={(e) => e.stopPropagation()}
                   >
+                    <p className="text-sm font-semibold text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {question.title}
+                    </p>
+
                     {question.imageId && (
                       <FileImage
                         fileId={question.imageId}

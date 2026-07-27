@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   Circle,
   RefreshCcw,
+  FileText,
+  CalendarDays,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ActionButton } from "@/components/ui/action-button";
@@ -17,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   getDailyChallenges,
   createDailyChallenge,
@@ -218,7 +221,24 @@ export default function DailyChallengePage() {
         <>
           {/* Challenges Table Skeleton */}
           <Card className="border-slate-200 shadow-xs overflow-hidden p-0">
-            <div className="overflow-x-auto">
+            {/* Mobile skeleton */}
+            <div className="divide-y divide-slate-100 md:hidden">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop skeleton */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm text-right">
                 <thead className="bg-slate-50/80 text-slate-500 font-medium border-b border-slate-200">
                   <tr>
@@ -243,10 +263,10 @@ export default function DailyChallengePage() {
                         <Skeleton className="h-4 w-20 mx-auto" />
                       </td>
                       <td className="px-4 py-4">
-                        <Skeleton className="h-4 w-24 mx-auto" />
+                        <Skeleton className="h-6 w-20 rounded-full mx-auto" />
                       </td>
                       <td className="px-4 py-4">
-                        <Skeleton className="h-4 w-8 mx-auto" />
+                        <Skeleton className="h-6 w-8 rounded-full mx-auto" />
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center gap-1.5">
@@ -312,52 +332,49 @@ export default function DailyChallengePage() {
       {!loading && !error && (
         <>
           {/* Challenges Table */}
-          <Card className="border-slate-200 shadow-xs overflow-hidden p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-right">
-                <thead className="bg-slate-50/80 text-slate-500 font-medium border-b border-slate-200">
-                  <tr>
-                    <th className="px-6 py-4 text-center whitespace-nowrap">
-                      التاريخ
-                    </th>
-                    <th className="px-4 py-4 text-center whitespace-nowrap">
-                      المسار
-                    </th>
-                    <th className="px-4 py-4 text-center whitespace-nowrap">
-                      عدد الأسئلة
-                    </th>
-                    <th className="px-6 py-4 text-center whitespace-nowrap">
-                      الأسئلة المستخدمة
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
-                  {challenges.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="px-6 py-10 text-center text-slate-400"
-                      >
-                        لا توجد تحديات بعد
-                      </td>
-                    </tr>
-                  )}
-                  {challenges.map((challenge) => (
-                    <tr
-                      key={challenge.id}
-                      className="hover:bg-slate-50/50 transition-colors"
-                    >
-                      <td className="px-6 py-4 text-center text-slate-700 font-medium whitespace-nowrap">
-                        {challenge.date}
-                      </td>
-                      <td className="px-4 py-4 text-center text-slate-600 whitespace-nowrap">
-                        {challenge.track.name}
-                      </td>
-                      <td className="px-4 py-4 text-center text-slate-600 whitespace-nowrap">
-                        {challenge.usedQuestions.length}
-                      </td>
-                      <td className="px-6 py-4 text-slate-600">
-                        <div className="flex flex-wrap gap-1.5 justify-center">
+
+          <Card className="border-slate-200 shadow-xs overflow-hidden p-0 bg-white">
+            {challenges.length === 0 ? (
+              <EmptyState
+                icon={CalendarDays}
+                title="لا توجد تحديات بعد"
+                description="لم يتم توليد أي تحدي يومي حتى الآن. اضغط على «توليد التحدي اليومي» للبدء."
+              />
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {challenges.map((challenge) => (
+                  <div
+                    key={challenge.id}
+                    className="flex flex-col md:flex-row gap-4 p-5 hover:bg-slate-50/50 transition-colors duration-200"
+                  >
+                    {/* الجانب الأيمن: معلومات التحدي الأساسية (يأخذ عرض ثابت على الشاشات الكبيرة) */}
+                    <div className="md:w-64 shrink-0 flex flex-col gap-3">
+                      <div className="flex items-center gap-2 text-slate-700 font-semibold text-sm">
+                        <CalendarDays className="h-4 w-4 text-blue-600 shrink-0" />
+                        <span>{challenge.date}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-100">
+                          {challenge.track.name}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-medium border border-slate-200">
+                          <span className="font-bold text-slate-800">
+                            {challenge.usedQuestions.length}
+                          </span>
+                          أسئلة
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* الجانب الأيسر: قائمة الأسئلة (تأخذ باقي المساحة المتاحة) */}
+                    <div className="flex-1 bg-white md:bg-transparent rounded-lg p-3 md:p-0 border border-slate-100 md:border-none">
+                      {challenge.usedQuestions.length === 0 ? (
+                        <p className="text-sm text-slate-400 flex items-center h-full">
+                          لا توجد أسئلة مستخدمة
+                        </p>
+                      ) : (
+                        <div className="flex flex-wrap gap-2">
                           {challenge.usedQuestions.map((uq) => (
                             <button
                               key={uq.id}
@@ -365,20 +382,24 @@ export default function DailyChallengePage() {
                               onClick={() =>
                                 setSelectedQuestionId(uq.question.id)
                               }
-                              className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors cursor-pointer"
+                              // تم تغيير التصميم من حبة (Pill) إلى مربع بحواف دائرية ليناسب النصوص الطويلة
+                              className="inline-flex items-start text-right max-w-full px-3 py-2 rounded-lg text-sm font-medium bg-slate-50 border border-slate-200 text-slate-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all cursor-pointer group"
                             >
-                              {uq.question.title}
+                              <FileText className="h-4 w-4 shrink-0 text-slate-400 group-hover:text-blue-500 ml-2 mt-0.5 transition-colors" />
+                              {/* استخدمنا break-words و whitespace-normal للسماح للنص الطويل بالنزول لسطر جديد بشكل جميل */}
+                              <span className="whitespace-normal break-words leading-tight">
+                                {uq.question.title}
+                              </span>
                             </button>
                           ))}
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
-
           {/* Unused Questions Summary */}
           <div>
             <h2 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">

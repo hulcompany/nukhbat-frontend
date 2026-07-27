@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Users,
   UserCheck,
@@ -7,8 +8,11 @@ import {
   Ban,
   Key,
   AlertCircle,
+  Loader2,
+  Zap,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { StatCard } from "@/components/dashboard/StatCard";
 import {
   BarChart,
@@ -24,6 +28,20 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { getSchoolAttempts } from "@/api/attempts";
+import { getSchoolLeaderboard } from "@/api/leaderboard";
+import { getTracks } from "@/api/tracks";
+import { Attempt } from "@/types/attempt";
+import { LeaderboardEntry } from "@/types/leaderboard";
+import { Track } from "@/types/track";
+import { ApiError } from "@/lib/errors";
+
+function formatError(e: unknown): string {
+  if (e instanceof ApiError && e.code === "BAD_INPUT" && e.serverMessage) {
+    return e.serverMessage;
+  }
+  return (e as Error).message;
+}
 
 // --- Mock Data ---
 
@@ -103,62 +121,6 @@ const latestStudents = [
   },
 ];
 
-const supportRequests = [
-  {
-    id: 1,
-    title: "التطبيق يتوقف فجأة",
-    user: "سارة عبد الرحمن النجار",
-    type: "مشكلة تقنية",
-    status: "جديد",
-    badge: "bg-blue-100 text-blue-600",
-  },
-  {
-    id: 2,
-    title: "إجابة السؤال غير صحيحة",
-    user: "أحمد محمد الخطيب",
-    type: "مشكلة في سؤال",
-    status: "قيد المعالجة",
-    badge: "bg-amber-100 text-amber-600",
-  },
-  {
-    id: 3,
-    title: "إضافة وضع مراجعة سريعة",
-    user: "نور الدين علي",
-    type: "اقتراح",
-    status: "مغلق",
-    badge: "bg-slate-100 text-slate-500",
-  },
-  {
-    id: 4,
-    title: "المفتاح لا يعمل",
-    user: "ليلى حسن إبراهيم",
-    type: "مشكلة في مفتاح التفعيل",
-    status: "تم الحل",
-    badge: "bg-emerald-100 text-emerald-600",
-  },
-];
-
-const expiringKeys = [
-  {
-    id: "ELITE-2025-A1B2",
-    user: "أحمد محمد الخطيب",
-    date: "2027-06-01",
-    status: "مستخدم",
-  },
-  {
-    id: "ELITE-2025-C3D4",
-    user: "سارة عبد الرحمن النجار",
-    date: "2027-05-15",
-    status: "مستخدم",
-  },
-  {
-    id: "ELITE-2025-G7H8",
-    user: "نور الدين علي",
-    date: "2027-04-10",
-    status: "مستخدم",
-  },
-];
-
 // --- Status Badge Helper ---
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -173,6 +135,59 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function MainDashboardPage() {
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [attemptsLoading, setAttemptsLoading] = useState(true);
+  const [attemptsError, setAttemptsError] = useState<string | null>(null);
+
+  const [leaderboardTrack, setLeaderboardTrack] = useState<Track | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(
+    null,
+  );
+
+  async function fetchAttempts() {
+    setAttemptsLoading(true);
+    setAttemptsError(null);
+    try {
+      const res = await getSchoolAttempts({ skip: 0, limit: 2, sort: "DESC" });
+      setAttempts(res.data.list);
+    } catch (e) {
+      setAttemptsError(formatError(e));
+    } finally {
+      setAttemptsLoading(false);
+    }
+  }
+
+  async function fetchLeaderboardPreview() {
+    setLeaderboardLoading(true);
+    setLeaderboardError(null);
+    try {
+      const tracksRes = await getTracks();
+      const track = tracksRes.data[0] ?? null;
+      setLeaderboardTrack(track);
+      if (!track) {
+        setLeaderboard([]);
+        return;
+      }
+      const res = await getSchoolLeaderboard(track.id, {
+        skip: 0,
+        limit: 2,
+        sort: "DESC",
+      });
+      setLeaderboard(res.data.list);
+    } catch (e) {
+      setLeaderboardError(formatError(e));
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchAttempts();
+    fetchLeaderboardPreview();
+  }, []);
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto p-1 pb-8">
       {/* Page Header */}
@@ -462,67 +477,112 @@ export default function MainDashboardPage() {
         </Card>
       </div>
 
-      {/* Bottom Section: Support Requests & Expiring Keys */}
+      {/* Bottom Section: Recent Attempts & Leaderboard */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Support Requests List */}
+        {/* Recent Attempts List */}
         <Card className="border-slate-200 shadow-xs">
           <CardHeader className="border-b border-slate-100">
             <CardTitle className="text-lg font-bold text-slate-900">
-              آخر طلبات الدعم
+              آخر المحاولات
             </CardTitle>
           </CardHeader>
           <div className="p-6 flex flex-col gap-4">
-            {supportRequests.map((req) => (
-              <div
-                key={req.id}
-                className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100"
-              >
-                <div className="flex flex-col gap-1">
-                  <span className="font-bold text-slate-900">{req.title}</span>
-                  <span className="text-xs text-slate-500">
-                    {req.user} ·{" "}
-                    <span className="text-slate-400">{req.type}</span>
+            {attemptsLoading && (
+              <div className="flex items-center justify-center py-6 text-slate-400">
+                <Loader2 size={20} className="animate-spin ml-2" />
+                جارٍ التحميل...
+              </div>
+            )}
+
+            {!attemptsLoading && attemptsError && (
+              <p className="text-sm text-red-500 text-center py-6">
+                {attemptsError}
+              </p>
+            )}
+
+            {!attemptsLoading && !attemptsError && attempts.length === 0 && (
+              <EmptyState title="لا توجد محاولات بعد" />
+            )}
+
+            {!attemptsLoading &&
+              !attemptsError &&
+              attempts.map((attempt) => (
+                <div
+                  key={attempt.id}
+                  className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100"
+                >
+                  <div className="flex flex-col gap-1">
+                    <span className="font-bold text-slate-900">
+                      {attempt.lessonTitle}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {attempt.student.user.name} ·{" "}
+                      <span className="text-slate-400">
+                        {attempt.course.title}
+                      </span>
+                    </span>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap bg-emerald-100 text-emerald-600">
+                    {attempt.questionsCorrect}/{attempt.questionsTotal}
                   </span>
                 </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${req.badge}`}
-                >
-                  {req.status}
-                </span>
-              </div>
-            ))}
+              ))}
           </div>
         </Card>
 
-        {/* Expiring Keys List */}
+        {/* Leaderboard Preview */}
         <Card className="border-slate-200 shadow-xs">
           <CardHeader className="border-b border-slate-100">
-            <CardTitle className="text-lg font-bold text-slate-900">
-              مفاتيح قاربت على الانتهاء
+            <CardTitle className="text-lg font-bold text-slate-900 flex items-center justify-between">
+              <span>المتصدرون</span>
+              {leaderboardTrack && (
+                <span className="text-xs font-medium text-slate-400">
+                  {leaderboardTrack.name}
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <div className="p-6 flex flex-col gap-4">
-            {expiringKeys.map((keyData) => (
-              <div
-                key={keyData.id}
-                className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100"
-              >
-                <div className="flex flex-col gap-1">
-                  <span className="font-bold text-slate-900 font-mono tracking-tight">
-                    {keyData.id}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    {keyData.user} · ينتهي:{" "}
-                    <span className="text-slate-700 font-medium">
-                      {keyData.date}
+            {leaderboardLoading && (
+              <div className="flex items-center justify-center py-6 text-slate-400">
+                <Loader2 size={20} className="animate-spin ml-2" />
+                جارٍ التحميل...
+              </div>
+            )}
+
+            {!leaderboardLoading && leaderboardError && (
+              <p className="text-sm text-red-500 text-center py-6">
+                {leaderboardError}
+              </p>
+            )}
+
+            {!leaderboardLoading &&
+              !leaderboardError &&
+              leaderboard.length === 0 && (
+                <EmptyState title="لا يوجد متصدرون بعد" />
+              )}
+
+            {!leaderboardLoading &&
+              !leaderboardError &&
+              leaderboard.map((entry, idx) => (
+                <div
+                  key={entry.studentId}
+                  className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-[#16192b] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                      {idx + 1}
+                    </div>
+                    <span className="font-bold text-slate-900">
+                      {entry.student.user.name}
                     </span>
+                  </div>
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap bg-amber-100 text-amber-600">
+                    {entry.xp}
+                    <Zap className="h-3.5 w-3.5 fill-amber-600" />
                   </span>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap bg-blue-100 text-blue-600">
-                  {keyData.status}
-                </span>
-              </div>
-            ))}
+              ))}
           </div>
         </Card>
       </div>

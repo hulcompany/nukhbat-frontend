@@ -13,7 +13,9 @@ export default function DashboardLayout({
         <SchoolDashboardSidebar />
         <main className="flex-1 min-w-0 overflow-hidden flex flex-col h-screen">
           {/* <DashboardHeader /> */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-8">{children}</div>
+          <div className="flex-1 overflow-y-auto p-4 pt-15 md:p-8">
+            {children}
+          </div>
         </main>
       </div>
     </AuthGuard>
