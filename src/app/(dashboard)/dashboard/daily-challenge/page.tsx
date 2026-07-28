@@ -6,12 +6,10 @@ import {
   ArrowLeft,
   CheckCircle2,
   Circle,
-  RefreshCcw,
   FileText,
   CalendarDays,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { ActionButton } from "@/components/ui/action-button";
 import {
   Dialog,
   DialogContent,
@@ -20,10 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  getDailyChallenges,
-  createDailyChallenge,
-} from "@/api/daily-challenge";
+import { getDailyChallenges } from "@/api/daily-challenge";
 import { getQuestionById } from "@/api/question";
 import { downloadFile } from "@/api/files";
 import { Challenge, UnusedQuestionSummary } from "@/types/daily-challenge";
@@ -81,8 +76,8 @@ export default function DailyChallengePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
+  // const [creating, setCreating] = useState(false);
+  // const [createError, setCreateError] = useState<string | null>(null);
 
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
     null,
@@ -120,18 +115,18 @@ export default function DailyChallengePage() {
     fetchChallenges();
   }, []);
 
-  async function handleCreate() {
-    setCreating(true);
-    setCreateError(null);
-    try {
-      await createDailyChallenge();
-      await fetchChallenges();
-    } catch (e) {
-      setCreateError((e as Error).message);
-    } finally {
-      setCreating(false);
-    }
-  }
+  // async function handleCreate() {
+  //   setCreating(true);
+  //   setCreateError(null);
+  //   try {
+  //     await createDailyChallenge();
+  //     await fetchChallenges();
+  //   } catch (e) {
+  //     setCreateError((e as Error).message);
+  //   } finally {
+  //     setCreating(false);
+  //   }
+  // }
 
   const totalQuestionsUsed = challenges.reduce(
     (sum, c) => sum + c.usedQuestions.length,
@@ -153,7 +148,7 @@ export default function DailyChallengePage() {
             إدارة التحديات اليومية للطلاب
           </p>
         </div>
-        <div className="flex flex-col items-end gap-2">
+        {/* <div className="flex flex-col items-end gap-2">
           <ActionButton
             label={creating ? "جاري إنشاء التحدي" : "توليد التحدي اليومي"}
             icon={RefreshCcw}
@@ -162,7 +157,7 @@ export default function DailyChallengePage() {
             onClick={handleCreate}
           />
           {createError && <p className="text-xs text-red-500">{createError}</p>}
-        </div>
+        </div> */}
       </div>
 
       {/* Stats Cards */}
