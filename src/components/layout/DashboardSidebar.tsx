@@ -115,16 +115,16 @@ export function DashboardSidebar() {
   // ];
 
   const adminItems = [
-    {
-      title: "الإحصائيات والتحليلات",
-      icon: BarChart2,
-      href: "/dashboard-8ukhba2/analytics",
-    },
-    {
-      title: "الإشعارات",
-      icon: Bell,
-      href: "/dashboard-8ukhba2/notifications",
-    },
+    // {
+    //   title: "الإحصائيات والتحليلات",
+    //   icon: BarChart2,
+    //   href: "/dashboard-8ukhba2/analytics",
+    // },
+    // {
+    //   title: "الإشعارات",
+    //   icon: Bell,
+    //   href: "/dashboard-8ukhba2/notifications",
+    // },
     // {
     //   title: "الدعم والمشاكل",
     //   icon: HeadphonesIcon,

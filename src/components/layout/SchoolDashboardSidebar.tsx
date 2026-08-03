@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { FileImage } from "@/components/ui/file-image";
 import { getMySchool } from "@/api/schools";
+import { getNotificationStats } from "@/api/notifications"; // <-- Imported new API
 import { School } from "@/types/school";
 import {
   ChevronLeft,
@@ -45,21 +46,20 @@ const contentItems = [
   { title: "المنافسة", icon: Trophy, href: `${BASE}/competition` },
 ];
 
-// const reportItems = [
-//   { title: "الإحصائيات", icon: BarChart2, href: `${BASE}/analytics` },
-// ];
-
 const otherItems = [
   { title: "ملف المدرسة", icon: Building2, href: `${BASE}/profile` },
-  { title: "الإشعارات", icon: Bell, href: `${BASE}/notifications` },
-  // { title: "الدعم", icon: HeadphonesIcon, href: `${BASE}/support` },
+  {
+    title: "الإشعارات",
+    icon: Bell,
+    href: `${BASE}/notifications`,
+    showBadge: true,
+  }, // <-- Added showBadge flag
   { title: "الإعدادات", icon: Settings, href: `${BASE}/settings` },
 ];
 
 const sections = [
   { label: null, items: mainItems },
   { label: "المحتوى", items: contentItems },
-  // { label: "التقارير", items: reportItems },
   { label: "أخرى", items: otherItems },
 ];
 
@@ -77,6 +77,7 @@ export function SchoolDashboardSidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [school, setSchool] = useState<School | null>(null);
+  const [unreadCount, setUnreadCount] = useState<number>(0); // <-- Added state for unread count
 
   useEffect(() => {
     const saved = localStorage.getItem("schoolSidebarCollapsed");
@@ -93,7 +94,16 @@ export function SchoolDashboardSidebar() {
         .catch(() => setSchool(null));
     };
 
+    // <-- Fetch Notification Stats
+    const fetchStats = () => {
+      getNotificationStats()
+        .then((res) => setUnreadCount(res.data.unRead))
+        .catch(() => setUnreadCount(0));
+    };
+
     fetchSchool();
+    fetchStats(); // <-- Called fetch stats
+
     // Re-fetch when the profile page updates the school (e.g. new logo)
     window.addEventListener("school-updated", fetchSchool);
     return () => window.removeEventListener("school-updated", fetchSchool);
@@ -114,11 +124,13 @@ export function SchoolDashboardSidebar() {
     icon: Icon,
     title,
     size = 18,
+    showBadge = false, // <-- Added showBadge prop
   }: {
     href: string;
     icon: React.ElementType;
     title: string;
     size?: number;
+    showBadge?: boolean;
   }) {
     const isActive = pathname === href || (href === BASE && pathname === BASE);
     return (
@@ -126,22 +138,42 @@ export function SchoolDashboardSidebar() {
         href={href}
         title={isCollapsed ? title : undefined}
         className={cn(
-          "flex items-center gap-3 px-3 py-3 rounded-lg transition-all group",
+          "flex items-center gap-3 px-3 py-3 rounded-lg transition-all group relative", // <-- Added relative positioning
           isActive
             ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
             : "hover:bg-white/5 hover:text-white",
           isCollapsed && "justify-center",
         )}
       >
-        <Icon
-          size={size}
-          className={cn(
-            "shrink-0",
-            isActive ? "text-white" : "text-slate-400 group-hover:text-white",
+        <div className="relative">
+          <Icon
+            size={size}
+            className={cn(
+              "shrink-0",
+              isActive ? "text-white" : "text-slate-400 group-hover:text-white",
+            )}
+          />
+          {/* Collapsed Badge indicator (just a dot) */}
+          {showBadge && unreadCount > 0 && isCollapsed && (
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500 border border-[#16192b]"></span>
+            </span>
           )}
-        />
+        </div>
+
         {!isCollapsed && (
-          <span className="text-sm font-medium whitespace-nowrap">{title}</span>
+          <div className="flex flex-1 items-center justify-between">
+            <span className="text-sm font-medium whitespace-nowrap">
+              {title}
+            </span>
+            {/* Expanded Badge indicator (shows number) */}
+            {showBadge && unreadCount > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                {unreadCount > 99 ? "+99" : unreadCount}
+              </span>
+            )}
+          </div>
         )}
       </Link>
     );
@@ -244,6 +276,8 @@ export function SchoolDashboardSidebar() {
                     href={item.href}
                     icon={item.icon}
                     title={item.title}
+                    // Tell TS that item might have an optional showBadge boolean
+                    showBadge={(item as { showBadge?: boolean }).showBadge}
                   />
                 ))}
               </div>

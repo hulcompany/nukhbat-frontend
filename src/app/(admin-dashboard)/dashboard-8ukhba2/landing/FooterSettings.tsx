@@ -170,7 +170,7 @@ export function FooterSettings() {
           </div>
 
           {/* Map Position */}
-          <div>
+          {/* <div>
             <h3 className="font-bold text-sm mb-4 text-slate-700 flex items-center gap-2">
               <span className="w-1.5 h-4 bg-blue-600 rounded-full" />
               إحداثيات الخريطة
@@ -201,7 +201,7 @@ export function FooterSettings() {
                 />
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </CardContent>
     </Card>

@@ -467,7 +467,7 @@ export default function SchoolsManagementPage() {
                     onClick={(e) => {
                       e.stopPropagation(); // Prevents triggering the Card's onClick (navigation)
                       // Pass the appropriate ID based on your backend expectation. Using school.id here.
-                      setNotifySchoolId(school.id);
+                      setNotifySchoolId(school.owner.id);
                     }}
                   >
                     <Send size={16} className="shrink-0" /> إشعار

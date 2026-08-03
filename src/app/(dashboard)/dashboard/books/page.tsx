@@ -35,6 +35,8 @@ export default function BooksPage() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  // Delete dialog
+  const [bookToDelete, setBookToDelete] = useState<Book | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // PDF viewer
@@ -118,11 +120,14 @@ export default function BooksPage() {
     }
   }
 
-  async function handleDelete(book: Book) {
-    setDeletingId(book.id);
+  async function handleDelete() {
+    if (!bookToDelete) return;
+
+    setDeletingId(bookToDelete.id);
     try {
-      await deleteBook(book.id);
-      setBooks((list) => list.filter((b) => b.id !== book.id));
+      await deleteBook(bookToDelete.id);
+      setBooks((list) => list.filter((b) => b.id !== bookToDelete.id));
+      setBookToDelete(null); // Close the dialog on success
     } catch (e) {
       setError(e as Error);
     } finally {
@@ -232,7 +237,7 @@ export default function BooksPage() {
                   <button
                     type="button"
                     disabled={deletingId === book.id}
-                    onClick={() => handleDelete(book)}
+                    onClick={() => setBookToDelete(book)}
                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                     title="حذف"
                   >
@@ -344,6 +349,44 @@ export default function BooksPage() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={!!bookToDelete}
+        onOpenChange={(open) => !open && setBookToDelete(null)}
+      >
+        <DialogContent dir="rtl" className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="pt-6 text-red-600">تأكيد الحذف</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-slate-700 text-sm">
+              هل أنت متأكد من رغبتك في حذف كتاب{" "}
+              <span className="font-bold">"{bookToDelete?.name}"</span>؟ لا يمكن
+              التراجع عن هذا الإجراء.
+            </p>
+          </div>
+          <div className="flex gap-3 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setBookToDelete(null)}
+              className="h-11 px-7"
+              disabled={!!deletingId}
+            >
+              إلغاء
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDelete}
+              className="h-11 px-7 bg-red-600 hover:bg-red-700 text-white"
+              disabled={!!deletingId}
+            >
+              {deletingId ? "جاري الحذف..." : "حذف"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

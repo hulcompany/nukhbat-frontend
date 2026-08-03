@@ -34,6 +34,7 @@ import { Track } from "@/types/track";
 import { ApiError } from "@/lib/errors";
 import { SchoolStatisticsData } from "@/types/statistics";
 import {
+  getSchoolAggregateActivity,
   getSchoolAggregateSubscriptions,
   getSchoolStatistics,
 } from "@/api/statistics";
@@ -45,30 +46,12 @@ function formatError(e: unknown): string {
   return (e as Error).message;
 }
 
-// --- Mock Data ---
-
-const dailyActivityData = [
-  { name: "السبت", value: 140 },
-  { name: "الأحد", value: 180 },
-  { name: "الإثنين", value: 210 },
-  { name: "الثلاثاء", value: 190 },
-  { name: "الأربعاء", value: 220 },
-  { name: "الخميس", value: 170 },
-  { name: "الجمعة", value: 80 },
-];
-
-const monthlyKeysData = [
-  { name: "يناير", value: 45 },
-  { name: "فبراير", value: 62 },
-  { name: "مارس", value: 38 },
-  { name: "أبريل", value: 80 },
-  { name: "مايو", value: 55 },
-  { name: "يونيو", value: 42 },
-];
-
 export default function MainDashboardPage() {
   const [stats, setStats] = useState<SchoolStatisticsData | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [activityData, setActivityData] = useState<
+    { name: string; value: number }[]
+  >([]);
   const [monthlyKeysData, setMonthlyKeysData] = useState<
     { name: string; value: number }[]
   >([]);
@@ -76,7 +59,7 @@ export default function MainDashboardPage() {
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [attemptsLoading, setAttemptsLoading] = useState(true);
   const [attemptsError, setAttemptsError] = useState<string | null>(null);
-
+  const [activityLoading, setActivityLoading] = useState(true);
   const [leaderboardTrack, setLeaderboardTrack] = useState<Track | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
@@ -154,10 +137,33 @@ export default function MainDashboardPage() {
     }
   }
 
+  async function fetchActivity() {
+    setActivityLoading(true);
+    try {
+      const res = await getSchoolAggregateActivity();
+
+      // Map the week array and parse date to Arabic weekday (e.g., السبت, الأحد)
+      const formattedData = res.data.week.map((item) => {
+        const dateObj = new Date(item.date);
+        return {
+          name: dateObj.toLocaleDateString("ar-EG", { weekday: "long" }),
+          value: item.openedStudents,
+        };
+      });
+
+      setActivityData(formattedData);
+    } catch (error) {
+      console.error("Failed to fetch admin activity data", error);
+    } finally {
+      setActivityLoading(false);
+    }
+  }
+
   useEffect(() => {
     fetchStats();
     fetchAttempts();
     fetchLeaderboardPreview();
+    fetchActivity();
     fetchMonthlySubscriptions();
   }, []);
 
@@ -266,10 +272,17 @@ export default function MainDashboardPage() {
               نشاط الطلاب اليومي
             </CardTitle>
           </CardHeader>
-          <div className="h-[250px] w-full" dir="ltr">
+          <div className="h-[250px] w-full relative" dir="ltr">
+            {/* Loading Overlay */}
+            {activityLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10">
+                <Loader2 size={24} className="animate-spin text-slate-400" />
+              </div>
+            )}
+
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={dailyActivityData}
+                data={activityData}
                 margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
               >
                 <CartesianGrid
@@ -288,6 +301,7 @@ export default function MainDashboardPage() {
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: "#64748b" }}
+                  allowDecimals={false} // Prevents showing decimals like 1.5 students
                 />
                 <Tooltip
                   cursor={{ fill: "#f8fafc" }}
@@ -295,7 +309,9 @@ export default function MainDashboardPage() {
                     borderRadius: "8px",
                     border: "none",
                     boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    textAlign: "right",
                   }}
+                  formatter={(value: any) => [value, "طالب"]}
                 />
                 <Bar
                   dataKey="value"

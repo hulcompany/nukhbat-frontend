@@ -35,3 +35,22 @@ export interface SendNotificationResponse {
   message: string;
   data: Notification;
 }
+
+export interface NotificationStatsData {
+  unRead: number;
+  unOpen: number;
+  total: number;
+}
+
+export interface NotificationStatsResponse {
+  message: string;
+  data: NotificationStatsData;
+}
+
+export interface ReadNotificationsRequest {
+  ids: string[];
+}
+
+export interface ReadNotificationsResponse {
+  message: string;
+}

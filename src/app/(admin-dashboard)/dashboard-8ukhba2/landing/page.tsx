@@ -17,7 +17,7 @@ interface DraftFaq {
   description: string;
 }
 
-const navItems = ["الأسئلة الشائعة", "التذييل (Footer)"];
+const navItems = ["الأسئلة الشائعة", "التذييل"];
 
 export default function LandingManagementPage() {
   const [activeTab, setActiveTab] = useState("الأسئلة الشائعة");
@@ -232,15 +232,15 @@ export default function LandingManagementPage() {
             </Card>
           )}
 
-          {activeTab === "التذييل (Footer)" && <FooterSettings />}
+          {activeTab === "التذييل" && <FooterSettings />}
 
-          {activeTab === "القسم الرئيسي (Hero)" && (
+          {/* {activeTab === "القسم الرئيسي (Hero)" && (
             <div className="bg-slate-50 rounded-2xl p-12 text-center border-2 border-dashed border-slate-200">
               <p className="text-slate-400 font-medium italic">
                 قريباً: إعدادات القسم الرئيسي
               </p>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>

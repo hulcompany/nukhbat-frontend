@@ -23,3 +23,19 @@ export interface SubscriptionAggregateResponse {
   message: string;
   data: SubscriptionAggregateData[];
 }
+
+export interface AggregateActivityDay {
+  date: string;
+  openedStudents: number;
+}
+
+export interface AggregateActivityData {
+  weekStart: string;
+  weekEnd: string;
+  week: AggregateActivityDay[];
+}
+
+export interface AggregateActivityResponse {
+  message: string;
+  data: AggregateActivityData;
+}
