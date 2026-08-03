@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ArrowUpDown,
   Loader2,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ import { getSchools } from "@/api/schools";
 import { SchoolStudent } from "@/types/student";
 import { Track } from "@/types/track";
 import { School } from "@/types/school";
+import { sendNotification } from "@/api/notifications";
 
 const LIMIT = 10;
 
@@ -78,7 +80,10 @@ function StudentDetailsDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent dir="rtl" className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent
+        dir="rtl"
+        className="max-w-lg max-h-[85vh] overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle className="pt-5">تفاصيل الطالب</DialogTitle>
         </DialogHeader>
@@ -134,6 +139,134 @@ function StudentDetailsDialog({
   );
 }
 
+function StudentNotificationDialog({
+  studentId, // Note: Based on your table code, this is actually receiving the userId
+  onClose,
+}: {
+  studentId: string;
+  onClose: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!title.trim() || !description.trim()) {
+      setError("العنوان والتفاصيل مطلوبان");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await sendNotification({
+        title: title.trim(),
+        description: description.trim(), // Now guaranteed to have a value
+        userId: studentId, // Using the ID passed from the button click
+      });
+
+      setSuccess(true);
+      // Auto-close dialog after 1.5 seconds of showing success message
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (err) {
+      setError((err as Error).message || "حدث خطأ أثناء إرسال الإشعار");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        dir="rtl"
+        className="max-w-md max-h-[85vh] overflow-y-auto"
+      >
+        <DialogHeader>
+          <DialogTitle className="pt-5">إرسال إشعار للطالب</DialogTitle>
+        </DialogHeader>
+
+        {success ? (
+          <div className="flex flex-col items-center justify-center py-10 gap-3">
+            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+              <Send size={24} />
+            </div>
+            <p className="text-lg font-medium text-green-600 text-center">
+              تم إرسال الإشعار بنجاح!
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            {error && (
+              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">
+                عنوان الإشعار <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="أدخل عنوان الإشعار..."
+                disabled={loading}
+                required
+                className="focus-visible:ring-blue-600"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-700">
+                تفاصيل الإشعار <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="أدخل محتوى الإشعار..."
+                disabled={loading}
+                required
+                className="w-full h-28 rounded-lg border border-slate-200 bg-white p-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-blue-600 focus-visible:border-blue-600 resize-none transition-shadow"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={loading}
+                className="h-11"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                disabled={loading || !title.trim() || !description.trim()}
+                className="h-11 bg-blue-600 hover:bg-blue-700 text-white min-w-24"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4 ml-2" />
+                )}
+                إرسال
+              </Button>
+            </div>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Students() {
   const [students, setStudents] = useState<SchoolStudent[]>([]);
   const [totalRecords, setTotalRecords] = useState(0);
@@ -153,6 +286,7 @@ export default function Students() {
   const [sort, setSort] = useState<"ASC" | "DESC">("DESC");
 
   const [viewingId, setViewingId] = useState<string | null>(null);
+  const [sendNotification, setSendNotification] = useState<string | null>(null);
 
   useEffect(() => {
     getTracks()
@@ -397,6 +531,13 @@ export default function Students() {
                     <td className="px-6 py-3 whitespace-nowrap">
                       <div className="flex items-center justify-center gap-2">
                         <button
+                          className="p-1.5 text-green-500 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="اشعار"
+                          onClick={() => setSendNotification(student.userId)}
+                        >
+                          <Send className="h-4 w-4" />
+                        </button>
+                        <button
                           className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
                           title="عرض"
                           onClick={() => setViewingId(student.id)}
@@ -442,6 +583,12 @@ export default function Students() {
         <StudentDetailsDialog
           studentId={viewingId}
           onClose={() => setViewingId(null)}
+        />
+      )}
+      {sendNotification && (
+        <StudentNotificationDialog
+          studentId={sendNotification}
+          onClose={() => setSendNotification(null)}
         />
       )}
     </div>

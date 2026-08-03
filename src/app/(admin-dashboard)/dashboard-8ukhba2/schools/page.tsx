@@ -13,6 +13,7 @@ import {
   ChevronRight,
   ChevronLeft,
   ImageIcon,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getSchools, createSchool, GetSchoolsParams } from "@/api/schools";
 import { downloadFile } from "@/api/files";
+import { sendNotification } from "@/api/notifications";
 import { School } from "@/types/school";
 
 function FileImage({
@@ -59,6 +61,139 @@ function FileImage({
   return <img src={src} alt={alt} className={className} />;
 }
 
+// --- Notification Dialog Component ---
+// --- Notification Dialog Component ---
+function SchoolNotificationDialog({
+  schoolId,
+  onClose,
+}: {
+  schoolId: string;
+  onClose: () => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Check if both title and description are provided
+    if (!title.trim() || !description.trim()) {
+      setError("العنوان والتفاصيل مطلوبان");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await sendNotification({
+        title: title.trim(),
+        description: description.trim(), // Now guaranteed to have a value
+        userId: schoolId,
+      });
+
+      setSuccess(true);
+      // Auto-close dialog after 1.5 seconds of showing success message
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (err) {
+      setError((err as Error).message || "حدث خطأ أثناء إرسال الإشعار");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        dir="rtl"
+        className="max-w-md max-h-[85vh] overflow-y-auto"
+      >
+        <DialogHeader>
+          <DialogTitle className="pt-5">إرسال إشعار للمدرسة</DialogTitle>
+        </DialogHeader>
+
+        {success ? (
+          <div className="flex flex-col items-center justify-center py-10 gap-3">
+            <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+              <Send size={24} />
+            </div>
+            <p className="text-lg font-medium text-green-600 text-center">
+              تم إرسال الإشعار بنجاح!
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            {error && (
+              <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-slate-700">
+                عنوان الإشعار <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="أدخل عنوان الإشعار..."
+                disabled={loading}
+                required
+                className="focus-visible:ring-blue-600"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-slate-700">
+                تفاصيل الإشعار <span className="text-red-500">*</span>
+              </Label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="أدخل محتوى الإشعار..."
+                disabled={loading}
+                required
+                className="w-full h-28 rounded-lg border border-slate-200 bg-white p-3 text-sm outline-none focus-visible:ring-1 focus-visible:ring-blue-600 focus-visible:border-blue-600 resize-none transition-shadow"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onClose}
+                disabled={loading}
+                className="h-11"
+              >
+                إلغاء
+              </Button>
+              <Button
+                type="submit"
+                // Disable button if either field is empty
+                disabled={loading || !title.trim() || !description.trim()}
+                className="bg-blue-600 hover:bg-blue-700 h-11 text-white min-w-24"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4 ml-2" />
+                )}
+                إرسال
+              </Button>
+            </div>
+          </form>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+// ---------------------------------------------
+
 const LIMIT = 10;
 
 export default function SchoolsManagementPage() {
@@ -73,6 +208,7 @@ export default function SchoolsManagementPage() {
   const [searchInput, setSearchInput] = useState("");
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [notifySchoolId, setNotifySchoolId] = useState<string | null>(null); // State for the notification dialog
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -325,24 +461,17 @@ export default function SchoolsManagementPage() {
                   >
                     <Edit2 size={16} className="shrink-0" /> تعديل
                   </Button>
-                  {/* <Button
-                    variant="outline"
-                    className="flex-1 gap-2 bg-green-100 text-green-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-green-200"
-                  >
-                    <Key size={16} className="shrink-0" /> مفاتيح
-                  </Button>
                   <Button
                     variant="outline"
                     className="flex-1 gap-2 bg-purple-100 text-purple-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-purple-200"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevents triggering the Card's onClick (navigation)
+                      // Pass the appropriate ID based on your backend expectation. Using school.id here.
+                      setNotifySchoolId(school.id);
+                    }}
                   >
                     <Send size={16} className="shrink-0" /> إشعار
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 gap-2 bg-amber-100 text-amber-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-amber-200"
-                  >
-                    <FileText size={16} className="shrink-0" /> تقرير
-                  </Button> */}
                 </div>
               </CardContent>
             </Card>
@@ -482,6 +611,14 @@ export default function SchoolsManagementPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* School Notification Dialog */}
+      {notifySchoolId && (
+        <SchoolNotificationDialog
+          schoolId={notifySchoolId}
+          onClose={() => setNotifySchoolId(null)}
+        />
+      )}
     </div>
   );
 }
