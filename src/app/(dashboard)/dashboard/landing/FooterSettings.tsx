@@ -15,6 +15,9 @@ const defaultForm: UpdateInfoRequest = {
   phone: "",
   location: "",
   position: { lat: 0, lng: 0 },
+  about: "",
+  privacyPolicy: "",
+  termsAndConditions: "",
 };
 
 export function FooterSettings() {
@@ -35,14 +38,19 @@ export function FooterSettings() {
           appStore: d.appStore ?? "",
           googlePlay: d.googlePlay ?? "",
           position: d.position ?? { lat: 0, lng: 0 },
+          about: d.about ?? "",
+          privacyPolicy: d.privacyPolicy ?? "",
+          termsAndConditions: d.termsAndConditions ?? "",
         });
       })
       .catch(() => setError("فشل تحميل بيانات التواصل"))
       .finally(() => setLoading(false));
   }, []);
 
-  const set = (field: keyof Omit<UpdateInfoRequest, "position">, value: string) =>
-    setForm((prev) => ({ ...prev, [field]: value }));
+  const set = (
+    field: keyof Omit<UpdateInfoRequest, "position">,
+    value: string,
+  ) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const setPosition = (axis: "lat" | "lng", value: string) =>
     setForm((prev) => ({

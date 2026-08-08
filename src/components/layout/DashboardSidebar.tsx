@@ -31,6 +31,9 @@ import {
   Settings,
   LogOut,
   X,
+  Info, // Added Info icon
+  Shield, // Added Shield icon
+  FileText, // Added FileText icon
 } from "lucide-react";
 
 function roleLabel(role?: string) {
@@ -82,68 +85,22 @@ export function DashboardSidebar() {
 
   const contentItems = [
     { title: "المناهج", icon: BookOpen, href: "/dashboard-8ukhba2/curricula" },
-    // {
-    //   title: "الأسئلة",
-    //   icon: HelpCircle,
-    //   href: "/dashboard-8ukhba2/questions",
-    // },
-    // {
-    //   title: "استيراد الأسئلة JSON",
-    //   icon: FileCode2,
-    //   href: "/dashboard-8ukhba2/import",
-    // },
-    // {
-    //   title: "محرر الأسئلة التفاعلية",
-    //   icon: PenTool,
-    //   href: "/dashboard-8ukhba2/editor",
-    // },
-    // {
-    //   title: "التحدي اليومي",
-    //   icon: Zap,
-    //   href: "/dashboard-8ukhba2/daily-challenge",
-    // },
     { title: "حكمة اليوم", icon: Lightbulb, href: "/dashboard-8ukhba2/wisdom" },
   ];
 
-  // const interactionItems = [
-  //   // { title: "المنافسة", icon: Trophy, href: "/dashboard-8ukhba2/competition" },
-  //   {
-  //     title: "الأوسمة والجواهر",
-  //     icon: Award,
-  //     href: "/dashboard-8ukhba2/badges",
-  //   },
-  // ];
-
   const adminItems = [
-    // {
-    //   title: "الإحصائيات والتحليلات",
-    //   icon: BarChart2,
-    //   href: "/dashboard-8ukhba2/analytics",
-    // },
-    // {
-    //   title: "الإشعارات",
-    //   icon: Bell,
-    //   href: "/dashboard-8ukhba2/notifications",
-    // },
-    // {
-    //   title: "الدعم والمشاكل",
-    //   icon: HeadphonesIcon,
-    //   href: "/dashboard-8ukhba2/support",
-    // },
     { title: "صفحة الهبوط", icon: Globe, href: "/dashboard-8ukhba2/landing" },
-    // {
-    //   title: "صلاحيات الأدمن",
-    //   icon: ShieldCheck,
-    //   href: "/dashboard-8ukhba2/permissions",
-    // },
-    // {
-    //   title: "سجل العمليات",
-    //   icon: ClipboardList,
-    //   href: "/dashboard-8ukhba2/logs",
-    // },
     { title: "الإعدادات", icon: Settings, href: "/dashboard-8ukhba2/settings" },
   ];
 
+  // --- New Section for About, Privacy Policy, and Terms ---
+  const legalItems = [
+    {
+      title: "إعدادات حول المنصة",
+      icon: Info,
+      href: "/dashboard-8ukhba2/about",
+    },
+  ];
   return (
     <>
       {/* Mobile Toggle Button (Visible only on small screens) */}
@@ -295,18 +252,18 @@ export function DashboardSidebar() {
               );
             })}
 
-            {/* Interaction Section */}
-            {/* <div
+            {/* Admin Section */}
+            <div
               className={cn("mt-6 mb-2", isCollapsed ? "text-center" : "px-3")}
             >
               {!isCollapsed && (
                 <p className="text-xs font-semibold text-slate-500 mb-2">
-                  التفاعل
+                  الإدارة
                 </p>
               )}
               {isCollapsed && <div className="h-px w-full bg-white/10 my-4" />}
-            </div> */}
-            {/* {interactionItems.map((item) => {
+            </div>
+            {adminItems.map((item) => {
               const isActive =
                 pathname === item.href ||
                 (pathname === "/" && item.href === "/dashboard-8ukhba2");
@@ -325,7 +282,7 @@ export function DashboardSidebar() {
                 >
                   <item.icon
                     size={18}
-                    className="shrink-0 text-slate-400 group-hover:text-white"
+                    className="flex-shrink-0 text-slate-400 group-hover:text-white"
                   />
                   {!isCollapsed && (
                     <span className="text-sm whitespace-nowrap">
@@ -334,20 +291,18 @@ export function DashboardSidebar() {
                   )}
                 </Link>
               );
-            })} */}
+            })}
 
-            {/* Admin Section */}
+            {/* Legal Section */}
             <div
               className={cn("mt-6 mb-2", isCollapsed ? "text-center" : "px-3")}
             >
               {!isCollapsed && (
-                <p className="text-xs font-semibold text-slate-500 mb-2">
-                  الإدارة
-                </p>
+                <p className="text-xs font-semibold text-slate-500 mb-2">حول</p>
               )}
               {isCollapsed && <div className="h-px w-full bg-white/10 my-4" />}
             </div>
-            {adminItems.map((item) => {
+            {legalItems.map((item) => {
               const isActive =
                 pathname === item.href ||
                 (pathname === "/" && item.href === "/dashboard-8ukhba2");

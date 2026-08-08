@@ -15,6 +15,9 @@ const defaultForm: UpdateInfoRequest = {
   phone: "",
   location: "",
   position: { lat: 0, lng: 0 },
+  about: "",
+  privacyPolicy: "",
+  termsAndConditions: "",
 };
 
 export function FooterSettings() {
@@ -35,6 +38,9 @@ export function FooterSettings() {
           appStore: d.appStore ?? "",
           googlePlay: d.googlePlay ?? "",
           position: d.position ?? { lat: 0, lng: 0 },
+          about: d.about ?? "",
+          privacyPolicy: d.privacyPolicy ?? "",
+          termsAndConditions: d.termsAndConditions ?? "",
         });
       })
       .catch(() => setError("فشل تحميل بيانات التواصل"))
@@ -46,11 +52,11 @@ export function FooterSettings() {
     value: string,
   ) => setForm((prev) => ({ ...prev, [field]: value }));
 
-  const setPosition = (axis: "lat" | "lng", value: string) =>
-    setForm((prev) => ({
-      ...prev,
-      position: { ...prev.position, [axis]: parseFloat(value) || 0 },
-    }));
+  // const setPosition = (axis: "lat" | "lng", value: string) =>
+  //   setForm((prev) => ({
+  //     ...prev,
+  //     position: { ...prev.position, [axis]: parseFloat(value) || 0 },
+  //   }));
 
   const handleSave = async () => {
     setSaving(true);
@@ -121,7 +127,7 @@ export function FooterSettings() {
                 <Input
                   value={form.phone}
                   onChange={(e) => set("phone", e.target.value)}
-                  placeholder="+963 912 345 678"
+                  placeholder="+963912345678"
                 />
               </div>
               <div className="space-y-2">
@@ -144,7 +150,7 @@ export function FooterSettings() {
               روابط التطبيق
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-wider">
                   App Store
                 </Label>
@@ -154,7 +160,7 @@ export function FooterSettings() {
                   placeholder="https://apps.apple.com/..."
                   dir="ltr"
                 />
-              </div>
+              </div> */}
               <div className="space-y-2">
                 <Label className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-wider">
                   Google Play

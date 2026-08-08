@@ -10,13 +10,14 @@ export interface FaqResponse {
 }
 
 export interface AppInfo {
-  appStore?: string;
-  googlePlay?: string;
+  appStore: string;
+  googlePlay: string;
   phone: string;
-  location?: string;
-  position?: Position;
-  facebook?: string;
-  instagram?: string;
+  location: string;
+  position: Position;
+  about: string;
+  privacyPolicy: string;
+  termsAndConditions: string;
 }
 
 export interface InfoResponse {
@@ -36,6 +37,9 @@ export interface UpdateInfoRequest {
   phone: string;
   location: string;
   position: Position;
+  about: string;
+  privacyPolicy: string;
+  termsAndConditions: string;
 }
 
 export interface CreateFaqRequest {
