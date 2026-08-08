@@ -1,16 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import {
-  Globe,
-  Bell,
-  Shield,
-  Save,
-  Eye,
-  EyeOff,
-  User,
-  ImageIcon,
-} from "lucide-react";
+import { Shield, Save, Eye, EyeOff, User, ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,7 +49,7 @@ const tabs = [
 ];
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("الإعدادات العامة");
+  const [activeTab, setActiveTab] = useState("الملف الشخصي");
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto p-1" dir="rtl">
@@ -97,7 +88,7 @@ export default function SettingsPage() {
 
         {/* Content */}
         <div className="col-span-3">
-          {activeTab === "الإعدادات العامة" && <GeneralSettings />}
+          {/* {activeTab === "الإعدادات العامة" && <GeneralSettings />} */}
           {activeTab === "الملف الشخصي" && <ProfileSettings />}
           {activeTab === "الإشعارات" && <NotificationSettings />}
           {activeTab === "الأمان" && <SecuritySettings />}
@@ -107,42 +98,42 @@ export default function SettingsPage() {
   );
 }
 
-function GeneralSettings() {
-  return (
-    <Card className="p-0">
-      <CardContent className="p-6 space-y-6">
-        <h2 className="font-bold text-lg">الإعدادات العامة</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="platform-name">اسم المنصة</Label>
-            <Input id="platform-name" placeholder="النخبة الأوائل" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="support-email">البريد الإلكتروني للدعم</Label>
-            <Input id="support-email" placeholder="support@elite.com" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="session-time">مدة جلسة الأدمن (ساعة)</Label>
-            <Input id="session-time" placeholder="8" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="initial-gems">عدد الجواهر الابتدائية</Label>
-            <Input id="initial-gems" placeholder="0" />
-          </div>
-        </div>
-        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
-          <div>
-            <div className="font-bold">وضع الصيانة</div>
-            <div className="text-sm text-slate-500">
-              إيقاف الوصول للطلاب مؤقتاً
-            </div>
-          </div>
-          <Switch />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+// function GeneralSettings() {
+//   return (
+//     <Card className="p-0">
+//       <CardContent className="p-6 space-y-6">
+//         <h2 className="font-bold text-lg">الإعدادات العامة</h2>
+//         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+//           <div className="space-y-2">
+//             <Label htmlFor="platform-name">اسم المنصة</Label>
+//             <Input id="platform-name" placeholder="النخبة الأوائل" />
+//           </div>
+//           <div className="space-y-2">
+//             <Label htmlFor="support-email">البريد الإلكتروني للدعم</Label>
+//             <Input id="support-email" placeholder="support@elite.com" />
+//           </div>
+//           <div className="space-y-2">
+//             <Label htmlFor="session-time">مدة جلسة الأدمن (ساعة)</Label>
+//             <Input id="session-time" placeholder="8" />
+//           </div>
+//           <div className="space-y-2">
+//             <Label htmlFor="initial-gems">عدد الجواهر الابتدائية</Label>
+//             <Input id="initial-gems" placeholder="0" />
+//           </div>
+//         </div>
+//         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+//           <div>
+//             <div className="font-bold">وضع الصيانة</div>
+//             <div className="text-sm text-slate-500">
+//               إيقاف الوصول للطلاب مؤقتاً
+//             </div>
+//           </div>
+//           <Switch />
+//         </div>
+//       </CardContent>
+//     </Card>
+//   );
+// }
 
 function NotificationSettings() {
   const notifications = [
