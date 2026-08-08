@@ -7,6 +7,7 @@ export interface CreateSchoolRequest {
   email: string;
   password: string;
   image: File;
+  phoneNumber: string;
 }
 
 export interface SchoolOwner {
@@ -14,6 +15,7 @@ export interface SchoolOwner {
   name: string;
   email: string;
   emailVerfied: boolean;
+  phoneNumber: string;
   role: UserRole;
   profileImage: string | null;
   createdAt: string; // ISO Date string
@@ -40,6 +42,7 @@ export interface SchoolOwner {
   name: string;
   email: string;
   emailVerfied: boolean;
+  phoneNumber: string;
   role: UserRole;
   profileImage: string | null;
   createdAt: string; // ISO Date string
@@ -51,6 +54,7 @@ export interface School {
   id: string;
   name: string;
   logo: string | null;
+  phoneNumber: string;
   owner: SchoolOwner;
   default?: boolean;
   tracks?: Track[];

@@ -195,7 +195,7 @@ export function Footer() {
                 <li className="flex items-center gap-3">
                   <Mail className="w-5 h-5 text-[#2563eb]" />
                   <span className="text-slate-400" dir="ltr">
-                    {FIXED_EMAIL}
+                    {info?.email || FIXED_EMAIL}
                   </span>
                 </li>
                 <li className="flex items-center gap-3">

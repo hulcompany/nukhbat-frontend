@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Plus,
   Edit2,
-  Key,
   Send,
-  FileText,
   Building2,
   Search,
   ChevronRight,
@@ -31,6 +29,15 @@ import { getSchools, createSchool, GetSchoolsParams } from "@/api/schools";
 import { downloadFile } from "@/api/files";
 import { sendNotification } from "@/api/notifications";
 import { School } from "@/types/school";
+
+// --- Helper Function to Extract API Errors ---
+function getApiErrorMessage(error: any): string {
+  if (error?.response?.data?.message) {
+    return error.response.data.message;
+  }
+  return error?.message || "حدث خطأ غير متوقع";
+}
+// ---------------------------------------------
 
 function FileImage({
   fileId,
@@ -62,7 +69,6 @@ function FileImage({
 }
 
 // --- Notification Dialog Component ---
-// --- Notification Dialog Component ---
 function SchoolNotificationDialog({
   schoolId,
   onClose,
@@ -79,7 +85,6 @@ function SchoolNotificationDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check if both title and description are provided
     if (!title.trim() || !description.trim()) {
       setError("العنوان والتفاصيل مطلوبان");
       return;
@@ -91,17 +96,16 @@ function SchoolNotificationDialog({
     try {
       await sendNotification({
         title: title.trim(),
-        description: description.trim(), // Now guaranteed to have a value
+        description: description.trim(),
         userId: schoolId,
       });
 
       setSuccess(true);
-      // Auto-close dialog after 1.5 seconds of showing success message
       setTimeout(() => {
         onClose();
       }, 1500);
-    } catch (err) {
-      setError((err as Error).message || "حدث خطأ أثناء إرسال الإشعار");
+    } catch (err: any) {
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -174,7 +178,6 @@ function SchoolNotificationDialog({
               </Button>
               <Button
                 type="submit"
-                // Disable button if either field is empty
                 disabled={loading || !title.trim() || !description.trim()}
                 className="bg-blue-600 hover:bg-blue-700 h-11 text-white min-w-24"
               >
@@ -192,6 +195,7 @@ function SchoolNotificationDialog({
     </Dialog>
   );
 }
+
 // ---------------------------------------------
 
 const LIMIT = 10;
@@ -208,7 +212,7 @@ export default function SchoolsManagementPage() {
   const [searchInput, setSearchInput] = useState("");
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [notifySchoolId, setNotifySchoolId] = useState<string | null>(null); // State for the notification dialog
+  const [notifySchoolId, setNotifySchoolId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -216,6 +220,7 @@ export default function SchoolsManagementPage() {
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -239,8 +244,8 @@ export default function SchoolsManagementPage() {
       const res = await getSchools(params);
       setSchools(res.data.list);
       setTotalRecords(res.data.totalRecords);
-    } catch (e) {
-      setError((e as Error).message);
+    } catch (e: any) {
+      setError(getApiErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -263,6 +268,20 @@ export default function SchoolsManagementPage() {
       return;
     }
 
+    // --- Phone Number Formatting and Validation ---
+    let phoneVal = phoneRef.current!.value.trim();
+    if (phoneVal.startsWith("0")) {
+      phoneVal = phoneVal.substring(1); // Strip leading zero if typed
+    }
+
+    if (!phoneVal.startsWith("9")) {
+      setFormError("رقم الهاتف يجب أن يبدأ بالرقم 9");
+      return;
+    }
+
+    const finalPhoneNumber = `+963${phoneVal}`;
+    // ----------------------------------------------
+
     setSubmitting(true);
     setFormError(null);
     try {
@@ -271,13 +290,14 @@ export default function SchoolsManagementPage() {
         name: nameRef.current!.value,
         email: emailRef.current!.value,
         password: passwordRef.current!.value,
+        phoneNumber: finalPhoneNumber,
         image: logoFile,
       });
       setDialogOpen(false);
       selectLogo(null);
       fetchSchools({ skip, limit: LIMIT, ...(search ? { name: search } : {}) });
-    } catch (e) {
-      setFormError((e as Error).message);
+    } catch (e: any) {
+      setFormError(getApiErrorMessage(e));
     } finally {
       setSubmitting(false);
     }
@@ -299,6 +319,24 @@ export default function SchoolsManagementPage() {
           bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200 w-full sm:w-auto"
           onClick={() => setDialogOpen(true)}
         />
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-0">
+          <CardContent className="p-4 md:p-6 text-center">
+            {loading ? (
+              <Skeleton className="h-8 w-12 mx-auto mb-1" />
+            ) : (
+              <div className="text-2xl md:text-3xl font-bold text-green-600 mb-1">
+                {totalRecords}
+              </div>
+            )}
+            <div className="text-xs md:text-sm text-slate-500">
+              إجمالي المدارس
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Search */}
@@ -327,24 +365,6 @@ export default function SchoolsManagementPage() {
           </form>
         </CardContent>
       </Card>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-0">
-          <CardContent className="p-4 md:p-6 text-center">
-            {loading ? (
-              <Skeleton className="h-8 w-12 mx-auto mb-1" />
-            ) : (
-              <div className="text-2xl md:text-3xl font-bold text-green-600 mb-1">
-                {totalRecords}
-              </div>
-            )}
-            <div className="text-xs md:text-sm text-slate-500">
-              إجمالي المدارس
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* States */}
       {error && <p className="text-center text-red-500 py-12">{error}</p>}
@@ -402,7 +422,7 @@ export default function SchoolsManagementPage() {
               key={school.id}
               className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow p-0"
               onClick={() =>
-                router.push(`/dashboard-8ukhba2/school/${school.id}`)
+                router.push(`/dashboard-8ukhba2/schools/${school.id}`)
               }
             >
               <CardContent className="p-4 md:p-6">
@@ -434,12 +454,19 @@ export default function SchoolsManagementPage() {
                   {[
                     { label: "المالك", val: school.owner.name },
                     { label: "البريد الإلكتروني", val: school.owner.email },
+                    {
+                      label: "رقم الهاتف",
+                      val: school.owner.phoneNumber || "—",
+                    }, // <-- Show phone number on card optionally
                   ].map((item, i) => (
                     <div key={i} className="bg-slate-50 p-2 md:p-3 rounded-lg">
                       <div className="text-[10px] md:text-xs text-slate-400 mb-0.5 md:mb-1">
                         {item.label}
                       </div>
-                      <div className="text-xs md:text-sm font-semibold truncate">
+                      <div
+                        className="text-xs md:text-sm font-semibold truncate"
+                        dir="ltr"
+                      >
                         {item.val}
                       </div>
                     </div>
@@ -455,7 +482,7 @@ export default function SchoolsManagementPage() {
                     className="flex-1 gap-2 bg-blue-100 text-blue-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-blue-200"
                     onClick={() =>
                       router.push(
-                        `/dashboard-8ukhba2/school/${school.id}?edit=true`,
+                        `/dashboard-8ukhba2/schools/${school.id}?edit=true`,
                       )
                     }
                   >
@@ -465,8 +492,7 @@ export default function SchoolsManagementPage() {
                     variant="outline"
                     className="flex-1 gap-2 bg-purple-100 text-purple-700 border-none text-xs md:text-sm h-9 md:h-10 hover:bg-purple-200"
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevents triggering the Card's onClick (navigation)
-                      // Pass the appropriate ID based on your backend expectation. Using school.id here.
+                      e.stopPropagation();
                       setNotifySchoolId(school.owner.id);
                     }}
                   >
@@ -523,6 +549,32 @@ export default function SchoolsManagementPage() {
               <Label htmlFor="email">البريد الإلكتروني</Label>
               <Input id="email" type="email" ref={emailRef} required />
             </div>
+
+            {/* --- Phone Number Field --- */}
+            <div className="space-y-1">
+              <Label htmlFor="phone">رقم الهاتف</Label>
+              <div
+                className="flex items-center border border-slate-200 rounded-md focus-within:ring-2 focus-within:ring-blue-600 focus-within:border-transparent transition-shadow"
+                dir="ltr"
+              >
+                <span className="px-3 text-slate-500 bg-slate-50 border-r border-slate-200 h-10 flex items-center rounded-l-md text-sm">
+                  +963
+                </span>
+                <input
+                  id="phone"
+                  ref={phoneRef}
+                  type="tel"
+                  required
+                  placeholder="9xxxxxxxx"
+                  className="flex-1 h-10 px-3 outline-none rounded-r-md text-sm bg-transparent"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">
+                يجب أن يبدأ الرقم بـ 9 (مثال: 933123456)
+              </p>
+            </div>
+            {/* --------------------------- */}
+
             <div className="space-y-1">
               <Label htmlFor="password">كلمة المرور</Label>
               <Input id="password" type="password" ref={passwordRef} required />

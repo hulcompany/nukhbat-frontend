@@ -5,8 +5,18 @@ import { AuthProvider } from "@/context/AuthContext";
 import NextTopLoader from "nextjs-toploader";
 
 export const metadata: Metadata = {
-  title: "النخبة الأوائل",
-  description: "لوحة تحكم النخبة الأوائل",
+  title: "النخبة",
+  description: "لوحة تحكم النخبة",
+  keywords: [
+    "النخبة",
+    "لوحة تحكم",
+    "منصة تعليمية",
+    "إدارة مدارس",
+    "طلاب",
+    "مناهج دراسية",
+    "التعليم في سوريا",
+    "nukhbat",
+  ],
   icons: {
     icon: [
       { url: "./favicon.ico" },
@@ -17,12 +27,13 @@ export const metadata: Metadata = {
   },
 };
 
+// Reduced the weights to prevent timeout errors during build
 const cairo = Cairo({
   subsets: ["arabic"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-  // Optional: define a CSS variable if you use Tailwind
+  weight: ["400", "500", "600", "700"],
   variable: "--font-cairo",
 });
+
 export default function RootLayout({
   children,
 }: Readonly<{

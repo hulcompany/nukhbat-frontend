@@ -18,6 +18,7 @@ export interface AppInfo {
   about: string;
   privacyPolicy: string;
   termsAndConditions: string;
+  email: string;
 }
 
 export interface InfoResponse {
@@ -40,6 +41,7 @@ export interface UpdateInfoRequest {
   about: string;
   privacyPolicy: string;
   termsAndConditions: string;
+  email: string;
 }
 
 export interface CreateFaqRequest {

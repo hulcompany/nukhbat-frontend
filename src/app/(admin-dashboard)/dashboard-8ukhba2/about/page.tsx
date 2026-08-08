@@ -29,6 +29,7 @@ export default function AboutAndLegalPage() {
     about: "",
     privacyPolicy: "",
     termsAndConditions: "",
+    email: "",
   });
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function AboutAndLegalPage() {
           about: d.about ?? "",
           privacyPolicy: d.privacyPolicy ?? "",
           termsAndConditions: d.termsAndConditions ?? "",
+          email: d.email ?? "",
         });
       })
       .catch(() => setErrorMsg("فشل تحميل البيانات"))
@@ -169,7 +171,7 @@ export default function AboutAndLegalPage() {
 
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-slate-700">
-                    المحتوى (يدعم التنسيق النصي)
+                    المحتوى
                   </Label>
                   <textarea
                     value={formData[activeTab]}

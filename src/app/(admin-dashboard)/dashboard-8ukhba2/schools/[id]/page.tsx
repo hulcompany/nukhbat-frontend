@@ -485,6 +485,11 @@ export default function SchoolDetailPage() {
               { label: "الاسم", val: school.owner.name },
               { label: "البريد الإلكتروني", val: school.owner.email },
               {
+                label: "رقم الهاتف",
+                val: school.owner.phoneNumber || "—",
+                dir: "ltr",
+              },
+              {
                 label: "الدور",
                 val: school.owner.role,
               },
@@ -501,7 +506,9 @@ export default function SchoolDetailPage() {
             ].map((item, i) => (
               <div key={i} className="bg-slate-50 p-3 rounded-lg">
                 <div className="text-xs text-slate-400 mb-1">{item.label}</div>
-                <div className="text-sm font-semibold">{item.val}</div>
+                <div className="text-sm font-semibold" dir={item.dir || "rtl"}>
+                  {item.val}
+                </div>
               </div>
             ))}
           </div>

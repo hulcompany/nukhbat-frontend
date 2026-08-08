@@ -13,6 +13,8 @@ import {
   ArrowLeft,
   Loader2,
   Edit2,
+  Upload,
+  FileJson,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,11 +33,18 @@ import {
   createQuestion,
   updateQuestion,
   getLessonQuestions,
+  bulkCreateQuestions,
 } from "@/api/question";
 import { downloadFile } from "@/api/files";
 import { Track } from "@/types/track";
 import { Subject } from "@/types/courses";
-import { Question, QuestionType } from "@/types/question";
+import {
+  Question,
+  QuestionType,
+  BulkQuestionInput,
+  QuestionOptionInput,
+  QuestionMatchItemInput,
+} from "@/types/question";
 import { ApiError } from "@/lib/errors";
 
 const PAGE_SIZE = 10;
@@ -118,6 +127,274 @@ function FileImage({
   if (!src) return null;
   return <img src={src} alt={alt} className={className} />;
 }
+
+// --- Bulk Import Parsing and Dialog Component ---
+function parseBulkQuestions(
+  text: string,
+  courseId: string,
+): BulkQuestionInput[] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("ملف غير صالح: يجب أن يكون بصيغة JSON");
+  }
+
+  const questions = (parsed as { questions?: unknown[] } | null)?.questions;
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new Error("يجب أن يحتوي الملف على مصفوفة questions غير فارغة");
+  }
+
+  return questions.map((q, i) => {
+    const item = q as Record<string, unknown>;
+    const label = `السؤال رقم ${i + 1}`;
+
+    if (!item.title || typeof item.title !== "string") {
+      throw new Error(`${label}: يجب إدخال نص السؤال`);
+    }
+
+    if (item.type === "options") {
+      if (!Array.isArray(item.options) || item.options.length < 2) {
+        throw new Error(`${label}: يجب إضافة خيارين على الأقل`);
+      }
+      return {
+        title: item.title,
+        type: "options",
+        courseId, // Used instead of lessonId
+        purpose: "dailyChallenge",
+        options: item.options as QuestionOptionInput[],
+      } as unknown as BulkQuestionInput;
+    }
+
+    if (item.type === "match") {
+      if (!Array.isArray(item.matchingItems) || item.matchingItems.length < 3) {
+        throw new Error(`${label}: يجب إضافة عناصر توصيل كافية`);
+      }
+      return {
+        title: item.title,
+        type: "match",
+        courseId, // Used instead of lessonId
+        purpose: "dailyChallenge",
+        matchingItems: item.matchingItems as QuestionMatchItemInput[],
+      } as unknown as BulkQuestionInput;
+    }
+
+    if (item.type === "trueFalse") {
+      if (typeof item.correctAnswer !== "boolean") {
+        throw new Error(`${label}: يجب تحديد الإجابة الصحيحة (true أو false)`);
+      }
+      return {
+        title: item.title,
+        type: "trueFalse",
+        courseId, // Used instead of lessonId
+        purpose: "dailyChallenge",
+        correctAnswer: item.correctAnswer,
+      } as unknown as BulkQuestionInput;
+    }
+
+    throw new Error(
+      `${label}: نوع السؤال يجب أن يكون options أو match أو trueFalse`,
+    );
+  });
+}
+
+function BulkImportDialog({
+  onClose,
+  onSaved,
+}: {
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [courses, setCourses] = useState<Subject[]>([]);
+  const [trackId, setTrackId] = useState("");
+  const [courseId, setCourseId] = useState("");
+  const [coursesLoading, setCoursesLoading] = useState(false);
+
+  const [file, setFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    getTracks()
+      .then((res) => setTracks(res.data))
+      .catch(() => setTracks([]));
+  }, []);
+
+  useEffect(() => {
+    if (!trackId) return;
+    setCoursesLoading(true);
+    getSchoolCourses(trackId)
+      .then((res) => setCourses(res.data))
+      .catch(() => setCourses([]))
+      .finally(() => setCoursesLoading(false));
+  }, [trackId]);
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragging(false);
+    const dropped = e.dataTransfer.files?.[0];
+    if (dropped) setFile(dropped);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!courseId) {
+      setFormError("يجب اختيار المسار والمادة");
+      return;
+    }
+    if (!file) {
+      setFormError("يرجى اختيار ملف JSON");
+      return;
+    }
+
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      const text = await file.text();
+      const questions = parseBulkQuestions(text, courseId);
+      await bulkCreateQuestions({ questions });
+      onSaved();
+    } catch (err) {
+      setFormError(formatError(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent dir="rtl" className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="pt-5">استيراد أسئلة من ملف JSON</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <Label>المسار</Label>
+              <select
+                className={selectClassName}
+                value={trackId}
+                onChange={(e) => {
+                  setTrackId(e.target.value);
+                  setCourseId("");
+                  setCourses([]);
+                }}
+              >
+                <option value="">اختر المسار</option>
+                {tracks.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-3">
+              <Label>المادة</Label>
+              <select
+                className={selectClassName}
+                value={courseId}
+                onChange={(e) => setCourseId(e.target.value)}
+                disabled={!trackId || coursesLoading}
+              >
+                <option value="">
+                  {coursesLoading ? "جارٍ التحميل..." : "اختر المادة"}
+                </option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="bulk-file">ملف الأسئلة</Label>
+            <input
+              id="bulk-file"
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
+                isDragging
+                  ? "bg-blue-50 border-blue-400"
+                  : "bg-slate-50/50 border-slate-200 hover:bg-slate-50 hover:border-blue-300"
+              }`}
+            >
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-3">
+                <FileJson className="h-6 w-6 text-blue-600" />
+              </div>
+              {file ? (
+                <>
+                  <p className="text-sm font-bold text-slate-900">
+                    {file.name}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="text-xs text-red-500 hover:text-red-600 mt-1"
+                  >
+                    إزالة الملف
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-bold text-slate-900">
+                    اسحب ملف JSON هنا
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    أو انقر لاختيار ملف · يُقبل فقط ملفات json.
+                  </p>
+                </>
+              )}
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              يجب أن يحتوي الملف على مصفوفة questions، وكل سؤال من نوع options
+              أو match أو trueFalse. سيتم ربط جميع الأسئلة المستوردة بالمادة
+              المحددة كـ (تحدي يومي) تلقائياً.
+            </p>
+          </div>
+
+          {formError && <p className="text-sm text-red-500">{formError}</p>}
+
+          <div className="flex gap-3 justify-end pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="p-4 h-12"
+            >
+              إلغاء
+            </Button>
+            <Button type="submit" disabled={submitting} className="p-4 h-12">
+              {submitting ? "جاري الاستيراد..." : "استيراد"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// -------------------------------------------------------------
 
 function QuestionFormDialog({
   editing,
@@ -238,8 +515,6 @@ function QuestionFormDialog({
     if (!editing && !courseId) return "يجب اختيار المسار والمادة";
     if (!title.trim()) return "يجب إدخال نص السؤال";
 
-    // Editing only touches title/image now, so answer validation below
-    // only applies when creating a new question.
     if (editing) return null;
 
     if (type === "options") {
@@ -303,15 +578,6 @@ function QuestionFormDialog({
         await updateQuestion(editing.id, {
           title: title.trim(),
           ...(imageFile ? { image: imageFile } : {}),
-          // editing is now limited to title and image only, answers can no
-          // longer be changed from here
-          // ...(answersDirty
-          //   ? type === "options"
-          //     ? { type, options: buildOptionInputs() }
-          //     : type === "match"
-          //       ? { type, matchingItems: buildMatchInputs() }
-          //       : { type, correctAnswer: trueFalseAnswer }
-          //   : {}),
         });
       } else {
         await createQuestion({
@@ -476,8 +742,6 @@ function QuestionFormDialog({
             </div>
           </div>
 
-          {/* Editing is now limited to title and image only — question
-              type/answers can no longer be changed once created. */}
           {!editing && (
             <div className="space-y-3">
               <Label>نوع السؤال</Label>
@@ -768,7 +1032,9 @@ export default function Questions() {
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
   const [formOpen, setFormOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   useEffect(() => {
@@ -822,16 +1088,25 @@ export default function Questions() {
             اختر المسار والمادة لعرض أسئلتها
           </p>
         </div>
-        <Button
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-6 h-10"
-          onClick={() => {
-            setEditingQuestion(null);
-            setFormOpen(true);
-          }}
-        >
-          إضافة سؤال
-          <Plus className="mr-2 h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            className="bg-slate-600 hover:bg-slate-700 text-white rounded-md px-6 h-10"
+            onClick={() => setBulkOpen(true)}
+          >
+            استيراد أسئلة
+            <Upload className="mr-2 h-4 w-4" />
+          </Button>
+          <Button
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-6 h-10"
+            onClick={() => {
+              setEditingQuestion(null);
+              setFormOpen(true);
+            }}
+          >
+            إضافة سؤال
+            <Plus className="mr-2 h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Filters Card */}
@@ -1069,7 +1344,8 @@ export default function Questions() {
                     {question.type === "trueFalse" && (
                       <div className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm bg-emerald-50 border-emerald-200 text-emerald-700">
                         <CheckCircle2 className="h-4 w-4 shrink-0" />
-                        الإجابة الصحيحة: {question.trueOrFalseAnswer ? "صح" : "خطأ"}
+                        الإجابة الصحيحة:{" "}
+                        {question.trueOrFalseAnswer ? "صح" : "خطأ"}
                       </div>
                     )}
                   </div>
@@ -1116,6 +1392,17 @@ export default function Questions() {
           onSaved={() => {
             setFormOpen(false);
             setEditingQuestion(null);
+            fetchQuestions();
+          }}
+        />
+      )}
+
+      {/* Bulk Import Questions Dialog */}
+      {bulkOpen && (
+        <BulkImportDialog
+          onClose={() => setBulkOpen(false)}
+          onSaved={() => {
+            setBulkOpen(false);
             fetchQuestions();
           }}
         />

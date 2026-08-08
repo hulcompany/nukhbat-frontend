@@ -13,7 +13,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getMySchool, updateMySchool, deleteMySchoolImage } from "@/api/schools";
+import {
+  getMySchool,
+  updateMySchool,
+  deleteMySchoolImage,
+} from "@/api/schools";
 import { downloadFile } from "@/api/files";
 import { School } from "@/types/school";
 
@@ -56,12 +60,11 @@ export default function SchoolProfilePage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const [deletingImage, setDeletingImage] = useState(false);
-  const [deleteImageError, setDeleteImageError] = useState<string | null>(
-    null,
-  );
+  const [deleteImageError, setDeleteImageError] = useState<string | null>(null);
 
   const nameRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null); // <-- Added phoneRef
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -104,9 +107,26 @@ export default function SchoolProfilePage() {
     try {
       const newName = nameRef.current!.value.trim();
 
-      const payload: { name?: string; image?: File } = {};
+      // --- Phone Number Validation ---
+      let phoneVal = phoneRef.current!.value.trim();
+      if (phoneVal.startsWith("0")) {
+        phoneVal = phoneVal.substring(1); // Strip leading zero
+      }
+
+      if (!phoneVal.startsWith("9")) {
+        setFormError("رقم الهاتف يجب أن يبدأ بالرقم 9");
+        setSubmitting(false);
+        return;
+      }
+
+      const finalPhoneNumber = `+963${phoneVal}`;
+      // -------------------------------
+
+      const payload: { name?: string; image?: File; phoneNumber?: string } = {};
       if (newName && newName !== school.name) payload.name = newName;
       if (logoFile) payload.image = logoFile;
+      if (finalPhoneNumber !== school.phoneNumber)
+        payload.phoneNumber = finalPhoneNumber;
 
       if (Object.keys(payload).length === 0) {
         setEditOpen(false);
@@ -120,8 +140,12 @@ export default function SchoolProfilePage() {
       selectLogo(null);
       setSchool(res.data);
       window.dispatchEvent(new Event("school-updated"));
-    } catch (e) {
-      setFormError((e as Error).message);
+    } catch (e: any) {
+      if (e.response && e.response.data && e.response.data.message) {
+        setFormError(e.response.data.message);
+      } else {
+        setFormError(e.message || "حدث خطأ غير متوقع");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -239,6 +263,11 @@ export default function SchoolProfilePage() {
             {[
               { label: "الاسم", val: school.owner.name },
               { label: "البريد الإلكتروني", val: school.owner.email },
+              {
+                label: "رقم الهاتف",
+                val: school.phoneNumber || school.owner.phoneNumber || "—",
+                dir: "ltr",
+              }, // <-- Added Phone Number
               { label: "الدور", val: school.owner.role },
               {
                 label: "البريد مُفعَّل",
@@ -253,7 +282,9 @@ export default function SchoolProfilePage() {
             ].map((item, i) => (
               <div key={i} className="bg-slate-50 p-3 rounded-lg">
                 <div className="text-xs text-slate-400 mb-1">{item.label}</div>
-                <div className="text-sm font-semibold">{item.val}</div>
+                <div className="text-sm font-semibold" dir={item.dir || "rtl"}>
+                  {item.val}
+                </div>
               </div>
             ))}
           </div>
@@ -276,6 +307,43 @@ export default function SchoolProfilePage() {
                 required
               />
             </div>
+
+            {/* --- Phone Number Field --- */}
+            <div className="space-y-1">
+              <Label htmlFor="edit-phone">رقم الهاتف</Label>
+              <div
+                className="flex items-center border border-slate-200 rounded-md focus-within:ring-2 focus-within:ring-blue-600 focus-within:border-transparent transition-shadow"
+                dir="ltr"
+              >
+                <span className="px-3 text-slate-500 bg-slate-50 border-r border-slate-200 h-10 flex items-center rounded-l-md text-sm">
+                  +963
+                </span>
+                <input
+                  id="edit-phone"
+                  ref={phoneRef}
+                  type="tel"
+                  required
+                  defaultValue={
+                    (
+                      school.phoneNumber || school.owner.phoneNumber
+                    )?.startsWith("+963")
+                      ? (
+                          school.phoneNumber || school.owner.phoneNumber
+                        )?.substring(4)
+                      : (
+                          school.phoneNumber || school.owner.phoneNumber
+                        )?.replace(/^0/, "") || ""
+                  }
+                  placeholder="9xxxxxxxx"
+                  className="flex-1 h-10 px-3 outline-none rounded-r-md text-sm bg-transparent"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">
+                يجب أن يبدأ الرقم بـ 9 (مثال: 933123456)
+              </p>
+            </div>
+            {/* --------------------------- */}
+
             <div className="space-y-1">
               <Label htmlFor="edit-image">
                 شعار المدرسة

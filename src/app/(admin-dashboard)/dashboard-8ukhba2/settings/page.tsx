@@ -51,9 +51,9 @@ function FileImage({
 }
 
 const tabs = [
-  { name: "الإعدادات العامة", icon: Globe },
+  // { name: "الإعدادات العامة", icon: Globe },
   { name: "الملف الشخصي", icon: User },
-  { name: "الإشعارات", icon: Bell },
+  // { name: "الإشعارات", icon: Bell },
   { name: "الأمان", icon: Shield },
 ];
 
@@ -412,11 +412,7 @@ function SecuritySettings() {
                 onClick={() => setShowConfirmPassword((v) => !v)}
                 tabIndex={-1}
               >
-                {showConfirmPassword ? (
-                  <EyeOff size={20} />
-                ) : (
-                  <Eye size={20} />
-                )}
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
           </div>

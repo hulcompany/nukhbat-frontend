@@ -18,6 +18,7 @@ const defaultForm: UpdateInfoRequest = {
   about: "",
   privacyPolicy: "",
   termsAndConditions: "",
+  email: "",
 };
 
 export function FooterSettings() {
@@ -41,6 +42,7 @@ export function FooterSettings() {
           about: d.about ?? "",
           privacyPolicy: d.privacyPolicy ?? "",
           termsAndConditions: d.termsAndConditions ?? "",
+          email: d.email ?? "",
         });
       })
       .catch(() => setError("فشل تحميل بيانات التواصل"))
@@ -138,6 +140,16 @@ export function FooterSettings() {
                   value={form.location}
                   onChange={(e) => set("location", e.target.value)}
                   placeholder="دمشق، سوريا"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-wider">
+                  البريد الإلكتروني
+                </Label>
+                <Input
+                  value={form.email}
+                  onChange={(e) => set("email", e.target.value)}
+                  placeholder="admin@hul.com"
                 />
               </div>
             </div>
