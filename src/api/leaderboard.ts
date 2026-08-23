@@ -12,8 +12,13 @@ export async function getSchoolLeaderboard(
   params: GetSchoolLeaderboardParams = {},
 ): Promise<LeaderboardResponse> {
   const res = await apiClient.get<LeaderboardResponse>(
-    `/learning/solving/school/leaderboard/${trackId}`,
-    { params },
+    "/learning/leaderboard/school",
+    {
+      params: {
+        trackId,
+        ...params,
+      },
+    },
   );
   return res.data;
 }

@@ -40,13 +40,16 @@ export interface LeaderboardStudent {
   school: LeaderboardSchool;
   trackId: string;
   track: Track;
+  currentStreak: number;
+  longestStreak: number;
+  lastStreakDate: string | null;
   xp: number;
   gems: number;
   createdAt: string; // ISO Date string
 }
 
 export interface LeaderboardEntry {
-  studentId: string;
+  rank: number;
   xp: number;
   student: LeaderboardStudent;
 }

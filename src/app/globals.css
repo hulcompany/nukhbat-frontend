@@ -127,3 +127,18 @@
     @apply font-sans;
   }
 }
+
+/* دعم اتجاه اليمين لليسار في محرر Quill */
+.ql-editor {
+  direction: rtl;
+  text-align: right;
+}
+
+/* ضبط الـ Placeholder ليكون على اليمين */
+.ql-editor.ql-blank::before {
+  right: 15px;
+  left: auto;
+  direction: rtl;
+  text-align: right;
+  font-style: normal; /* اختياري: لإزالة الخط المائل إذا أردت */
+}

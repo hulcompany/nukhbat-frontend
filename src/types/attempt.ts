@@ -19,6 +19,9 @@ export interface AttemptStudent {
   active: boolean;
   schoolId: string;
   trackId: string;
+  currentStreak: number;
+  longestStreak: number;
+  lastStreakDate: string | null;
   xp: number;
   gems: number;
   createdAt: string; // ISO Date string
@@ -29,6 +32,32 @@ export interface AttemptCourse {
   title: string;
   trackId: string;
   createdAt: string; // ISO Date string
+}
+
+export interface QuestionVerdictDetail {
+  skipped: boolean;
+  verdict: boolean;
+  verdicts?: any[];
+  answered?: any;
+  correctAnswer?: any;
+}
+
+export interface QuestionVerdictItem {
+  id: string;
+  type: string; // "options" | "match" | "fillBlanks" | "trueFalse" | "order" | "classify"
+  title: string;
+  result: QuestionVerdictDetail;
+  verdict: boolean;
+  isSkipped: boolean;
+}
+
+export interface AttemptResult {
+  score: number;
+  total: number;
+  passed: boolean;
+  correct: number;
+  skipped: number;
+  verdicts: QuestionVerdictItem[];
 }
 
 export interface Attempt {
@@ -49,6 +78,7 @@ export interface Attempt {
   questionsSkipped: number;
   completed: boolean;
   xpAwarded: number;
+  result: AttemptResult;
   createdAt: string; // ISO Date string
 }
 

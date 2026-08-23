@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { FileImage } from "@/components/ui/file-image";
 import { getMySchool } from "@/api/schools";
-import { getNotificationStats } from "@/api/notifications"; // <-- Imported new API
+import { getNotificationStats } from "@/api/notifications";
 import { School } from "@/types/school";
 import {
   ChevronLeft,
@@ -44,6 +44,7 @@ const contentItems = [
   { title: "الأسئلة", icon: HelpCircle, href: `${BASE}/questions` },
   { title: "التحدي اليومي", icon: Zap, href: `${BASE}/daily-challenge` },
   { title: "المنافسة", icon: Trophy, href: `${BASE}/competition` },
+  { title: "المحاولات", icon: BarChart2, href: `${BASE}/attempts` }, // <-- Added Attempts Page
 ];
 
 const otherItems = [
@@ -53,7 +54,7 @@ const otherItems = [
     icon: Bell,
     href: `${BASE}/notifications`,
     showBadge: true,
-  }, // <-- Added showBadge flag
+  },
   { title: "الإعدادات", icon: Settings, href: `${BASE}/settings` },
 ];
 
@@ -77,7 +78,7 @@ export function SchoolDashboardSidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [school, setSchool] = useState<School | null>(null);
-  const [unreadCount, setUnreadCount] = useState<number>(0); // <-- Added state for unread count
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   useEffect(() => {
     const saved = localStorage.getItem("schoolSidebarCollapsed");
@@ -94,7 +95,6 @@ export function SchoolDashboardSidebar() {
         .catch(() => setSchool(null));
     };
 
-    // <-- Fetch Notification Stats
     const fetchStats = () => {
       getNotificationStats()
         .then((res) => setUnreadCount(res.data.unRead))
@@ -102,7 +102,7 @@ export function SchoolDashboardSidebar() {
     };
 
     fetchSchool();
-    fetchStats(); // <-- Called fetch stats
+    fetchStats();
 
     // Re-fetch when the profile page updates the school (e.g. new logo)
     window.addEventListener("school-updated", fetchSchool);
@@ -124,7 +124,7 @@ export function SchoolDashboardSidebar() {
     icon: Icon,
     title,
     size = 18,
-    showBadge = false, // <-- Added showBadge prop
+    showBadge = false,
   }: {
     href: string;
     icon: React.ElementType;
@@ -138,7 +138,7 @@ export function SchoolDashboardSidebar() {
         href={href}
         title={isCollapsed ? title : undefined}
         className={cn(
-          "flex items-center gap-3 px-3 py-3 rounded-lg transition-all group relative", // <-- Added relative positioning
+          "flex items-center gap-3 px-3 py-3 rounded-lg transition-all group relative",
           isActive
             ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
             : "hover:bg-white/5 hover:text-white",

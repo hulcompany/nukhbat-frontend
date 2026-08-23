@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCcw, Zap, Loader2, Trophy } from "lucide-react";
+import { RefreshCcw, Zap, Loader2, Trophy, Flame } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
@@ -170,14 +170,14 @@ export default function CompetitionPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {entries.slice(0, 3).map((entry, idx) => (
                     <Card
-                      key={entry.studentId}
+                      key={entry.student.id}
                       className="border-slate-200 shadow-xs p-8 flex flex-col items-center text-center relative overflow-visible"
                     >
                       <div className="relative mb-4">
                         <div
                           className={`absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center border-2 border-white shadow-sm z-10 ${MEDAL_CLASSES[idx]}`}
                         >
-                          {idx + 1}
+                          {entry.rank}
                         </div>
                         <div className="w-16 h-16 bg-[#16192b] text-white rounded-full flex items-center justify-center text-xl font-bold shadow-md">
                           {entry.student.user.name.charAt(0)}
@@ -209,8 +209,9 @@ export default function CompetitionPage() {
                         <th className="px-6 py-4 text-center whitespace-nowrap">
                           الترتيب
                         </th>
-                        <th className="px-6 py-4 whitespace-nowrap">
-                          الطالب
+                        <th className="px-6 py-4 whitespace-nowrap">الطالب</th>
+                        <th className="px-4 py-4 text-center whitespace-nowrap">
+                          الستريك (Streak)
                         </th>
                         <th className="px-4 py-4 text-center whitespace-nowrap">
                           نقاط الخبرة
@@ -221,12 +222,12 @@ export default function CompetitionPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
-                      {entries.map((entry, idx) => {
-                        const rank = page * PAGE_SIZE + idx + 1;
+                      {entries.map((entry) => {
+                        const rank = entry.rank;
                         const isTopRank = sort === "DESC" && rank <= 3;
                         return (
                           <tr
-                            key={entry.studentId}
+                            key={entry.student.id}
                             className="hover:bg-slate-50/50 transition-colors"
                           >
                             {/* Rank Badge */}
@@ -234,8 +235,7 @@ export default function CompetitionPage() {
                               <div
                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mx-auto ${
                                   isTopRank
-                                    ? MEDAL_CLASSES[rank - 1] +
-                                      " text-white"
+                                    ? MEDAL_CLASSES[rank - 1] + " text-white"
                                     : "bg-slate-100 text-slate-500"
                                 }`}
                               >
@@ -257,6 +257,14 @@ export default function CompetitionPage() {
                                     {entry.student.user.email}
                                   </span>
                                 </div>
+                              </div>
+                            </td>
+
+                            {/* Streak */}
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <div className="flex items-center justify-center gap-1.5 text-orange-500 font-bold">
+                                <span>{entry.student.currentStreak}</span>
+                                <Flame className="h-4 w-4 fill-orange-500" />
                               </div>
                             </td>
 

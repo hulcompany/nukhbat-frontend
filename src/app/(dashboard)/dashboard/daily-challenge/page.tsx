@@ -37,6 +37,18 @@ const TYPE_META: Record<QuestionType, { label: string; className: string }> = {
     label: "صح أو خطأ",
     className: "bg-amber-100 text-amber-600 border-amber-200",
   },
+  fillBlanks: {
+    label: "ملء الفراغات",
+    className: "bg-teal-100 text-teal-700 border-teal-200",
+  },
+  order: {
+    label: "ترتيب",
+    className: "bg-orange-100 text-orange-600 border-orange-200",
+  },
+  classify: {
+    label: "تصنيف",
+    className: "bg-pink-100 text-pink-600 border-pink-200",
+  },
 };
 
 function FileImage({
@@ -508,7 +520,7 @@ export default function DailyChallengePage() {
 
               {questionDetails.type === "options" && (
                 <div className="space-y-2">
-                  {questionDetails.options.map((option) => (
+                  {questionDetails.optionsGroups.map((option) => (
                     <div
                       key={option.id}
                       className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${

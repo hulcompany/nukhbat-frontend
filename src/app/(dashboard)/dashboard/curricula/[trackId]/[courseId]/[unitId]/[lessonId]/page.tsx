@@ -67,6 +67,18 @@ const TYPE_META: Record<QuestionType, { label: string; className: string }> = {
     label: "صح أو خطأ",
     className: "bg-amber-100 text-amber-600 border-amber-200",
   },
+  fillBlanks: {
+    label: "ملء الفراغات",
+    className: "bg-teal-100 text-teal-700 border-teal-200",
+  },
+  order: {
+    label: "ترتيب",
+    className: "bg-orange-100 text-orange-600 border-orange-200",
+  },
+  classify: {
+    label: "تصنيف",
+    className: "bg-pink-100 text-pink-600 border-pink-200",
+  },
 };
 
 function formatError(e: unknown): string {
@@ -341,8 +353,12 @@ function QuestionFormDialog({
   const [formError, setFormError] = useState<string | null>(null);
 
   const [options, setOptions] = useState<OptionRow[]>(() => {
-    if (editing && editing.type === "options" && editing.options.length > 0) {
-      return editing.options.map((o) => ({
+    if (
+      editing &&
+      editing.type === "options" &&
+      editing.optionsGroups.length > 0
+    ) {
+      return editing.optionsGroups.map((o) => ({
         text: o.text,
         isCorrect: o.isCorrect,
       }));
@@ -1192,9 +1208,7 @@ export default function LessonQuestionsPage() {
           icon={HelpCircle}
           title="لا توجد أسئلة لهذا الدرس بعد"
           description={
-            canAddQuestions
-              ? "ابدأ بإضافة السؤال الأول لهذا الدرس."
-              : undefined
+            canAddQuestions ? "ابدأ بإضافة السؤال الأول لهذا الدرس." : undefined
           }
           actionLabel={canAddQuestions ? "إضافة سؤال" : undefined}
           onAction={
@@ -1326,7 +1340,7 @@ export default function LessonQuestionsPage() {
 
                     {question.type === "options" && (
                       <div className="space-y-2">
-                        {question.options.map((option) => (
+                        {question.optionsGroups.map((option) => (
                           <div
                             key={option.id}
                             className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${

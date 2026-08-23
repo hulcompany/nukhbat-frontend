@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // <-- Added useRouter
 import {
   Users,
   UserCheck,
@@ -38,6 +39,7 @@ import {
   getSchoolAggregateSubscriptions,
   getSchoolStatistics,
 } from "@/api/statistics";
+import { Button } from "@/components/ui/button";
 
 function formatError(e: unknown): string {
   if (e instanceof ApiError && e.code === "BAD_INPUT" && e.serverMessage) {
@@ -47,6 +49,8 @@ function formatError(e: unknown): string {
 }
 
 export default function MainDashboardPage() {
+  const router = useRouter(); // <-- Initialized router
+
   const [stats, setStats] = useState<SchoolStatisticsData | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [activityData, setActivityData] = useState<
@@ -388,13 +392,23 @@ export default function MainDashboardPage() {
       {/* Bottom Section: Recent Attempts & Leaderboard */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Attempts List */}
-        <Card className="border-slate-200 shadow-xs">
-          <CardHeader className="border-b border-slate-100">
-            <CardTitle className="text-lg font-bold text-slate-900">
-              آخر المحاولات
-            </CardTitle>
+        <Card className="border-slate-200 shadow-xs flex flex-col">
+          <CardHeader className="border-b border-slate-100 py-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-bold text-slate-900">
+                آخر المحاولات
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push("/dashboard/attempts")} // Update path to match your routing
+                className="text-xs font-medium"
+              >
+                عرض الكل
+              </Button>
+            </div>
           </CardHeader>
-          <div className="p-6 flex flex-col gap-4">
+          <div className="p-6 flex flex-col gap-4 flex-1">
             {attemptsLoading && (
               <div className="flex items-center justify-center py-6 text-slate-400">
                 <Loader2 size={20} className="animate-spin ml-2" />
@@ -474,7 +488,7 @@ export default function MainDashboardPage() {
               !leaderboardError &&
               leaderboard.map((entry, idx) => (
                 <div
-                  key={entry.studentId}
+                  key={entry.student.id}
                   className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100"
                 >
                   <div className="flex items-center gap-3">

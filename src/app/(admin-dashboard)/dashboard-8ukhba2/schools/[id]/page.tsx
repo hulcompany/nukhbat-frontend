@@ -859,7 +859,7 @@ export default function SchoolDetailPage() {
                         {isExpanded && (
                           <div className="border-t border-slate-100 px-4 py-3 space-y-2">
                             {question.type === "options" &&
-                              question.options.map((option) => (
+                              question.optionsGroups.map((option) => (
                                 <div
                                   key={option.id}
                                   className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
