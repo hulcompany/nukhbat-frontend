@@ -4,11 +4,14 @@ import {
   QuestionsResponse,
   QuestionType,
   QuestionPurpose,
-  QuestionOptionInput,
+  QuestionOptionGroupInput,
   QuestionMatchItemInput,
   BulkCreateQuestionsRequest,
   BulkCreateQuestionsResponse,
   BulkDeleteQuestionsResponse,
+  QuestionFillBlankInput,
+  QuestionOrderItemInput,
+  ClassifyItemInput,
 } from "@/types/question";
 
 function appendTips(formData: FormData, tips?: string[]) {
@@ -16,37 +19,6 @@ function appendTips(formData: FormData, tips?: string[]) {
   tips.forEach((tip, i) => {
     formData.append(`tips[${i}]`, tip);
   });
-}
-
-function appendAnswers(
-  formData: FormData,
-  type: QuestionType,
-  options?: QuestionOptionInput[],
-  matchingItems?: QuestionMatchItemInput[],
-  correctAnswer?: boolean,
-) {
-  formData.append("type", type);
-  if (type === "options" && options) {
-    options.forEach((option, i) => {
-      formData.append(`options[${i}][text]`, option.text);
-      formData.append(`options[${i}][isCorrect]`, String(option.isCorrect));
-    });
-  }
-  if (type === "match" && matchingItems) {
-    matchingItems.forEach((item, i) => {
-      formData.append(`matchingItems[${i}][text]`, item.text);
-      formData.append(`matchingItems[${i}][type]`, item.type);
-      if (item.correctIndex !== undefined) {
-        formData.append(
-          `matchingItems[${i}][correctIndex]`,
-          String(item.correctIndex),
-        );
-      }
-    });
-  }
-  if (type === "trueFalse" && correctAnswer !== undefined) {
-    formData.append("correctAnswer", String(correctAnswer));
-  }
 }
 
 export interface GetQuestionsParams {
@@ -84,32 +56,25 @@ export async function createQuestion(data: {
   courseId?: string;
   purpose?: QuestionPurpose;
   image?: File;
-  options?: QuestionOptionInput[];
+  optionGroups?: QuestionOptionGroupInput[];
   matchingItems?: QuestionMatchItemInput[];
   correctAnswer?: boolean;
   tips?: string[];
+
+  // الأنواع الجديدة
+  fillBlanks?: QuestionFillBlankInput[];
+  orders?: QuestionOrderItemInput[];
+  classify?: ClassifyItemInput[];
 }): Promise<QuestionResponse> {
-  const formData = new FormData();
-  formData.append("title", data.title);
-  if (data.lessonId) formData.append("lessonId", data.lessonId);
-  if (data.courseId) formData.append("courseId", data.courseId);
-  if (data.purpose) formData.append("purpose", data.purpose);
-  if (data.image) formData.append("image", data.image);
-  appendAnswers(
-    formData,
-    data.type,
-    data.options,
-    data.matchingItems,
-    data.correctAnswer,
-  );
-  appendTips(formData, data.tips);
-  const res = await apiClient.post<QuestionResponse>(
+  const { image, ...payload } = data;
+  const created = await apiClient.post<QuestionResponse>(
     "/curriculum/school/questions",
-    formData,
-    { headers: { "Content-Type": "multipart/form-data" } },
+    payload,
   );
 
-  return res.data;
+  if (!image) return created.data;
+
+  return updateQuestion(created.data.data.id, { image });
 }
 
 export async function updateQuestion(
@@ -118,25 +83,12 @@ export async function updateQuestion(
     title?: string;
     image?: File;
     tips?: string[];
-    // type?: QuestionType;
-    // options?: QuestionOptionInput[];
-    // matchingItems?: QuestionMatchItemInput[];
-    // correctAnswer?: boolean;
   },
 ): Promise<QuestionResponse> {
   const formData = new FormData();
   if (data.title !== undefined) formData.append("title", data.title);
   if (data.image) formData.append("image", data.image);
   appendTips(formData, data.tips);
-  // if (data.type) {
-  //   appendAnswers(
-  //     formData,
-  //     data.type,
-  //     data.options,
-  //     data.matchingItems,
-  //     data.correctAnswer,
-  //   );
-  // }
 
   const res = await apiClient.patch<QuestionResponse>(
     `/curriculum/school/questions/${id}`,

@@ -1,4 +1,5 @@
 import { Lesson } from "./lesson";
+import { Subject } from "./courses";
 
 export type QuestionType =
   | "options"
@@ -18,6 +19,13 @@ export interface QuestionOption {
   imageId: string | null;
 }
 
+export interface QuestionOptionGroup {
+  id: string;
+  title: string;
+  index: number;
+  options: QuestionOption[];
+}
+
 export interface ClassifyItem {
   id: string;
   text: string;
@@ -32,7 +40,10 @@ export interface QuestionMatchItem {
   id: string;
   text: string;
   type: QuestionMatchType;
-  correctMatchId: string | null;
+  index?: number;
+  correctIndex?: number | null;
+  /** @deprecated Older API response relation. */
+  correctMatchId?: string | null;
   questionId: string;
   schoolId: string;
 }
@@ -49,6 +60,7 @@ export interface QuestionFillBlank {
   index: number;
   answers: string[];
   questionId?: string;
+  schoolId?: string;
 }
 
 export interface QuestionSchool {
@@ -66,18 +78,65 @@ export interface Question {
   purpose: QuestionPurpose;
   lesson: Lesson;
   lessonId: string | null;
-  course?: any; // --------------
+  course?: Subject | null;
   courseId: string | null;
-  optionsGroups: QuestionOption[];
-  trueOrFalseAnswer: boolean | null;
+  optionsGroups: Array<QuestionOptionGroup | QuestionOption>;
+  trueOrFalse?: boolean | null;
+  trueOrFalseAnswer?: boolean | null;
+  /** @deprecated Older API response name. */
+  classify?: ClassifyItem[];
   classifyItems: ClassifyItem[];
   matchingItems: QuestionMatchItem[];
-  orderItems: QuestionOrderItem[];
+  order?: QuestionOrderItem[];
+  orderItems?: QuestionOrderItem[];
   fillBlanks: QuestionFillBlank[];
   imageId: string | null;
   school?: QuestionSchool;
   schoolId: string;
   tips: string[];
+}
+
+export function getQuestionOptions(
+  question: Pick<Question, "optionsGroups">,
+): QuestionOption[] {
+  return question.optionsGroups.flatMap((group) =>
+    "options" in group ? group.options : [group],
+  );
+}
+
+export function getQuestionTrueFalseAnswer(
+  question: Pick<Question, "trueOrFalse" | "trueOrFalseAnswer">,
+): boolean | null {
+  return question.trueOrFalse ?? question.trueOrFalseAnswer ?? null;
+}
+
+export function getQuestionCorrectMatch(
+  baseItem: QuestionMatchItem,
+  matchingItems: QuestionMatchItem[],
+): QuestionMatchItem | undefined {
+  return matchingItems.find(
+    (item) =>
+      item.type === "match" &&
+      ((baseItem.correctIndex != null &&
+        item.index === baseItem.correctIndex) ||
+        (!!baseItem.correctMatchId && item.id === baseItem.correctMatchId)),
+  );
+}
+
+export function getQuestionClassifyItems(
+  question: Pick<Question, "classify" | "classifyItems">,
+): ClassifyItem[] {
+  if (question.classifyItems?.length) return question.classifyItems;
+  return question.classify ?? [];
+}
+
+export const QUESTION_BLANK_MARKER = "__________";
+
+export function formatQuestionTitle(title: string): string {
+  return title.replace(
+    /\*?\{\{textField:\s*\{[^{}]*\}\}\}\*?/g,
+    QUESTION_BLANK_MARKER,
+  );
 }
 
 export interface QuestionsListData {
@@ -102,6 +161,12 @@ export interface QuestionOptionInput {
   isCorrect: boolean;
 }
 
+export interface QuestionOptionGroupInput {
+  title: string;
+  index: number;
+  options: QuestionOptionInput[];
+}
+
 export interface QuestionMatchItemInput {
   text: string;
   type: QuestionMatchType;
@@ -117,11 +182,17 @@ export interface QuestionOrderItemInput {
   text: string;
 }
 
+export interface ClassifyItemInput {
+  text: string;
+  type: "category" | "item";
+  correctCategoryIndex?: number;
+}
+
 export interface BulkOptionsQuestionInput {
   title: string;
   type: "options";
   lessonId: string;
-  options: QuestionOptionInput[];
+  optionGroups: QuestionOptionGroupInput[];
 }
 
 export interface BulkMatchQuestionInput {
@@ -154,13 +225,21 @@ export interface BulkOrderQuestionInput {
   orders: QuestionOrderItemInput[];
 }
 
-// 6. إضافة الواجهات الجديدة للـ Union Type الشامل
+export interface BulkClassifyQuestionInput {
+  title: string;
+  type: "classify";
+  purpose?: string;
+  lessonId: string;
+  classify: ClassifyItemInput[];
+}
+
 export type BulkQuestionInput =
   | BulkOptionsQuestionInput
   | BulkMatchQuestionInput
   | BulkTrueFalseQuestionInput
   | BulkFillBlanksQuestionInput
-  | BulkOrderQuestionInput;
+  | BulkOrderQuestionInput
+  | BulkClassifyQuestionInput;
 
 export interface BulkCreateQuestionsRequest {
   questions: BulkQuestionInput[];

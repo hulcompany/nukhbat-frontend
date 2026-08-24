@@ -39,7 +39,12 @@ import {
 import { School } from "@/types/school";
 import { Track } from "@/types/track";
 import { AdminCourse, AdminUnit, AdminLesson } from "@/types/admin-learning";
-import { Question } from "@/types/question";
+import {
+  formatQuestionTitle,
+  getQuestionOptions,
+  getQuestionTrueFalseAnswer,
+  Question,
+} from "@/types/question";
 import { LessonStatus } from "@/types/lesson";
 
 function FileImage({
@@ -818,7 +823,7 @@ export default function SchoolDetailPage() {
                               {questionsSkip + qi + 1}
                             </span>
                             <span className="font-medium truncate">
-                              {question.title}
+                              {formatQuestionTitle(question.title)}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
@@ -859,7 +864,7 @@ export default function SchoolDetailPage() {
                         {isExpanded && (
                           <div className="border-t border-slate-100 px-4 py-3 space-y-2">
                             {question.type === "options" &&
-                              question.optionsGroups.map((option) => (
+                              getQuestionOptions(question).map((option) => (
                                 <div
                                   key={option.id}
                                   className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
@@ -902,7 +907,9 @@ export default function SchoolDetailPage() {
                               <div className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm bg-emerald-50 border-emerald-200 text-emerald-700">
                                 <Check className="h-4 w-4 shrink-0" />
                                 الإجابة الصحيحة:{" "}
-                                {question.trueOrFalseAnswer ? "صح" : "خطأ"}
+                                {getQuestionTrueFalseAnswer(question)
+                                  ? "صح"
+                                  : "خطأ"}
                               </div>
                             )}
                           </div>

@@ -37,9 +37,9 @@ export interface AttemptCourse {
 export interface QuestionVerdictDetail {
   skipped: boolean;
   verdict: boolean;
-  verdicts?: any[];
-  answered?: any;
-  correctAnswer?: any;
+  verdicts?: unknown[];
+  answered?: unknown;
+  correctAnswer?: unknown;
 }
 
 export interface QuestionVerdictItem {

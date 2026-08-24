@@ -22,7 +22,13 @@ import { getDailyChallenges } from "@/api/daily-challenge";
 import { getQuestionById } from "@/api/question";
 import { downloadFile } from "@/api/files";
 import { Challenge, UnusedQuestionSummary } from "@/types/daily-challenge";
-import { Question, QuestionType } from "@/types/question";
+import {
+  formatQuestionTitle,
+  getQuestionOptions,
+  getQuestionTrueFalseAnswer,
+  Question,
+  QuestionType,
+} from "@/types/question";
 
 const TYPE_META: Record<QuestionType, { label: string; className: string }> = {
   options: {
@@ -395,7 +401,7 @@ export default function DailyChallengePage() {
                               <FileText className="h-4 w-4 shrink-0 text-slate-400 group-hover:text-blue-500 ml-2 mt-0.5 transition-colors" />
                               {/* استخدمنا break-words و whitespace-normal للسماح للنص الطويل بالنزول لسطر جديد بشكل جميل */}
                               <span className="whitespace-normal break-words leading-tight">
-                                {uq.question.title}
+                                {formatQuestionTitle(uq.question.title)}
                               </span>
                             </button>
                           ))}
@@ -499,7 +505,7 @@ export default function DailyChallengePage() {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <h3 className="font-bold text-slate-900 text-lg">
-                  {questionDetails.title}
+                  {formatQuestionTitle(questionDetails.title)}
                 </h3>
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
@@ -513,14 +519,14 @@ export default function DailyChallengePage() {
               {questionDetails.imageId && (
                 <FileImage
                   fileId={questionDetails.imageId}
-                  alt={questionDetails.title}
+                  alt={formatQuestionTitle(questionDetails.title)}
                   className="max-h-52 rounded-lg border border-slate-200"
                 />
               )}
 
               {questionDetails.type === "options" && (
                 <div className="space-y-2">
-                  {questionDetails.optionsGroups.map((option) => (
+                  {getQuestionOptions(questionDetails).map((option) => (
                     <div
                       key={option.id}
                       className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
@@ -585,7 +591,7 @@ export default function DailyChallengePage() {
                 <div className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm bg-emerald-50 border-emerald-200 text-emerald-700">
                   <CheckCircle2 className="h-4 w-4 shrink-0" />
                   الإجابة الصحيحة:{" "}
-                  {questionDetails.trueOrFalseAnswer ? "صح" : "خطأ"}
+                  {getQuestionTrueFalseAnswer(questionDetails) ? "صح" : "خطأ"}
                 </div>
               )}
             </div>
