@@ -162,7 +162,7 @@ export interface QuestionOptionInput {
 }
 
 export interface QuestionOptionGroupInput {
-  title: string;
+  title?: string;
   index: number;
   options: QuestionOptionInput[];
 }
@@ -188,50 +188,53 @@ export interface ClassifyItemInput {
   correctCategoryIndex?: number;
 }
 
-export interface BulkOptionsQuestionInput {
+export type BulkQuestionTarget =
+  | {
+      purpose: "dailyChallenge";
+      courseId: string;
+      lessonId?: never;
+    }
+  | {
+      purpose: "lesson";
+      lessonId: string;
+      courseId?: never;
+    };
+
+export type BulkQuestionInputBase = {
   title: string;
+  tips?: string[];
+} &
+  BulkQuestionTarget;
+
+export type BulkOptionsQuestionInput = BulkQuestionInputBase & {
   type: "options";
-  lessonId: string;
   optionGroups: QuestionOptionGroupInput[];
-}
+};
 
-export interface BulkMatchQuestionInput {
-  title: string;
+export type BulkMatchQuestionInput = BulkQuestionInputBase & {
   type: "match";
-  lessonId: string;
   matchingItems: QuestionMatchItemInput[];
-}
+};
 
-export interface BulkTrueFalseQuestionInput {
-  title: string;
+export type BulkTrueFalseQuestionInput = BulkQuestionInputBase & {
   type: "trueFalse";
-  lessonId: string;
   correctAnswer: boolean;
-}
+};
 
-export interface BulkFillBlanksQuestionInput {
-  title: string;
+export type BulkFillBlanksQuestionInput = BulkQuestionInputBase & {
   type: "fillBlanks";
-  purpose?: string;
-  lessonId: string;
   fillBlanks: QuestionFillBlankInput[];
-}
+};
 
-export interface BulkOrderQuestionInput {
-  title: string;
+export type BulkOrderQuestionInput = BulkQuestionInputBase & {
   type: "order";
-  purpose?: string;
-  lessonId: string;
   orders: QuestionOrderItemInput[];
-}
+};
 
-export interface BulkClassifyQuestionInput {
-  title: string;
+export type BulkClassifyQuestionInput = BulkQuestionInputBase & {
   type: "classify";
-  purpose?: string;
-  lessonId: string;
   classify: ClassifyItemInput[];
-}
+};
 
 export type BulkQuestionInput =
   | BulkOptionsQuestionInput

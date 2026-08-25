@@ -21,6 +21,8 @@ import {
   ImageIcon,
   Lightbulb,
   AlignLeft,
+  Upload,
+  FileJson,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -42,6 +44,7 @@ import {
   updateQuestion,
   deleteQuestionImage,
   deleteQuestion,
+  bulkCreateQuestions,
   bulkDeleteQuestions,
 } from "@/api/question";
 import { getUnitLessons } from "@/api/lesson";
@@ -57,6 +60,7 @@ import {
 } from "@/types/question";
 import { Lesson } from "@/types/lesson";
 import { ApiError } from "@/lib/errors";
+import { parseBulkQuestions } from "@/lib/bulk-questions";
 
 if (typeof window !== "undefined") {
   (window as Window & { katex?: typeof katex }).katex = katex;
@@ -217,8 +221,140 @@ function formatError(e: unknown): string {
   return (e as Error).message;
 }
 
-// ... دوال الاستيراد تبقى كما هي
-// (تم إخفاء كود الـ BulkImportDialog اختصاراً لكنه موجود في ملفك الأساسي)
+function BulkImportDialog({
+  lessonId,
+  onClose,
+  onSaved,
+}: {
+  lessonId: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragging(false);
+    const dropped = e.dataTransfer.files?.[0];
+    if (dropped) setFile(dropped);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!file) {
+      setFormError("يرجى اختيار ملف JSON");
+      return;
+    }
+
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      const questions = parseBulkQuestions(await file.text(), {
+        purpose: "lesson",
+        lessonId,
+      });
+      await bulkCreateQuestions({ questions });
+      onSaved();
+    } catch (err) {
+      setFormError(formatError(err));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent dir="rtl" className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="pt-5">استيراد أسئلة الدرس من ملف JSON</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="mt-2 space-y-4">
+          <div className="space-y-3">
+            <Label htmlFor="lesson-bulk-file">ملف الأسئلة</Label>
+            <input
+              id="lesson-bulk-file"
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
+                isDragging
+                  ? "border-blue-400 bg-blue-50"
+                  : "border-slate-200 bg-slate-50/50 hover:border-blue-300 hover:bg-slate-50"
+              }`}
+            >
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
+                <FileJson className="h-6 w-6 text-blue-600" />
+              </div>
+              {file ? (
+                <>
+                  <p className="text-sm font-bold text-slate-900">
+                    {file.name}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="mt-1 text-xs text-red-500 hover:text-red-600"
+                  >
+                    إزالة الملف
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-bold text-slate-900">
+                    اسحب ملف JSON هنا
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    أو انقر لاختيار ملف · يُقبل فقط ملفات json.
+                  </p>
+                </>
+              )}
+            </div>
+            <p className="text-xs leading-relaxed text-slate-400">
+              يجب أن يحتوي الملف على مصفوفة questions. تُدعم الأنواع options و
+              match و trueFalse و fillBlanks و order و classify. سيتم تجاهل
+              purpose و lessonId داخل الملف وربط الأسئلة بهذا الدرس تلقائياً.
+            </p>
+          </div>
+
+          {formError && <p className="text-sm text-red-500">{formError}</p>}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="h-12 p-4"
+            >
+              إلغاء
+            </Button>
+            <Button type="submit" disabled={submitting} className="h-12 p-4">
+              {submitting ? "جاري الاستيراد..." : "استيراد"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function FileImage({
   fileId,
@@ -1590,6 +1726,7 @@ export default function LessonQuestionsPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
 
   const [deleteTarget, setDeleteTarget] = useState<Question | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -1725,6 +1862,13 @@ export default function LessonQuestionsPage() {
         </div>
         {canAddQuestions && (
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            <ActionButton
+              label="استيراد JSON"
+              icon={Upload}
+              bgClassName="bg-slate-700 hover:bg-slate-800 shadow-slate-200"
+              className="flex-1 justify-center sm:flex-none"
+              onClick={() => setBulkImportOpen(true)}
+            />
             <ActionButton
               label="إضافة سؤال"
               icon={Plus}
@@ -2126,6 +2270,17 @@ export default function LessonQuestionsPage() {
           onClose={closeForm}
           onSaved={() => {
             closeForm();
+            fetchData();
+          }}
+        />
+      )}
+
+      {bulkImportOpen && (
+        <BulkImportDialog
+          lessonId={lessonId}
+          onClose={() => setBulkImportOpen(false)}
+          onSaved={() => {
+            setBulkImportOpen(false);
             fetchData();
           }}
         />
