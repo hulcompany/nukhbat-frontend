@@ -21,7 +21,7 @@ export interface QuestionOption {
 
 export interface QuestionOptionGroup {
   id: string;
-  title: string;
+  text: string;
   index: number;
   options: QuestionOption[];
 }

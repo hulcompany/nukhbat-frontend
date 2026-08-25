@@ -50,7 +50,6 @@ import {
   formatQuestionTitle,
   getQuestionClassifyItems,
   getQuestionCorrectMatch,
-  getQuestionOptions,
   getQuestionTrueFalseAnswer,
   QUESTION_BLANK_MARKER,
   Question,
@@ -930,7 +929,7 @@ function QuestionFormDialog({
           )}
 
           {!editing && type === "match" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="grid grid-cols-1 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
               <div className="space-y-3">
                 <Label>العناصر الأساسية</Label>
                 {bases.map((base, i) => (
@@ -1375,7 +1374,7 @@ function QuestionFormDialog({
           )}
 
           {!editing && type === "classify" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="grid grid-cols-1  gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
               <div className="space-y-3">
                 <Label>التصنيفات (المجموعات)</Label>
                 {classifyCategories.map((cat, i) => (
@@ -1919,23 +1918,40 @@ export default function LessonQuestionsPage() {
 
                     {/* Previews based on question type */}
                     {question.type === "options" && (
-                      <div className="space-y-2">
-                        {getQuestionOptions(question).map((option) => (
-                          <div
-                            key={option.id}
-                            className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${option.isCorrect ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-slate-50 border-slate-200 text-slate-600"}`}
-                          >
-                            {option.isCorrect ? (
-                              <CheckCircle2 className="h-4 w-4 shrink-0" />
-                            ) : (
-                              <Circle className="h-4 w-4 shrink-0" />
-                            )}
-                            <RichTextContent
-                              value={option.text}
-                              className="flex-1 text-sm"
-                            />
-                          </div>
-                        ))}
+                      <div className="space-y-4">
+                        {question.optionsGroups.map((group) => {
+                          const options =
+                            "options" in group ? group.options : [group];
+
+                          return (
+                            <div key={group.id} className="space-y-2">
+                              {"options" in group && (
+                                <RichTextContent
+                                  value={group.text}
+                                  className="text-sm font-semibold text-slate-700"
+                                />
+                              )}
+                              <div className="space-y-2">
+                                {options.map((option) => (
+                                  <div
+                                    key={option.id}
+                                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${option.isCorrect ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-slate-50 border-slate-200 text-slate-600"}`}
+                                  >
+                                    {option.isCorrect ? (
+                                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                                    ) : (
+                                      <Circle className="h-4 w-4 shrink-0" />
+                                    )}
+                                    <RichTextContent
+                                      value={option.text}
+                                      className="flex-1 text-sm"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
 
