@@ -700,7 +700,7 @@ function QuestionFormDialog({
   const [optionGroupTitle, setOptionGroupTitle] = useState(() => {
     if (editing?.type === "options") {
       const group = editing.optionsGroups.find((item) => "options" in item);
-      if (group && "title" in group) return group.title;
+      if (group) return group.text;
     }
     return "المجموعة الأولى";
   });
