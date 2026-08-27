@@ -1,12 +1,15 @@
 "use client";
 
-import { forwardRef, useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import katex from "katex";
-import "react-quill-new/dist/quill.snow.css";
 import "katex/dist/katex.min.css";
+
 import {
+  Sigma,
   ArrowRight,
   ArrowLeft,
   Edit2,
@@ -23,6 +26,11 @@ import {
   AlignLeft,
   Upload,
   FileJson,
+  Bold,
+  Italic,
+  Heading,
+  Eye,
+  PenLine,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -66,125 +74,31 @@ if (typeof window !== "undefined") {
   (window as Window & { katex?: typeof katex }).katex = katex;
 }
 
-const ReactQuill = dynamic(() => import("react-quill-new"), {
-  ssr: false,
-}) as typeof import("react-quill-new").default;
-
-const quillModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    [{ align: [] }, { direction: "rtl" }],
-    ["bold", "italic", "underline", "strike"],
-    [{ color: [] }, { background: [] }],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["formula"],
-    ["clean"],
-  ],
-};
-
-type ReactQuillInstance = InstanceType<
-  typeof import("react-quill-new").default
->;
-
-interface RichTextEditorProps {
-  id?: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  readOnly?: boolean;
-  direction?: "rtl" | "ltr";
-  className?: string;
-}
-
-const RichTextEditor = forwardRef<ReactQuillInstance, RichTextEditorProps>(
-  function RichTextEditor(
-    {
-      id,
-      value,
-      onChange,
-      placeholder,
-      readOnly = false,
-      direction = "rtl",
-      className = "",
-    },
-    ref,
-  ) {
-    return (
-      <ReactQuill
-        ref={ref}
-        id={id}
-        theme="snow"
-        value={value}
-        onChange={onChange}
-        modules={quillModules}
-        readOnly={readOnly}
-        placeholder={placeholder}
-        className={`relative min-w-0 overflow-visible rounded-lg border border-slate-200 bg-white 
-          [&_.ql-toolbar]:rounded-t-lg [&_.ql-toolbar]:border-0 [&_.ql-toolbar]:border-b [&_.ql-toolbar]:border-slate-200 
-          [&_.ql-container]:rounded-b-lg [&_.ql-container]:border-0 [&_.ql-editor]:min-h-20 
-          /* --- إصلاح نافذة المعادلات (Tooltip) --- */
-          [&_.ql-tooltip]:z-50 
-          [&_.ql-tooltip]:!right-2 
-          [&_.ql-tooltip]:!left-auto 
-          [&_.ql-tooltip]:!transform-none 
-          [&_.ql-tooltip]:max-w-[95%] 
-          [&_.ql-tooltip]:whitespace-normal 
-          [&_.ql-tooltip]:flex 
-          [&_.ql-tooltip]:flex-wrap 
-          [&_.ql-tooltip]:items-center 
-          [&_.ql-tooltip]:gap-2 
-          [&_.ql-tooltip_input]:!w-[130px] 
-          sm:[&_.ql-tooltip_input]:!w-[170px]
-          /* -------------------------------------- */
-          ${
-            direction === "ltr"
-              ? "[&_.ql-editor]:[direction:ltr] [&_.ql-editor]:!text-left"
-              : ""
-          } ${className}`}
-      />
-    );
-  },
-);
-
-function richTextToPlainText(value: string): string {
-  return value
-    .replace(
-      /<span[^>]*class=["'][^"']*ql-formula[^"']*["'][^>]*data-value=["']([^"']*)["'][^>]*><\/span>/gi,
-      "$1",
-    )
-    .replace(/<br\s*\/?\s*>/gi, " ")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;|&#160;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function hasRichTextContent(value: string): boolean {
-  return richTextToPlainText(value).length > 0 || /ql-formula/i.test(value);
-}
-
-function RichTextContent({
+// ============================================================================
+// مكون العرض المطور (يقوم برسم الـ Markdown والمعادلات الرياضية)
+// ============================================================================
+function DisplayText({
   value,
   className = "",
 }: {
   value: string;
   className?: string;
 }) {
-  if (!/<[a-z][\s\S]*>/i.test(value)) {
-    return <div className={`whitespace-pre-wrap ${className}`}>{value}</div>;
-  }
-
+  if (!value) return null;
   return (
     <div
-      className={`ql-editor !min-h-0 !p-0 ${className}`}
-      dangerouslySetInnerHTML={{ __html: value }}
-    />
+      className={`whitespace-pre-wrap leading-relaxed [&_h1]:mb-2 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:mb-2 [&_h3]:text-lg [&_h3]:font-bold [&_p]:mb-2 last:[&_p]:mb-0 [&_ul]:mb-2 [&_ul]:list-inside [&_ul]:list-disc [&_ol]:mb-2 [&_ol]:list-inside [&_ol]:list-decimal [&_strong]:font-bold [&_em]:italic ${className}`}
+      dir="auto"
+    >
+      <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+        {value}
+      </ReactMarkdown>
+    </div>
   );
+}
+
+function hasTextContent(value: string): boolean {
+  return !!value && value.trim().length > 0;
 }
 
 const TYPE_META: Record<QuestionType, { label: string; className: string }> = {
@@ -270,7 +184,9 @@ function BulkImportDialog({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent dir="rtl" className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="pt-5">استيراد أسئلة الدرس من ملف JSON</DialogTitle>
+          <DialogTitle className="pt-5">
+            استيراد أسئلة الدرس من ملف JSON
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="mt-2 space-y-4">
           <div className="space-y-3">
@@ -493,7 +409,7 @@ function serializeFillBlankTitle(value: string, rows: FillBlankRow[]): string {
       const row = rows[position];
       if (!row) return part;
       const contentLength = row.contentLength.trim() || "null";
-      const hint = richTextToPlainText(row.hint) || "null";
+      const hint = row.hint.trim() || "null";
       const token = `{{textField: {index: ${row.index}, width: ${row.width}, textDirection: ${row.textDirection}, hint: ${hint}, contentLength: ${contentLength}}}}`;
       return `${part}${token}`;
     })
@@ -532,7 +448,11 @@ function QuestionFormDialog({
   const [imageRemoved, setImageRemoved] = useState(false);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const titleEditorRef = useRef<ReactQuillInstance>(null);
+
+  // مرجع لحقل الـ Textarea الخاص بالعنوان ووضع المعاينة
+  const titleTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [previewMode, setPreviewMode] = useState(false); // <--- إضافة حالة المعاينة
+
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -579,6 +499,33 @@ function QuestionFormDialog({
     };
   }, [imagePreview]);
 
+  // دالة مساعدة لإدراج رموز الماركداون داخل حقل النص
+  function insertMarkdown(prefix: string, suffix: string = "") {
+    const textarea = titleTextareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = title.substring(start, end);
+    const newTitle =
+      title.substring(0, start) +
+      prefix +
+      selectedText +
+      suffix +
+      title.substring(end);
+
+    setTitle(newTitle);
+
+    // إعادة التركيز على الحقل وتحديد النص
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + prefix.length,
+        start + prefix.length + selectedText.length,
+      );
+    }, 0);
+  }
+
   function selectImage(file: File | null) {
     if (file && !file.type.startsWith("image/")) {
       setFormError("يُقبل فقط ملفات الصور");
@@ -612,17 +559,29 @@ function QuestionFormDialog({
   }
 
   function insertFillBlank() {
-    const editor = titleEditorRef.current?.getEditor();
-    const insertionPoint =
-      editor?.getSelection()?.index ??
-      Math.max((editor?.getLength() ?? 1) - 1, 0);
+    const textarea = titleTextareaRef.current;
 
-    if (editor) {
-      editor.insertText(insertionPoint, QUESTION_BLANK_MARKER, "user");
-      editor.setSelection(insertionPoint + QUESTION_BLANK_MARKER.length, 0);
+    if (textarea && !previewMode) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newTitle =
+        title.substring(0, start) +
+        QUESTION_BLANK_MARKER +
+        title.substring(end);
+
+      setTitle(newTitle);
+
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(
+          start + QUESTION_BLANK_MARKER.length,
+          start + QUESTION_BLANK_MARKER.length,
+        );
+      }, 0);
     } else {
       setTitle((currentTitle) => `${currentTitle}${QUESTION_BLANK_MARKER}`);
     }
+
     setFillBlanks((prev) => [
       ...prev,
       {
@@ -634,8 +593,6 @@ function QuestionFormDialog({
         width: 80,
       },
     ]);
-
-    requestAnimationFrame(() => titleEditorRef.current?.focus());
   }
 
   function deleteFillBlank(position: number) {
@@ -666,7 +623,7 @@ function QuestionFormDialog({
   }
 
   function validate(): string | null {
-    if (!hasRichTextContent(title)) return "يجب إدخال نص السؤال";
+    if (!hasTextContent(title)) return "يجب إدخال نص السؤال";
     if (editing) {
       if (
         type === "fillBlanks" &&
@@ -677,10 +634,10 @@ function QuestionFormDialog({
     }
 
     if (type === "options") {
-      if (!hasRichTextContent(optionGroupTitle))
+      if (!hasTextContent(optionGroupTitle))
         return "يجب إدخال اسم مجموعة الخيارات";
       if (options.length < 2) return "يجب إضافة خيارين على الأقل";
-      if (options.some((o) => !hasRichTextContent(o.text)))
+      if (options.some((o) => !hasTextContent(o.text)))
         return "أدخل نص جميع الخيارات";
       if (options.filter((o) => o.isCorrect).length !== 1)
         return "يجب تحديد إجابة صحيحة واحدة";
@@ -694,8 +651,8 @@ function QuestionFormDialog({
       if (matches.length < bases.length)
         return "عدد الإجابات يجب ألا يقل عن عدد العناصر الأساسية";
       if (
-        bases.some((b) => !hasRichTextContent(b.text)) ||
-        matches.some((m) => !hasRichTextContent(m.text))
+        bases.some((b) => !hasTextContent(b.text)) ||
+        matches.some((m) => !hasTextContent(m.text))
       )
         return "أدخل نص جميع عناصر التوصيل";
       if (bases.some((b) => b.matchIndex === null))
@@ -714,7 +671,7 @@ function QuestionFormDialog({
         fillBlanks.some(
           (fb) =>
             fb.answers.length < 1 ||
-            fb.answers.some((answer) => !hasRichTextContent(answer)),
+            fb.answers.some((answer) => !hasTextContent(answer)),
         )
       )
         return "أدخل جميع الإجابات المقبولة للفراغات";
@@ -738,14 +695,14 @@ function QuestionFormDialog({
         )
       )
         return "عدد الأحرف يجب أن يكون رقماً صحيحاً أكبر من صفر";
-      if (fillBlanks.some((fb) => /[,{}]/.test(richTextToPlainText(fb.hint))))
+      if (fillBlanks.some((fb) => /[,{}]/.test(fb.hint.trim())))
         return "تلميح الفراغ لا يمكن أن يحتوي على فاصلة أو أقواس معقوفة";
       return null;
     }
 
     if (type === "order") {
       if (orders.length < 2) return "يجب إضافة عنصرين للترتيب على الأقل";
-      if (orders.some((o) => !hasRichTextContent(o.text)))
+      if (orders.some((o) => !hasTextContent(o.text)))
         return "أدخل نص جميع عناصر الترتيب";
       return null;
     }
@@ -753,9 +710,9 @@ function QuestionFormDialog({
     if (type === "classify") {
       if (classifyCategories.length < 2) return "أضف تصنيفين على الأقل";
       if (classifyItems.length < 2) return "أضف عنصرين للتصنيف على الأقل";
-      if (classifyCategories.some((c) => !hasRichTextContent(c.text)))
+      if (classifyCategories.some((c) => !hasTextContent(c.text)))
         return "أدخل نص جميع التصنيفات";
-      if (classifyItems.some((i) => !hasRichTextContent(i.text)))
+      if (classifyItems.some((i) => !hasTextContent(i.text)))
         return "أدخل نص جميع العناصر";
       if (classifyItems.some((i) => i.categoryIndex === null))
         return "اختر تصنيفاً لكل عنصر";
@@ -826,13 +783,13 @@ function QuestionFormDialog({
 
     setSubmitting(true);
     setFormError(null);
-    const tipsPayload = tips
-      .filter(hasRichTextContent)
-      .map((tip) => tip.trim());
+    const tipsPayload = tips.filter(hasTextContent).map((tip) => tip.trim());
+
     const titlePayload =
       type === "fillBlanks"
         ? serializeFillBlankTitle(title, fillBlanks)
         : title.trim();
+
     try {
       if (editing) {
         if (imageRemoved && !imageFile && editing.imageId) {
@@ -890,20 +847,124 @@ function QuestionFormDialog({
           onSubmit={handleSubmit}
           className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin"
         >
-          <div className="space-y-3">
-            <Label htmlFor="question-title">نص السؤال</Label>
-            <RichTextEditor
-              id="question-title"
-              ref={titleEditorRef}
-              value={title}
-              onChange={setTitle}
-              placeholder={
-                type === "fillBlanks"
-                  ? `اكتب نص السؤال ثم أضف ${QUESTION_BLANK_MARKER} في موضع كل إجابة`
-                  : "اكتب نص السؤال هنا..."
-              }
-              className="[&_.ql-editor]:min-h-32 [&_.ql-editor]:text-base [&_.ql-editor]:leading-7"
-            />
+          {/* ===================================================================== */}
+          {/* منطقة حقل النص مع خيارات التعديل والمعاينة */}
+          {/* ===================================================================== */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="question-title">نص السؤال</Label>
+              <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode(false)}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                    !previewMode
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                  }`}
+                >
+                  <PenLine className="w-3.5 h-3.5" /> تعديل
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode(true)}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                    previewMode
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700 hover:bg-slate-200/50"
+                  }`}
+                >
+                  <Eye className="w-3.5 h-3.5" /> معاينة
+                </button>
+              </div>
+            </div>
+
+            {!previewMode ? (
+              <div className="flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white focus-within:ring-2 focus-within:ring-blue-600 focus-within:border-blue-600 transition-all">
+                {/* شريط أدوات Markdown */}
+                <div className="flex items-center gap-1 border-b border-slate-200 bg-slate-50/80 p-1.5 overflow-x-auto">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 shrink-0 p-0 text-slate-600 hover:text-blue-600"
+                    onClick={() => insertMarkdown("**", "**")}
+                    title="عريض (Bold)"
+                  >
+                    <Bold className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 shrink-0 p-0 text-slate-600 hover:text-blue-600"
+                    onClick={() => insertMarkdown("*", "*")}
+                    title="مائل (Italic)"
+                  >
+                    <Italic className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 shrink-0 p-0 text-slate-600 hover:text-blue-600"
+                    onClick={() => insertMarkdown("### ", "")}
+                    title="عنوان (Heading)"
+                  >
+                    <Heading className="h-4 w-4" />
+                  </Button>
+                  <div className="mx-1 h-5 w-px shrink-0 bg-slate-300" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 shrink-0 px-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                    onClick={() => insertMarkdown("$", "$")}
+                    title="معادلة رياضية في نفس السطر"
+                  >
+                    <span className="font-serif italic font-bold text-[15px]">
+                      f(x)
+                    </span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 shrink-0 px-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50"
+                    onClick={() => insertMarkdown("\n$$\n", "\n$$\n")}
+                    title="معادلة رياضية في سطر منفصل"
+                  >
+                    <Sigma className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* حقل الإدخال */}
+                <textarea
+                  id="question-title"
+                  ref={titleTextareaRef}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={
+                    type === "fillBlanks"
+                      ? `اكتب نص السؤال ثم أضف ${QUESTION_BLANK_MARKER} في موضع كل إجابة`
+                      : "اكتب نص السؤال واستخدم أدوات التنسيق العلوية..."
+                  }
+                  className="w-full bg-transparent px-3 py-3 text-sm placeholder:text-right placeholder:text-slate-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 min-h-[120px] resize-y"
+                  dir="auto"
+                />
+              </div>
+            ) : (
+              <div className="min-h-[160px] w-full rounded-md border border-slate-200 bg-slate-50 px-4 py-4 text-sm shadow-inner overflow-x-auto">
+                {title ? (
+                  <DisplayText value={title} />
+                ) : (
+                  <span className="text-slate-400 italic">
+                    لا يوجد نص لمعاينته...
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="space-y-3">
@@ -1002,16 +1063,17 @@ function QuestionFormDialog({
             <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
               <div className="space-y-2">
                 <Label htmlFor="option-group-title">اسم مجموعة الخيارات</Label>
-                <RichTextEditor
+                <Input
                   id="option-group-title"
                   value={optionGroupTitle}
-                  onChange={setOptionGroupTitle}
+                  onChange={(e) => setOptionGroupTitle(e.target.value)}
                   placeholder="اسم مجموعة الخيارات"
+                  className="bg-white"
                 />
               </div>
               <Label>الخيارات (حدد الإجابة الصحيحة)</Label>
               {options.map((option, i) => (
-                <div key={i} className="flex items-start gap-2">
+                <div key={i} className="flex items-center gap-2">
                   <input
                     type="radio"
                     name="correct-option"
@@ -1023,14 +1085,14 @@ function QuestionFormDialog({
                       )
                     }
                   />
-                  <RichTextEditor
+                  <Input
                     value={option.text}
                     placeholder={`الخيار ${i + 1}`}
-                    className="flex-1"
-                    onChange={(value) =>
+                    className="flex-1 bg-white"
+                    onChange={(e) =>
                       setOptions((prev) =>
                         prev.map((o, j) =>
-                          j === i ? { ...o, text: value } : o,
+                          j === i ? { ...o, text: e.target.value } : o,
                         ),
                       )
                     }
@@ -1073,15 +1135,15 @@ function QuestionFormDialog({
                     key={i}
                     className="space-y-2 rounded-lg bg-white border border-slate-200 p-3 shadow-sm"
                   >
-                    <div className="flex items-start gap-2">
-                      <RichTextEditor
+                    <div className="flex items-center gap-2">
+                      <Input
                         value={base.text}
                         placeholder={`العنصر ${i + 1}`}
                         className="flex-1"
-                        onChange={(value) =>
+                        onChange={(e) =>
                           setBases((prev) =>
                             prev.map((b, j) =>
-                              j === i ? { ...b, text: value } : b,
+                              j === i ? { ...b, text: e.target.value } : b,
                             ),
                           )
                         }
@@ -1114,7 +1176,7 @@ function QuestionFormDialog({
                       <option value="">اختر الإجابة</option>
                       {matches.map((m, j) => (
                         <option key={j} value={j}>
-                          {richTextToPlainText(m.text) || `الإجابة ${j + 1}`}
+                          {m.text.trim() || `الإجابة ${j + 1}`}
                         </option>
                       ))}
                     </select>
@@ -1138,14 +1200,16 @@ function QuestionFormDialog({
               <div className="space-y-3">
                 <Label>الإجابات الممكنة</Label>
                 {matches.map((match, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <RichTextEditor
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
                       value={match.text}
                       placeholder={`الإجابة ${i + 1}`}
-                      className="flex-1"
-                      onChange={(value) =>
+                      className="flex-1 bg-white"
+                      onChange={(e) =>
                         setMatches((prev) =>
-                          prev.map((m, j) => (j === i ? { text: value } : m)),
+                          prev.map((m, j) =>
+                            j === i ? { text: e.target.value } : m,
+                          ),
                         )
                       }
                     />
@@ -1213,8 +1277,7 @@ function QuestionFormDialog({
                   <>
                     <p>
                       ضع المؤشر داخل نص السؤال، ثم اضغط <b>إضافة فراغ</b>. سيظهر
-                      خط فارغ هنا، بينما يُرسل التنسيق المطلوب إلى الخادم
-                      تلقائياً.
+                      خط فارغ هناك.
                     </p>
                     <Button
                       type="button"
@@ -1222,6 +1285,7 @@ function QuestionFormDialog({
                       size="sm"
                       onClick={insertFillBlank}
                       className="mt-3 bg-white"
+                      disabled={previewMode}
                     >
                       <Plus className="h-4 w-4 ml-1" /> إضافة فراغ عند موضع
                       المؤشر
@@ -1340,15 +1404,17 @@ function QuestionFormDialog({
                       <Label htmlFor={`fill-blank-hint-${i}`}>
                         تلميح الفراغ (اختياري)
                       </Label>
-                      <RichTextEditor
+                      <Input
                         id={`fill-blank-hint-${i}`}
-                        direction={fb.textDirection}
+                        dir={fb.textDirection}
                         value={fb.hint}
                         placeholder="مثال: اكتب اسم العاصمة"
-                        onChange={(value) =>
+                        onChange={(e) =>
                           setFillBlanks((prev) =>
                             prev.map((row, position) =>
-                              position === i ? { ...row, hint: value } : row,
+                              position === i
+                                ? { ...row, hint: e.target.value }
+                                : row,
                             ),
                           )
                         }
@@ -1363,7 +1429,7 @@ function QuestionFormDialog({
                       {fb.answers.map((answer, answerIndex) => (
                         <div
                           key={answerIndex}
-                          className="space-y-2 rounded-lg border border-slate-200 bg-white p-3"
+                          className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3"
                         >
                           <div className="flex items-center justify-between gap-2">
                             <Label
@@ -1402,15 +1468,16 @@ function QuestionFormDialog({
                               </Button>
                             )}
                           </div>
-                          <RichTextEditor
+                          <Input
                             id={`fill-blank-${i}-answer-${answerIndex}`}
-                            direction={fb.textDirection}
+                            dir={fb.textDirection}
                             value={answer}
                             readOnly={!!editing}
+                            className="bg-white"
                             placeholder={
                               answerIndex === 0 ? "مثال: باريس" : "مثال: Paris"
                             }
-                            onChange={(value) =>
+                            onChange={(e) =>
                               setFillBlanks((prev) =>
                                 prev.map((row, position) =>
                                   position === i
@@ -1419,7 +1486,7 @@ function QuestionFormDialog({
                                         answers: row.answers.map(
                                           (currentAnswer, currentIndex) =>
                                             currentIndex === answerIndex
-                                              ? value
+                                              ? e.target.value
                                               : currentAnswer,
                                         ),
                                       }
@@ -1457,6 +1524,7 @@ function QuestionFormDialog({
                     variant="outline"
                     size="sm"
                     onClick={insertFillBlank}
+                    disabled={previewMode}
                   >
                     <Plus className="h-4 w-4 ml-1" /> إضافة فراغ آخر
                   </Button>
@@ -1471,17 +1539,19 @@ function QuestionFormDialog({
                 العناصر المراد ترتيبها (قم بإدخالها بالترتيب الصحيح هنا)
               </Label>
               {orders.map((order, i) => (
-                <div key={i} className="flex items-start gap-2">
+                <div key={i} className="flex items-center gap-2">
                   <div className="w-6 h-6 shrink-0 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold">
                     {i + 1}
                   </div>
-                  <RichTextEditor
+                  <Input
                     value={order.text}
                     placeholder={`العنصر رقم ${i + 1}`}
-                    className="flex-1"
-                    onChange={(value) =>
+                    className="flex-1 bg-white"
+                    onChange={(e) =>
                       setOrders((prev) =>
-                        prev.map((o, j) => (j === i ? { text: value } : o)),
+                        prev.map((o, j) =>
+                          j === i ? { text: e.target.value } : o,
+                        ),
                       )
                     }
                   />
@@ -1510,18 +1580,20 @@ function QuestionFormDialog({
           )}
 
           {!editing && type === "classify" && (
-            <div className="grid grid-cols-1  gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <div className="grid grid-cols-1 gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
               <div className="space-y-3">
                 <Label>التصنيفات (المجموعات)</Label>
                 {classifyCategories.map((cat, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <RichTextEditor
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
                       value={cat.text}
                       placeholder={`اسم التصنيف ${i + 1}`}
-                      className="flex-1"
-                      onChange={(value) =>
+                      className="flex-1 bg-white"
+                      onChange={(e) =>
                         setClassifyCategories((prev) =>
-                          prev.map((c, j) => (j === i ? { text: value } : c)),
+                          prev.map((c, j) =>
+                            j === i ? { text: e.target.value } : c,
+                          ),
                         )
                       }
                     />
@@ -1571,15 +1643,15 @@ function QuestionFormDialog({
                     key={i}
                     className="space-y-2 p-3 bg-white border border-slate-200 rounded-lg shadow-sm"
                   >
-                    <div className="flex items-start gap-2">
-                      <RichTextEditor
+                    <div className="flex items-center gap-2">
+                      <Input
                         value={item.text}
                         placeholder={`العنصر ${i + 1}`}
                         className="flex-1"
-                        onChange={(value) =>
+                        onChange={(e) =>
                           setClassifyItems((prev) =>
                             prev.map((it, j) =>
-                              j === i ? { ...it, text: value } : it,
+                              j === i ? { ...it, text: e.target.value } : it,
                             ),
                           )
                         }
@@ -1614,7 +1686,7 @@ function QuestionFormDialog({
                       <option value="">أين ينتمي هذا العنصر؟</option>
                       {classifyCategories.map((c, idx) => (
                         <option key={idx} value={idx}>
-                          {richTextToPlainText(c.text) || `التصنيف ${idx + 1}`}
+                          {c.text.trim() || `التصنيف ${idx + 1}`}
                         </option>
                       ))}
                     </select>
@@ -1642,13 +1714,15 @@ function QuestionFormDialog({
           <div className="space-y-3 pt-2">
             <Label>نصائح (اختياري)</Label>
             {tips.map((tip, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <RichTextEditor
+              <div key={i} className="flex items-center gap-2">
+                <Input
                   value={tip}
                   placeholder={`نصيحة ${i + 1}`}
-                  className="flex-1"
-                  onChange={(value) =>
-                    setTips((prev) => prev.map((t, j) => (j === i ? value : t)))
+                  className="flex-1 bg-white"
+                  onChange={(e) =>
+                    setTips((prev) =>
+                      prev.map((t, j) => (j === i ? e.target.value : t)),
+                    )
                   }
                 />
                 <Button
@@ -1744,7 +1818,11 @@ export default function LessonQuestionsPage() {
     setLoading(true);
     setError(null);
     try {
-      const questionsRes = await getLessonQuestions({ lessonId });
+      const questionsRes = await getLessonQuestions({
+        lessonId,
+        skip: 0,
+        limit: 10,
+      });
       const list = [...questionsRes.data.list].sort(
         (a, b) => a.index - b.index,
       );
@@ -1763,8 +1841,6 @@ export default function LessonQuestionsPage() {
   }
 
   useEffect(() => {
-    // Route parameter changes require synchronizing the list with the API.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lessonId, unitId]);
@@ -1983,16 +2059,11 @@ export default function LessonQuestionsPage() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <h3
-                        title={richTextToPlainText(
-                          formatQuestionTitle(question.title),
-                        )}
-                        className="font-bold text-slate-900 truncate"
-                      >
-                        {richTextToPlainText(
-                          formatQuestionTitle(question.title),
-                        )}
-                      </h3>
+                      {/* العرض في القائمة المصغرة */}
+                      <DisplayText
+                        value={formatQuestionTitle(question.title)}
+                        className="font-bold text-slate-900 truncate max-w-lg"
+                      />
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 mt-1 rounded-full text-xs font-semibold border ${typeMeta.className}`}
                       >
@@ -2047,7 +2118,8 @@ export default function LessonQuestionsPage() {
                     className="border-t border-slate-100 pt-4 space-y-4"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <RichTextContent
+                    {/* العرض الحي للماركداون في تفاصيل السؤال */}
+                    <DisplayText
                       value={formatQuestionTitle(question.title)}
                       className="text-sm font-semibold leading-relaxed text-slate-700"
                     />
@@ -2070,7 +2142,7 @@ export default function LessonQuestionsPage() {
                           return (
                             <div key={group.id} className="space-y-2">
                               {"options" in group && (
-                                <RichTextContent
+                                <DisplayText
                                   value={group.text}
                                   className="text-sm font-semibold text-slate-700"
                                 />
@@ -2086,7 +2158,7 @@ export default function LessonQuestionsPage() {
                                     ) : (
                                       <Circle className="h-4 w-4 shrink-0" />
                                     )}
-                                    <RichTextContent
+                                    <DisplayText
                                       value={option.text}
                                       className="flex-1 text-sm"
                                     />
@@ -2121,7 +2193,7 @@ export default function LessonQuestionsPage() {
                                   <span className="mb-1 block text-[11px] font-semibold text-slate-400">
                                     العنصر
                                   </span>
-                                  <RichTextContent
+                                  <DisplayText
                                     value={base.text}
                                     className="break-words"
                                   />
@@ -2131,7 +2203,7 @@ export default function LessonQuestionsPage() {
                                   <span className="mb-1 block text-[11px] font-semibold text-emerald-500">
                                     الإجابة الصحيحة
                                   </span>
-                                  <RichTextContent
+                                  <DisplayText
                                     value={paired?.text ?? "غير محددة"}
                                     className="break-words"
                                   />
@@ -2169,7 +2241,7 @@ export default function LessonQuestionsPage() {
                                   {answerIndex > 0 && (
                                     <span className="text-slate-400">أو</span>
                                   )}
-                                  <RichTextContent
+                                  <DisplayText
                                     value={answer}
                                     className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-semibold text-emerald-700"
                                   />
@@ -2190,7 +2262,7 @@ export default function LessonQuestionsPage() {
                               key={item.id}
                               className="flex items-center gap-2"
                             >
-                              <RichTextContent
+                              <DisplayText
                                 value={item.text}
                                 className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-semibold text-emerald-700"
                               />
@@ -2212,7 +2284,7 @@ export default function LessonQuestionsPage() {
                               key={cat.id}
                               className="border border-slate-200 rounded-xl p-3 bg-slate-50/50"
                             >
-                              <RichTextContent
+                              <DisplayText
                                 value={cat.text}
                                 className="mb-2 border-b border-slate-200 pb-2 font-bold text-slate-800"
                               />
@@ -2228,7 +2300,7 @@ export default function LessonQuestionsPage() {
                                       key={item.id}
                                       className="text-sm bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700"
                                     >
-                                      <RichTextContent value={item.text} />
+                                      <DisplayText value={item.text} />
                                     </li>
                                   ))}
                               </ul>
@@ -2248,7 +2320,7 @@ export default function LessonQuestionsPage() {
                             className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700"
                           >
                             <Lightbulb className="h-4 w-4 shrink-0" />
-                            <RichTextContent value={tip} className="flex-1" />
+                            <DisplayText value={tip} className="flex-1" />
                           </div>
                         ))}
                       </div>
@@ -2297,9 +2369,7 @@ export default function LessonQuestionsPage() {
           </DialogHeader>
           <p className="text-sm text-slate-500">
             هل أنت متأكد من حذف سؤال &quot;
-            {deleteTarget
-              ? richTextToPlainText(formatQuestionTitle(deleteTarget.title))
-              : ""}
+            {deleteTarget ? deleteTarget.title : ""}
             &quot;؟ لا يمكن التراجع عن هذا الإجراء.
           </p>
           {deleteError && <p className="text-sm text-red-500">{deleteError}</p>}
