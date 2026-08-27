@@ -352,6 +352,43 @@ function parseTextFieldProperties(value: string): Record<string, string> {
   );
 }
 
+// ============================================================================
+// دالة مساعدة لتهيئة وعرض عنوان السؤال بشكل أنيق مع خطوط الفراغ والتلميحات
+// ============================================================================
+export function formatTitleForDisplay(
+  title: string,
+  type: QuestionType | string,
+): string {
+  if (!title) return "";
+
+  if (type === "fillBlanks") {
+    return title.replace(TEXT_FIELD_TOKEN_PATTERN, (match, propertiesStr) => {
+      const props = parseTextFieldProperties(propertiesStr);
+      let hintText = "";
+
+      // التحقق من وجود التلميح وتنظيفه من العلامات
+      if (
+        props.hint &&
+        props.hint !== "null" &&
+        props.hint !== '""' &&
+        props.hint !== "''"
+      ) {
+        // إزالة علامات التنصيص والباك سلاش من التلميح
+        const cleanHint = props.hint.replace(/^\\?["']|\\?["']$/g, "").trim();
+        if (cleanHint) {
+          hintText = ` (تلميح: ${cleanHint})`;
+        }
+      }
+
+      // عرض النتيجة كخط فراغ حقيقي مع التلميح بخط عريض
+      return ` **__________${hintText}** `;
+    });
+  }
+
+  // لباقي أنواع الأسئلة، نستخدم الدالة الافتراضية
+  return formatQuestionTitle(title);
+}
+
 function getFillBlankAuthoringState(question: Question | null): {
   title: string;
   rows: FillBlankRow[];
@@ -380,7 +417,7 @@ function getFillBlankAuthoringState(question: Question | null): {
             : "",
         hint:
           properties.hint && properties.hint.toLowerCase() !== "null"
-            ? properties.hint.replace(/^(["'])(.*)\1$/, "$2")
+            ? properties.hint.replace(/^\\?["']|\\?["']$/g, "")
             : "",
         textDirection:
           (
@@ -413,7 +450,6 @@ function serializeFillBlankTitle(value: string, rows: FillBlankRow[]): string {
 
       const contentLength = row.contentLength.trim() || "null";
 
-      // تجهيز التلميح: إضافة باك سلاش (\) قبل علامات التنصيص المزدوجة
       const trimmedHint = row.hint.trim();
       const hint = trimmedHint ? `\"${trimmedHint}\"` : "null";
 
@@ -793,10 +829,11 @@ function QuestionFormDialog({
     setFormError(null);
     const tipsPayload = tips.filter(hasTextContent).map((tip) => tip.trim());
 
-    const titlePayload =
-      type === "fillBlanks"
-        ? serializeFillBlankTitle(title, fillBlanks)
-        : title.trim();
+    // في حال كان وضع الفراغات، نقوم بإنشاء الـ Token بصيغته البرمجية
+    let titlePayload = title.trim();
+    if (type === "fillBlanks") {
+      titlePayload = serializeFillBlankTitle(title, fillBlanks);
+    }
 
     try {
       if (editing) {
@@ -855,9 +892,6 @@ function QuestionFormDialog({
           onSubmit={handleSubmit}
           className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin"
         >
-          {/* ===================================================================== */}
-          {/* منطقة حقل النص مع خيارات التعديل والمعاينة */}
-          {/* ===================================================================== */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="question-title">نص السؤال</Label>
@@ -965,7 +999,7 @@ function QuestionFormDialog({
             ) : (
               <div className="min-h-[160px] w-full rounded-md border border-slate-200 bg-slate-50 px-4 py-4 text-sm shadow-inner overflow-x-auto">
                 {title ? (
-                  <DisplayText value={title} />
+                  <DisplayText value={formatTitleForDisplay(title, type)} />
                 ) : (
                   <span className="text-slate-400 italic">
                     لا يوجد نص لمعاينته...
@@ -2089,7 +2123,10 @@ export default function LessonQuestionsPage() {
                     <div className="min-w-0">
                       {/* العرض في القائمة المصغرة */}
                       <DisplayText
-                        value={formatQuestionTitle(question.title)}
+                        value={formatTitleForDisplay(
+                          question.title,
+                          question.type,
+                        )}
                         className="font-bold text-slate-900 truncate max-w-lg"
                       />
                       <span
@@ -2148,7 +2185,10 @@ export default function LessonQuestionsPage() {
                   >
                     {/* العرض الحي للماركداون في تفاصيل السؤال */}
                     <DisplayText
-                      value={formatQuestionTitle(question.title)}
+                      value={formatTitleForDisplay(
+                        question.title,
+                        question.type,
+                      )}
                       className="text-sm font-semibold leading-relaxed text-slate-700"
                     />
 

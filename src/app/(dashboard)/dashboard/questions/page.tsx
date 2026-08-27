@@ -200,6 +200,43 @@ function parseTextFieldProperties(value: string): Record<string, string> {
   );
 }
 
+// ============================================================================
+// دالة مساعدة لتهيئة وعرض عنوان السؤال بشكل أنيق مع خطوط الفراغ والتلميحات
+// ============================================================================
+export function formatTitleForDisplay(
+  title: string,
+  type: QuestionType | string,
+): string {
+  if (!title) return "";
+
+  if (type === "fillBlanks") {
+    return title.replace(TEXT_FIELD_TOKEN_PATTERN, (match, propertiesStr) => {
+      const props = parseTextFieldProperties(propertiesStr);
+      let hintText = "";
+
+      // التحقق من وجود التلميح وتنظيفه من العلامات
+      if (
+        props.hint &&
+        props.hint !== "null" &&
+        props.hint !== '""' &&
+        props.hint !== "''"
+      ) {
+        // إزالة علامات التنصيص والباك سلاش من التلميح
+        const cleanHint = props.hint.replace(/^\\?["']|\\?["']$/g, "").trim();
+        if (cleanHint) {
+          hintText = ` (تلميح: ${cleanHint})`;
+        }
+      }
+
+      // عرض النتيجة كخط فراغ حقيقي مع التلميح بخط عريض
+      return ` **__________${hintText}** `;
+    });
+  }
+
+  // لباقي أنواع الأسئلة، نستخدم الدالة الافتراضية
+  return formatQuestionTitle(title);
+}
+
 function getFillBlankAuthoringState(question: Question | null): {
   title: string;
   rows: FillBlankRow[];
@@ -231,8 +268,9 @@ function getFillBlankAuthoringState(question: Question | null): {
             ? properties.hint.replace(/^(["'])(.*)\1$/, "$2")
             : "",
         textDirection:
-          (properties.textDirection ?? properties.TextDirection)
-            ?.toLowerCase() === "ltr"
+          (
+            properties.textDirection ?? properties.TextDirection
+          )?.toLowerCase() === "ltr"
             ? "ltr"
             : "rtl",
         width:
@@ -257,9 +295,14 @@ function serializeFillBlankTitle(value: string, rows: FillBlankRow[]): string {
     .map((part, position) => {
       const row = rows[position];
       if (!row) return part;
+
       const contentLength = row.contentLength.trim() || "null";
-      const hint = row.hint.trim() || "null";
+
+      const trimmedHint = row.hint.trim();
+      const hint = trimmedHint ? `\"${trimmedHint}\"` : "null";
+
       const token = `{{textField: {index: ${row.index}, width: ${row.width}, textDirection: ${row.textDirection}, hint: ${hint}, contentLength: ${contentLength}}}}`;
+
       return `${part}${token}`;
     })
     .join("")
@@ -340,7 +383,9 @@ function getOptionGroups(
 
   return value.map((group, groupIndex) => {
     if (!isRecord(group)) {
-      throw new Error(`${label}: مجموعة الخيارات رقم ${groupIndex + 1} غير صالحة`);
+      throw new Error(
+        `${label}: مجموعة الخيارات رقم ${groupIndex + 1} غير صالحة`,
+      );
     }
     if (!Number.isInteger(group.index) || (group.index as number) < 0) {
       throw new Error(`${label}: يجب تحديد index صالح لكل مجموعة خيارات`);
@@ -408,9 +453,12 @@ function getMatchingItems(
     );
     if (
       item.correctIndex !== undefined &&
-      (!Number.isInteger(item.correctIndex) || (item.correctIndex as number) < 0)
+      (!Number.isInteger(item.correctIndex) ||
+        (item.correctIndex as number) < 0)
     ) {
-      throw new Error(`${label}: correctIndex غير صالح في عنصر التوصيل رقم ${index + 1}`);
+      throw new Error(
+        `${label}: correctIndex غير صالح في عنصر التوصيل رقم ${index + 1}`,
+      );
     }
 
     return {
@@ -423,7 +471,10 @@ function getMatchingItems(
   });
 }
 
-function getFillBlanks(value: unknown, label: string): QuestionFillBlankInput[] {
+function getFillBlanks(
+  value: unknown,
+  label: string,
+): QuestionFillBlankInput[] {
   if (!Array.isArray(value) || value.length === 0) {
     throw new Error(`${label}: يجب إضافة فراغ واحد على الأقل`);
   }
@@ -461,7 +512,10 @@ function getOrders(value: unknown, label: string): QuestionOrderItemInput[] {
       throw new Error(`${label}: عنصر الترتيب رقم ${index + 1} غير صالح`);
     }
     return {
-      text: getRequiredText(item.text, `${label}: نص عنصر الترتيب رقم ${index + 1}`),
+      text: getRequiredText(
+        item.text,
+        `${label}: نص عنصر الترتيب رقم ${index + 1}`,
+      ),
     };
   });
 }
@@ -607,9 +661,7 @@ function parseBulkQuestions(
       };
     }
 
-    throw new Error(
-      `${label}: نوع السؤال غير مدعوم`,
-    );
+    throw new Error(`${label}: نوع السؤال غير مدعوم`);
   });
 }
 
@@ -1037,7 +1089,6 @@ function QuestionFormDialog({
         width: 80,
       },
     ]);
-
   }
 
   function deleteFillBlank(position: number) {
@@ -1145,11 +1196,7 @@ function QuestionFormDialog({
         )
       )
         return "عدد الأحرف يجب أن يكون رقماً صحيحاً أكبر من صفر";
-      if (
-        fillBlanks.some((blank) =>
-          /[,{}]/.test(blank.hint.trim()),
-        )
-      )
+      if (fillBlanks.some((blank) => /[,{}]/.test(blank.hint.trim())))
         return "تلميح الفراغ لا يمكن أن يحتوي على فاصلة أو أقواس معقوفة";
       return null;
     }
@@ -1164,11 +1211,7 @@ function QuestionFormDialog({
     if (type === "classify") {
       if (classifyCategories.length < 2) return "أضف تصنيفين على الأقل";
       if (classifyItems.length < 2) return "أضف عنصرين للتصنيف على الأقل";
-      if (
-        classifyCategories.some(
-          (category) => !hasTextContent(category.text),
-        )
-      )
+      if (classifyCategories.some((category) => !hasTextContent(category.text)))
         return "أدخل نص جميع التصنيفات";
       if (classifyItems.some((item) => !hasTextContent(item.text)))
         return "أدخل نص جميع العناصر";
@@ -1240,9 +1283,7 @@ function QuestionFormDialog({
 
     setSubmitting(true);
     setFormError(null);
-    const tipsPayload = tips
-      .filter(hasTextContent)
-      .map((tip) => tip.trim());
+    const tipsPayload = tips.filter(hasTextContent).map((tip) => tip.trim());
     const titlePayload =
       type === "fillBlanks"
         ? serializeFillBlankTitle(title, fillBlanks)
@@ -1268,19 +1309,13 @@ function QuestionFormDialog({
           ...(type === "options"
             ? { optionGroups: buildOptionGroupInputs() }
             : {}),
-          ...(type === "match"
-            ? { matchingItems: buildMatchInputs() }
-            : {}),
-          ...(type === "trueFalse"
-            ? { correctAnswer: trueFalseAnswer }
-            : {}),
+          ...(type === "match" ? { matchingItems: buildMatchInputs() } : {}),
+          ...(type === "trueFalse" ? { correctAnswer: trueFalseAnswer } : {}),
           ...(type === "fillBlanks"
             ? { fillBlanks: buildFillBlanksInputs() }
             : {}),
           ...(type === "order" ? { orders: buildOrderInputs() } : {}),
-          ...(type === "classify"
-            ? { classify: buildClassifyInputs() }
-            : {}),
+          ...(type === "classify" ? { classify: buildClassifyInputs() } : {}),
         });
       }
       onSaved();
@@ -1452,7 +1487,7 @@ function QuestionFormDialog({
             ) : (
               <div className="min-h-[160px] w-full overflow-x-auto rounded-md border border-slate-200 bg-slate-50 px-4 py-4 text-sm shadow-inner">
                 {title ? (
-                  <DisplayText value={title} />
+                  <DisplayText value={formatTitleForDisplay(title, type)} />
                 ) : (
                   <span className="italic text-slate-400">
                     لا يوجد نص لمعاينته...
@@ -1493,11 +1528,11 @@ function QuestionFormDialog({
               {imagePreview || (editing?.imageId && !imageRemoved) ? (
                 <div className="relative">
                   {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="معاينة صورة السؤال"
+                    <img
+                      src={imagePreview}
+                      alt="معاينة صورة السؤال"
                       className="max-h-40 rounded-lg border border-slate-200"
-                  />
+                    />
                   ) : (
                     <FileImage
                       fileId={editing!.imageId!}
@@ -1730,7 +1765,7 @@ function QuestionFormDialog({
                                 ? { ...b, matchIndex: null }
                                 : b.matchIndex > i
                                   ? { ...b, matchIndex: b.matchIndex - 1 }
-                                : b,
+                                  : b,
                           ),
                         );
                       }}
@@ -2086,7 +2121,9 @@ function QuestionFormDialog({
                     disabled={orders.length <= 2}
                     onClick={() =>
                       setOrders((currentOrders) =>
-                        currentOrders.filter((_, position) => position !== index),
+                        currentOrders.filter(
+                          (_, position) => position !== index,
+                        ),
                       )
                     }
                   >
@@ -2099,10 +2136,7 @@ function QuestionFormDialog({
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  setOrders((currentOrders) => [
-                    ...currentOrders,
-                    { text: "" },
-                  ])
+                  setOrders((currentOrders) => [...currentOrders, { text: "" }])
                 }
               >
                 <Plus className="h-4 w-4 ml-1" /> إضافة عنصر ترتيب
@@ -2267,7 +2301,7 @@ function QuestionFormDialog({
                   onChange={(event) =>
                     setTips((currentTips) =>
                       currentTips.map((currentTip, position) =>
-                      position === index ? event.target.value : currentTip,
+                        position === index ? event.target.value : currentTip,
                       ),
                     )
                   }
@@ -2291,9 +2325,7 @@ function QuestionFormDialog({
               type="button"
               variant="outline"
               size="sm"
-              onClick={() =>
-                setTips((currentTips) => [...currentTips, ""])
-              }
+              onClick={() => setTips((currentTips) => [...currentTips, ""])}
             >
               <Plus className="h-4 w-4 ml-1" /> إضافة نصيحة
             </Button>
@@ -2390,7 +2422,7 @@ export default function Questions() {
   }, [courseId, page]);
 
   const filteredQuestions = questions.filter((q) =>
-    formatQuestionTitle(q.title)
+    formatTitleForDisplay(q.title, q.type)
       .toLowerCase()
       .includes(search.trim().toLowerCase()),
   );
@@ -2555,7 +2587,10 @@ export default function Questions() {
                     </div>
                     <div className="min-w-0">
                       <DisplayText
-                        value={formatQuestionTitle(question.title)}
+                        value={formatTitleForDisplay(
+                          question.title,
+                          question.type,
+                        )}
                         className="max-w-lg truncate font-bold text-slate-900"
                       />
                       <div className="flex flex-wrap items-center gap-1.5 mt-1">
@@ -2609,7 +2644,10 @@ export default function Questions() {
                     onClick={(e) => e.stopPropagation()}
                   >
                     <DisplayText
-                      value={formatQuestionTitle(question.title)}
+                      value={formatTitleForDisplay(
+                        question.title,
+                        question.type,
+                      )}
                       className="text-sm font-semibold leading-relaxed text-slate-700"
                     />
 
