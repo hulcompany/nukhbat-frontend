@@ -410,9 +410,15 @@ function serializeFillBlankTitle(value: string, rows: FillBlankRow[]): string {
     .map((part, position) => {
       const row = rows[position];
       if (!row) return part;
+
       const contentLength = row.contentLength.trim() || "null";
-      const hint = row.hint.trim() || "null";
+
+      // تجهيز التلميح: إضافة باك سلاش (\) قبل علامات التنصيص المزدوجة
+      const trimmedHint = row.hint.trim();
+      const hint = trimmedHint ? `\"${trimmedHint}\"` : "null";
+
       const token = `{{textField: {index: ${row.index}, width: ${row.width}, textDirection: ${row.textDirection}, hint: ${hint}, contentLength: ${contentLength}}}}`;
+
       return `${part}${token}`;
     })
     .join("")
