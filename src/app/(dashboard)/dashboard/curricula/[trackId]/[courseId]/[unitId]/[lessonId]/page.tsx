@@ -128,6 +128,8 @@ const TYPE_META: Record<QuestionType, { label: string; className: string }> = {
   },
 };
 
+const QUESTIONS_PER_PAGE = 10;
+
 function formatError(e: unknown): string {
   if (e instanceof ApiError && e.code === "BAD_INPUT" && e.serverMessage) {
     return e.serverMessage;
@@ -1792,6 +1794,8 @@ export default function LessonQuestionsPage() {
   const router = useRouter();
 
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1820,13 +1824,14 @@ export default function LessonQuestionsPage() {
     try {
       const questionsRes = await getLessonQuestions({
         lessonId,
-        skip: 0,
-        limit: 10,
+        skip: page * QUESTIONS_PER_PAGE,
+        limit: QUESTIONS_PER_PAGE,
       });
       const list = [...questionsRes.data.list].sort(
         (a, b) => a.index - b.index,
       );
       setQuestions(list);
+      setTotalRecords(questionsRes.data.totalRecords);
       if (list.length > 0) {
         setLesson(list[0].lesson);
       } else {
@@ -1841,9 +1846,16 @@ export default function LessonQuestionsPage() {
   }
 
   useEffect(() => {
-    fetchData();
+    const timeoutId = window.setTimeout(fetchData, 0);
+    return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lessonId, unitId]);
+  }, [lessonId, unitId, page]);
+
+  function changePage(nextPage: number) {
+    setExpandedId(null);
+    setSelectedIds(new Set());
+    setPage(nextPage);
+  }
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -1853,12 +1865,16 @@ export default function LessonQuestionsPage() {
     try {
       await deleteQuestion(deleteTarget.id);
       setQuestions((prev) => prev.filter((q) => q.id !== deleteTarget.id));
+      setTotalRecords((currentTotal) => Math.max(0, currentTotal - 1));
       setSelectedIds((prev) => {
         const next = new Set(prev);
         next.delete(deleteTarget.id);
         return next;
       });
       setDeleteTarget(null);
+      if (questions.length === 1 && page > 0) {
+        changePage(page - 1);
+      }
     } catch (e) {
       setDeleteError(formatError(e));
     } finally {
@@ -1887,8 +1903,14 @@ export default function LessonQuestionsPage() {
       const ids = Array.from(selectedIds);
       await bulkDeleteQuestions(ids);
       setQuestions((prev) => prev.filter((q) => !selectedIds.has(q.id)));
+      setTotalRecords((currentTotal) =>
+        Math.max(0, currentTotal - selectedIds.size),
+      );
       setSelectedIds(new Set());
       setBulkDeleteOpen(false);
+      if (selectedIds.size >= questions.length && page > 0) {
+        changePage(page - 1);
+      }
     } catch (e) {
       setBulkDeleteError(formatError(e));
     } finally {
@@ -2330,6 +2352,31 @@ export default function LessonQuestionsPage() {
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {!loading && !error && totalRecords > QUESTIONS_PER_PAGE && (
+        <div className="flex items-center justify-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={page === 0}
+            onClick={() => changePage(page - 1)}
+          >
+            السابق
+          </Button>
+          <span className="text-sm text-slate-500">
+            صفحة {page + 1} من{" "}
+            {Math.max(1, Math.ceil(totalRecords / QUESTIONS_PER_PAGE))}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={(page + 1) * QUESTIONS_PER_PAGE >= totalRecords}
+            onClick={() => changePage(page + 1)}
+          >
+            التالي
+          </Button>
         </div>
       )}
 

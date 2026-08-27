@@ -1,8 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
-import { Plus, FileText, Edit2, Trash2, Eye } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import {
+  Plus,
+  FileText,
+  Edit2,
+  Trash2,
+  Bold,
+  Italic,
+  Heading,
+  Eye,
+  PenLine,
+  Sigma,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,8 +40,6 @@ import { Subject } from "@/types/courses";
 import { Book } from "@/types/book";
 import { ApiError } from "@/lib/errors";
 
-// --- استيراد مكتبات المحرر والمعادلات الرياضية ---
-import "react-quill-new/dist/quill.snow.css";
 import "katex/dist/katex.min.css";
 import katex from "katex";
 import { Unit } from "@/types/unit";
@@ -39,19 +50,26 @@ if (typeof window !== "undefined") {
   (window as any).katex = katex;
 }
 
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
-// إعدادات شريط أدوات المحرر (Toolbar)
-const quillModules = {
-  toolbar: [
-    [{ header: [1, 2, 3, false] }],
-    [{ align: [] }, { direction: "rtl" }], // أضفنا زر تغيير الاتجاه هنا
-    ["bold", "italic", "underline", "strike"],
-    [{ color: [] }, { background: [] }],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["formula"], // زر إدراج المعادلات الرياضية
-    ["clean"], // إزالة التنسيق
-  ],
-};
+function DisplayText({
+  value,
+  className = "",
+}: {
+  value: string;
+  className?: string;
+}) {
+  if (!value) return null;
+
+  return (
+    <div
+      className={`whitespace-pre-wrap leading-relaxed [&_h1]:mb-2 [&_h1]:text-2xl [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:text-xl [&_h2]:font-bold [&_h3]:mb-2 [&_h3]:text-lg [&_h3]:font-bold [&_p]:mb-2 last:[&_p]:mb-0 [&_ul]:mb-2 [&_ul]:list-inside [&_ul]:list-disc [&_ol]:mb-2 [&_ol]:list-inside [&_ol]:list-decimal [&_strong]:font-bold [&_em]:italic ${className}`}
+      dir="auto"
+    >
+      <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+        {value}
+      </ReactMarkdown>
+    </div>
+  );
+}
 
 export default function BooksPage() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -67,6 +85,8 @@ export default function BooksPage() {
   // Form States
   const [name, setName] = useState("");
   const [text, setText] = useState("");
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const [previewMode, setPreviewMode] = useState(false);
 
   // Curriculum Selectors States
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -164,6 +184,7 @@ export default function BooksPage() {
     setCourseId("");
     setUnitId("");
     setChangeLessonMode(true);
+    setPreviewMode(false);
     setFormError(null);
     setShowForm(true);
   }
@@ -177,8 +198,34 @@ export default function BooksPage() {
     setCourseId("");
     setUnitId("");
     setChangeLessonMode(false);
+    setPreviewMode(false);
     setFormError(null);
     setShowForm(true);
+  }
+
+  function insertMarkdown(prefix: string, suffix: string = "") {
+    const textarea = contentTextareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = text.substring(start, end);
+    const nextText =
+      text.substring(0, start) +
+      prefix +
+      selectedText +
+      suffix +
+      text.substring(end);
+
+    setText(nextText);
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + prefix.length,
+        start + prefix.length + selectedText.length,
+      );
+    }, 0);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -188,7 +235,7 @@ export default function BooksPage() {
       setFormError("يرجى إدخال اسم الكتاب");
       return;
     }
-    if (!text.trim() || text === "<p><br></p>") {
+    if (!text.trim()) {
       setFormError("يرجى إدخال محتوى الكتاب");
       return;
     }
@@ -423,20 +470,115 @@ export default function BooksPage() {
               </div>
             </div>
 
-            {/* Editor */}
             <div className="space-y-2">
-              <Label>المحتوى النصي (يدعم المعادلات عبر KaTeX)</Label>
-
-              <div className="w-full h-[calc(100vh-420px)] min-h-[500px]">
-                <ReactQuill
-                  theme="snow"
-                  value={text}
-                  onChange={setText}
-                  modules={quillModules}
-                  className="h-full flex flex-col bg-white rounded-lg overflow-hidden border-slate-200"
-                  placeholder="ابدأ في كتابة محتوى الكتاب هنا. استخدم زر (fx) لإدراج المعادلات الرياضية..."
-                />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="book-content">
+                  المحتوى النصي (يدعم المعادلات عبر KaTeX)
+                </Label>
+                <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode(false)}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                      !previewMode
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700"
+                    }`}
+                  >
+                    <PenLine className="h-3.5 w-3.5" /> تعديل
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode(true)}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
+                      previewMode
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-slate-500 hover:bg-slate-200/50 hover:text-slate-700"
+                    }`}
+                  >
+                    <Eye className="h-3.5 w-3.5" /> معاينة
+                  </button>
+                </div>
               </div>
+
+              {!previewMode ? (
+                <div className="flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white transition-all focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600">
+                  <div className="flex items-center gap-1 overflow-x-auto border-b border-slate-200 bg-slate-50/80 p-1.5">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 shrink-0 p-0 text-slate-600 hover:text-blue-600"
+                      onClick={() => insertMarkdown("**", "**")}
+                      title="عريض (Bold)"
+                    >
+                      <Bold className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 shrink-0 p-0 text-slate-600 hover:text-blue-600"
+                      onClick={() => insertMarkdown("*", "*")}
+                      title="مائل (Italic)"
+                    >
+                      <Italic className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 shrink-0 p-0 text-slate-600 hover:text-blue-600"
+                      onClick={() => insertMarkdown("### ")}
+                      title="عنوان (Heading)"
+                    >
+                      <Heading className="h-4 w-4" />
+                    </Button>
+                    <div className="mx-1 h-5 w-px shrink-0 bg-slate-300" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 shrink-0 px-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                      onClick={() => insertMarkdown("$", "$")}
+                      title="معادلة رياضية في نفس السطر"
+                    >
+                      <span className="font-serif text-[15px] font-bold italic">
+                        f(x)
+                      </span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 shrink-0 px-2 text-slate-600 hover:bg-blue-50 hover:text-blue-600"
+                      onClick={() => insertMarkdown("\n$$\n", "\n$$\n")}
+                      title="معادلة رياضية في سطر منفصل"
+                    >
+                      <Sigma className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <textarea
+                    id="book-content"
+                    ref={contentTextareaRef}
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="ابدأ في كتابة محتوى الكتاب واستخدم أدوات التنسيق العلوية..."
+                    className="h-[calc(100vh-420px)] min-h-[500px] w-full resize-y bg-transparent px-3 py-3 text-sm placeholder:text-right placeholder:text-slate-400 focus:outline-none"
+                    dir="auto"
+                  />
+                </div>
+              ) : (
+                <div className="min-h-[500px] w-full overflow-x-auto rounded-md border border-slate-200 bg-slate-50 px-4 py-4 text-sm shadow-inner">
+                  {text ? (
+                    <DisplayText value={text} />
+                  ) : (
+                    <span className="italic text-slate-400">
+                      لا يوجد محتوى لمعاينته...
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Error */}
@@ -613,12 +755,9 @@ export default function BooksPage() {
                   <span className="truncate">{viewerBook?.name}</span>
                 </DialogTitle>
               </DialogHeader>
-              <div className="mt-4 flex-1 overflow-y-auto min-h-0 bg-slate-50/50 rounded-lg p-2 md:p-4 border border-slate-100">
-                <div
-                  className="ql-editor !p-0"
-                  dangerouslySetInnerHTML={{
-                    __html: viewerBook?.text || "لا يوجد محتوى لعرضه.",
-                  }}
+              <div className="mt-4 min-h-0 flex-1 overflow-y-auto rounded-lg border border-slate-100 bg-slate-50/50 p-2 md:p-4">
+                <DisplayText
+                  value={viewerBook?.text || "لا يوجد محتوى لعرضه."}
                 />
               </div>
             </DialogContent>
