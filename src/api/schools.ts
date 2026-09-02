@@ -77,14 +77,11 @@ export async function updateMySchool(data: {
   name?: string;
   image?: File;
   password?: string;
-  phoneNumber?: string;
 }): Promise<SchoolResponse> {
   const formData = new FormData();
   if (data.name !== undefined) formData.append("name", data.name);
   if (data.image) formData.append("image", data.image);
   if (data.password !== undefined) formData.append("password", data.password);
-  if (data.phoneNumber !== undefined)
-    formData.append("phoneNumber", data.phoneNumber);
 
   const res = await apiClient.patch<SchoolResponse>("/school/me", formData, {
     headers: { "Content-Type": "multipart/form-data" },

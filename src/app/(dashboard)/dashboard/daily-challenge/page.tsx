@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ListChecks,
   ArrowLeft,
@@ -8,7 +9,9 @@ import {
   Circle,
   FileText,
   CalendarDays,
+  Plus,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Dialog,
@@ -87,15 +90,13 @@ function FileImage({
 }
 
 export default function DailyChallengePage() {
+  const router = useRouter();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [unUsedQuestions, setUnUsedQuestions] = useState<
     UnusedQuestionSummary[]
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // const [creating, setCreating] = useState(false);
-  // const [createError, setCreateError] = useState<string | null>(null);
 
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
     null,
@@ -133,19 +134,6 @@ export default function DailyChallengePage() {
     fetchChallenges();
   }, []);
 
-  // async function handleCreate() {
-  //   setCreating(true);
-  //   setCreateError(null);
-  //   try {
-  //     await createDailyChallenge();
-  //     await fetchChallenges();
-  //   } catch (e) {
-  //     setCreateError((e as Error).message);
-  //   } finally {
-  //     setCreating(false);
-  //   }
-  // }
-
   const totalQuestionsUsed = challenges.reduce(
     (sum, c) => sum + c.usedQuestions.length,
     0,
@@ -166,16 +154,14 @@ export default function DailyChallengePage() {
             إدارة التحديات اليومية للطلاب
           </p>
         </div>
-        {/* <div className="flex flex-col items-end gap-2">
-          <ActionButton
-            label={creating ? "جاري إنشاء التحدي" : "توليد التحدي اليومي"}
-            icon={RefreshCcw}
-            bgClassName="bg-blue-600 hover:bg-blue-700 shadow-blue-200"
-            disabled={creating}
-            onClick={handleCreate}
-          />
-          {createError && <p className="text-xs text-red-500">{createError}</p>}
-        </div> */}
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => router.push("/dashboard/questions")}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 h-10 rounded-lg shadow-md shadow-blue-200"
+          >
+            <Plus className="ml-2 h-4 w-4" /> إضافة أسئلة جديدة
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

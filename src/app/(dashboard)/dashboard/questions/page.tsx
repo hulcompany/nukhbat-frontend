@@ -2449,21 +2449,25 @@ export default function Questions() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">إدارة الأسئلة</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            إدارة اسئلة التحدي اليوميه
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
             اختر المسار والمادة لعرض أسئلتها
           </p>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* تم التعديل هنا */}
+        <div className="flex flex-col md:flex-row w-full sm:w-auto gap-2">
           <Button
-            className="bg-slate-600 hover:bg-slate-700 text-white rounded-md px-6 h-10"
+            className="w-full sm:w-auto bg-slate-600 hover:bg-slate-700 text-white rounded-md px-6 h-10"
             onClick={() => setBulkOpen(true)}
           >
             استيراد أسئلة
             <Upload className="mr-2 h-4 w-4" />
           </Button>
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-6 h-10"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white rounded-md px-6 h-10"
             onClick={() => {
               setEditingQuestion(null);
               setFormOpen(true);

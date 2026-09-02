@@ -119,14 +119,11 @@ export default function SchoolProfilePage() {
         return;
       }
 
-      const finalPhoneNumber = `+963${phoneVal}`;
       // -------------------------------
 
-      const payload: { name?: string; image?: File; phoneNumber?: string } = {};
+      const payload: { name?: string; image?: File } = {};
       if (newName && newName !== school.name) payload.name = newName;
       if (logoFile) payload.image = logoFile;
-      if (finalPhoneNumber !== school.phoneNumber)
-        payload.phoneNumber = finalPhoneNumber;
 
       if (Object.keys(payload).length === 0) {
         setEditOpen(false);
@@ -309,7 +306,7 @@ export default function SchoolProfilePage() {
             </div>
 
             {/* --- Phone Number Field --- */}
-            <div className="space-y-1">
+            {/* <div className="space-y-1">
               <Label htmlFor="edit-phone">رقم الهاتف</Label>
               <div
                 className="flex items-center border border-slate-200 rounded-md focus-within:ring-2 focus-within:ring-blue-600 focus-within:border-transparent transition-shadow"
@@ -341,7 +338,7 @@ export default function SchoolProfilePage() {
               <p className="text-[10px] text-slate-400 mt-1">
                 يجب أن يبدأ الرقم بـ 9 (مثال: 933123456)
               </p>
-            </div>
+            </div> */}
             {/* --------------------------- */}
 
             <div className="space-y-1">
