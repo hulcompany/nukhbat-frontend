@@ -94,6 +94,7 @@ export interface Question {
   school?: QuestionSchool;
   schoolId: string;
   tips: string[];
+  verdictText: string;
 }
 
 export function getQuestionOptions(
@@ -203,8 +204,7 @@ export type BulkQuestionTarget =
 export type BulkQuestionInputBase = {
   title: string;
   tips?: string[];
-} &
-  BulkQuestionTarget;
+} & BulkQuestionTarget;
 
 export type BulkOptionsQuestionInput = BulkQuestionInputBase & {
   type: "options";

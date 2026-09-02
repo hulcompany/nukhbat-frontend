@@ -60,7 +60,7 @@ export async function createQuestion(data: {
   matchingItems?: QuestionMatchItemInput[];
   correctAnswer?: boolean;
   tips?: string[];
-
+  verdictText?: string;
   // الأنواع الجديدة
   fillBlanks?: QuestionFillBlankInput[];
   orders?: QuestionOrderItemInput[];

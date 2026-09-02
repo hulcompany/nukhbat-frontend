@@ -201,7 +201,6 @@ function parseTextFieldProperties(value: string): Record<string, string> {
 }
 
 // ============================================================================
-// دالة مساعدة لتهيئة وعرض عنوان السؤال بشكل أنيق مع خطوط الفراغ والتلميحات
 // ============================================================================
 export function formatTitleForDisplay(
   title: string,
@@ -214,26 +213,22 @@ export function formatTitleForDisplay(
       const props = parseTextFieldProperties(propertiesStr);
       let hintText = "";
 
-      // التحقق من وجود التلميح وتنظيفه من العلامات
       if (
         props.hint &&
         props.hint !== "null" &&
         props.hint !== '""' &&
         props.hint !== "''"
       ) {
-        // إزالة علامات التنصيص والباك سلاش من التلميح
         const cleanHint = props.hint.replace(/^\\?["']|\\?["']$/g, "").trim();
         if (cleanHint) {
           hintText = ` (تلميح: ${cleanHint})`;
         }
       }
 
-      // عرض النتيجة كخط فراغ حقيقي مع التلميح بخط عريض
       return ` **__________${hintText}** `;
     });
   }
 
-  // لباقي أنواع الأسئلة، نستخدم الدالة الافتراضية
   return formatQuestionTitle(title);
 }
 
@@ -977,6 +972,8 @@ function QuestionFormDialog({
     editing?.tips && editing.tips.length > 0 ? editing.tips : [""],
   );
 
+  const [verdictText, setVerdictText] = useState(editing?.verdictText ?? "");
+
   useEffect(() => {
     if (editing) return;
     getTracks()
@@ -1137,8 +1134,8 @@ function QuestionFormDialog({
       if (options.length < 2) return "يجب إضافة خيارين على الأقل";
       if (options.some((option) => !hasTextContent(option.text)))
         return "أدخل نص جميع الخيارات";
-      if (options.filter((o) => o.isCorrect).length !== 1)
-        return "يجب تحديد إجابة صحيحة واحدة";
+      if (options.filter((o) => o.isCorrect).length === 0)
+        return "يجب تحديد إجابة صحيحة واحدة على الأقل";
       return null;
     }
 
@@ -1288,6 +1285,11 @@ function QuestionFormDialog({
       type === "fillBlanks"
         ? serializeFillBlankTitle(title, fillBlanks)
         : title.trim();
+
+    const verdictTextPayload = hasTextContent(verdictText)
+      ? verdictText.trim()
+      : undefined;
+
     try {
       if (editing) {
         if (imageRemoved && !imageFile && editing.imageId) {
@@ -1305,6 +1307,7 @@ function QuestionFormDialog({
           courseId,
           purpose: "dailyChallenge",
           tips: tipsPayload,
+          verdictText: verdictTextPayload,
           ...(imageFile ? { image: imageFile } : {}),
           ...(type === "options"
             ? { optionGroups: buildOptionGroupInputs() }
@@ -1380,6 +1383,25 @@ function QuestionFormDialog({
                     </option>
                   ))}
                 </select>
+              </div>
+            </div>
+          )}
+
+          {!editing && (
+            <div className="space-y-3">
+              <Label>نوع السؤال</Label>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(TYPE_META) as QuestionType[]).map((t) => (
+                  <Button
+                    key={t}
+                    type="button"
+                    variant={type === t ? "default" : "outline"}
+                    onClick={() => switchType(t)}
+                    className="h-10"
+                  >
+                    {TYPE_META[t].label}
+                  </Button>
+                ))}
               </div>
             </div>
           )}
@@ -1566,25 +1588,6 @@ function QuestionFormDialog({
             </div>
           </div>
 
-          {!editing && (
-            <div className="space-y-3">
-              <Label>نوع السؤال</Label>
-              <div className="flex flex-wrap gap-2">
-                {(Object.keys(TYPE_META) as QuestionType[]).map((t) => (
-                  <Button
-                    key={t}
-                    type="button"
-                    variant={type === t ? "default" : "outline"}
-                    onClick={() => switchType(t)}
-                    className="h-10"
-                  >
-                    {TYPE_META[t].label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
           {!editing && type === "options" && (
             <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
               <div className="space-y-2">
@@ -1601,13 +1604,14 @@ function QuestionFormDialog({
               {options.map((option, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <input
-                    type="radio"
-                    name="correct-option"
-                    className="h-4 w-4 shrink-0 accent-blue-600"
+                    type="checkbox"
+                    className="h-4 w-4 shrink-0 accent-blue-600 rounded border-slate-300"
                     checked={option.isCorrect}
-                    onChange={() => {
+                    onChange={(e) => {
                       setOptions((prev) =>
-                        prev.map((o, j) => ({ ...o, isCorrect: j === i })),
+                        prev.map((o, j) =>
+                          j === i ? { ...o, isCorrect: e.target.checked } : o,
+                        ),
                       );
                     }}
                   />
@@ -2289,7 +2293,20 @@ function QuestionFormDialog({
               </div>
             </div>
           )}
-
+          {/* حقل شرح الإجابة */}
+          <div className="space-y-2 pt-2 border-t border-slate-100 mt-4">
+            <Label htmlFor="verdict-text">
+              شرح الإجابة / التفسير (اختياري)
+            </Label>
+            <textarea
+              id="verdict-text"
+              value={verdictText}
+              onChange={(e) => setVerdictText(e.target.value)}
+              placeholder="اكتب شرحاً يوضح سبب الإجابة الصحيحة لتظهر للطالب..."
+              className="w-full rounded-md border border-slate-200 bg-white px-3 py-3 text-sm placeholder:text-right focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[80px] resize-y"
+              dir="auto"
+            />
+          </div>
           <div className="space-y-3 pt-2">
             <Label>نصائح (اختياري)</Label>
             {tips.map((tip, index) => (
@@ -2845,6 +2862,21 @@ export default function Questions() {
                             <DisplayText value={tip} className="flex-1" />
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {question.verdictText && (
+                      <div className="space-y-2 mt-4 pt-4 border-t border-slate-50">
+                        <p className="text-xs font-semibold text-slate-500">
+                          شرح الإجابة
+                        </p>
+                        <div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+                          <Lightbulb className="h-4 w-4 shrink-0 text-blue-600" />
+                          <DisplayText
+                            value={question.verdictText}
+                            className="flex-1"
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
